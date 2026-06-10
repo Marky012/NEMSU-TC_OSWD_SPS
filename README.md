@@ -1,13 +1,15 @@
 <!-- SVG icons sourced from Flaticon (https://www.flaticon.com). Download your preferred icons and
-     save TWO versions of each to ./docs/icons/:
-       - Dark version  (e.g. features.svg)        — used in GitHub light mode
-       - White version (e.g. features-white.svg)  — used in GitHub dark mode
-     Rename each file to match the filenames used in the <picture> tags below. -->
+     save them to ./docs/icons/. You only need ONE version of each icon (the dark/black version).
+     GitHub's #gh-dark-mode-only and #gh-light-mode-only fragments handle theme switching automatically.
+     Each section heading uses TWO <img> tags pointing to the same file:
+       - One shown only in light mode  (original dark icon)
+       - One shown only in dark mode   (same icon but with CSS invert filter via inline SVG wrapper)
+     No white copies needed. -->
 
 <div align="center">
 
 <h1>OSWD Student Profiling System</h1>
-<p><strong>Office of Student Welfare and Development</strong><br>North Eastern Mindanao State University — Tandag City Campus</p>
+<p><strong>Office of Student Welfare and Development</strong><br>North Eastern Mindanao State University — Tagbina Campus</p>
 
 ![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi&logoColor=white)
@@ -25,7 +27,7 @@
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/features-white.svg"><img src="./docs/icons/features.svg" width="20" height="20" /></picture> Features
+## <img src="./docs/icons/features.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/features.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Features
 
 - **JWT Authentication** — Secure OAuth2 Password Flow with Bcrypt hashing and role-based access control
 - **Student Profiling Forms** — Digitized version of the university's 43-question OSWD paper forms with parent-child conditional rendering
@@ -39,7 +41,7 @@
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/stack-white.svg"><img src="./docs/icons/stack.svg" width="20" height="20" /></picture> Tech Stack
+## <img src="./docs/icons/stack.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/stack.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Tech Stack
 
 | Category | Technology | Purpose |
 |---|---|---|
@@ -55,7 +57,7 @@
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/structure-white.svg"><img src="./docs/icons/structure.svg" width="20" height="20" /></picture> Project Structure
+## <img src="./docs/icons/structure.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/structure.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Project Structure
 
 ```
 backend/
@@ -79,7 +81,7 @@ backend/
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/setup-white.svg"><img src="./docs/icons/setup.svg" width="20" height="20" /></picture> Getting Started
+## <img src="./docs/icons/setup.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/setup.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Getting Started
 
 ### Prerequisites
 
@@ -143,7 +145,7 @@ The application will launch on **`http://127.0.0.1:8000`**.
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/credentials-white.svg"><img src="./docs/icons/credentials.svg" width="20" height="20" /></picture> Default Credentials
+## <img src="./docs/icons/credentials.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/credentials.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Default Credentials
 
 | Role | Email | Password |
 |---|---|---|
@@ -153,7 +155,7 @@ The application will launch on **`http://127.0.0.1:8000`**.
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/api-white.svg"><img src="./docs/icons/api.svg" width="20" height="20" /></picture> API Documentation
+## <img src="./docs/icons/api.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/api.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> API Documentation
 
 Once the server is running, the interactive API documentation is available at:
 
@@ -166,7 +168,7 @@ Use the **Authorize** lock button in Swagger UI to authenticate as Super Admin o
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/tests-white.svg"><img src="./docs/icons/tests.svg" width="20" height="20" /></picture> Running Tests
+## <img src="./docs/icons/tests.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/tests.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Running Tests
 
 Run the full test suite with:
 
@@ -178,7 +180,7 @@ The tests cover routing integrity, request validation rules, authentication flow
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/deployment-white.svg"><img src="./docs/icons/deployment.svg" width="20" height="20" /></picture> Production Deployment
+## <img src="./docs/icons/deployment.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/deployment.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Production Deployment
 
 The following guide covers deploying this backend on a university Linux server (Ubuntu/Debian).
 
@@ -295,18 +297,18 @@ Add the following line to run a full backup daily at midnight:
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/contributing-white.svg"><img src="./docs/icons/contributing.svg" width="20" height="20" /></picture> Contributing
+## <img src="./docs/icons/contributing.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/contributing.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Contributing
 
 Contributions, bug reports, and feature suggestions are welcome. Please open an issue or submit a pull request through the [GitHub repository](https://github.com/Marky012/NEMSU-TC_OSWD_SPS).
 
 ---
 
-## <picture><source media="(prefers-color-scheme: dark)" srcset="./docs/icons/license-white.svg"><img src="./docs/icons/license.svg" width="20" height="20" /></picture> License
+## <img src="./docs/icons/license.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/license.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> License
 
 This project is licensed under the [MIT License](./LICENSE).
 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for the Office of Student Welfare and Development — NEMSU Tandag City Campus</sub>
+  <sub>Built with ❤️ for the Office of Student Welfare and Development — NEMSU Tagbina Campus</sub>
 </div>
