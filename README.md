@@ -1,10 +1,7 @@
 <!-- SVG icons sourced from Flaticon (https://www.flaticon.com). Download your preferred icons and
      save them to ./docs/icons/. You only need ONE version of each icon (the dark/black version).
-     GitHub's #gh-dark-mode-only and #gh-light-mode-only fragments handle theme switching automatically.
-     Each section heading uses TWO <img> tags pointing to the same file:
-       - One shown only in light mode  (original dark icon)
-       - One shown only in dark mode   (same icon but with CSS invert filter via inline SVG wrapper)
-     No white copies needed. -->
+     GitHub automatically shows/hides images based on the #gh-dark-mode-only and #gh-light-mode-only
+     URL fragments appended to the image src. No white copies needed. -->
 
 <div align="center">
 
@@ -27,7 +24,7 @@
 
 ---
 
-## <img src="./docs/icons/features.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/features.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Features
+## <img src="./docs/icons/features.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/features-white.svg#gh-dark-mode-only" width="20" height="20" /> Features
 
 - **JWT Authentication** — Secure OAuth2 Password Flow with Bcrypt hashing and role-based access control
 - **Student Profiling Forms** — Digitized version of the university's 43-question OSWD paper forms with parent-child conditional rendering
@@ -41,7 +38,7 @@
 
 ---
 
-## <img src="./docs/icons/stack.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/stack.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Tech Stack
+## <img src="./docs/icons/stack.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/stack-white.svg#gh-dark-mode-only" width="20" height="20" /> Tech Stack
 
 | Category | Technology | Purpose |
 |---|---|---|
@@ -57,7 +54,7 @@
 
 ---
 
-## <img src="./docs/icons/structure.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/structure.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Project Structure
+## <img src="./docs/icons/structure.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/structure-white.svg#gh-dark-mode-only" width="20" height="20" /> Project Structure
 
 ```
 backend/
@@ -81,7 +78,7 @@ backend/
 
 ---
 
-## <img src="./docs/icons/setup.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/setup.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Getting Started
+## <img src="./docs/icons/setup.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/setup-white.svg#gh-dark-mode-only" width="20" height="20" /> Getting Started
 
 ### Prerequisites
 
@@ -145,7 +142,7 @@ The application will launch on **`http://127.0.0.1:8000`**.
 
 ---
 
-## <img src="./docs/icons/credentials.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/credentials.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Default Credentials
+## <img src="./docs/icons/credentials.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/credentials-white.svg#gh-dark-mode-only" width="20" height="20" /> Default Credentials
 
 | Role | Email | Password |
 |---|---|---|
@@ -155,7 +152,7 @@ The application will launch on **`http://127.0.0.1:8000`**.
 
 ---
 
-## <img src="./docs/icons/api.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/api.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> API Documentation
+## <img src="./docs/icons/api.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/api-white.svg#gh-dark-mode-only" width="20" height="20" /> API Documentation
 
 Once the server is running, the interactive API documentation is available at:
 
@@ -168,7 +165,7 @@ Use the **Authorize** lock button in Swagger UI to authenticate as Super Admin o
 
 ---
 
-## <img src="./docs/icons/tests.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/tests.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Running Tests
+## <img src="./docs/icons/tests.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/tests-white.svg#gh-dark-mode-only" width="20" height="20" /> Running Tests
 
 Run the full test suite with:
 
@@ -180,7 +177,7 @@ The tests cover routing integrity, request validation rules, authentication flow
 
 ---
 
-## <img src="./docs/icons/deployment.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/deployment.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Production Deployment
+## <img src="./docs/icons/deployment.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/deployment-white.svg#gh-dark-mode-only" width="20" height="20" /> Production Deployment
 
 The following guide covers deploying this backend on a university Linux server (Ubuntu/Debian).
 
@@ -297,13 +294,13 @@ Add the following line to run a full backup daily at midnight:
 
 ---
 
-## <img src="./docs/icons/contributing.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/contributing.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> Contributing
+## <img src="./docs/icons/contributing.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/contributing-white.svg#gh-dark-mode-only" width="20" height="20" /> Contributing
 
 Contributions, bug reports, and feature suggestions are welcome. Please open an issue or submit a pull request through the [GitHub repository](https://github.com/Marky012/NEMSU-TC_OSWD_SPS).
 
 ---
 
-## <img src="./docs/icons/license.svg" width="20" height="20" #gh-light-mode-only/><img src="./docs/icons/license.svg" width="20" height="20" style="filter:invert(1)" #gh-dark-mode-only/> License
+## <img src="./docs/icons/license.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/license-white.svg#gh-dark-mode-only" width="20" height="20" /> License
 
 This project is licensed under the [MIT License](./LICENSE).
 
