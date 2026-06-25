@@ -32,7 +32,7 @@ def hash_verification_code(code: str) -> str:
     """Hash a 6-digit verification code using SHA-256."""
     return hashlib.sha256(code.encode()).hexdigest()
 
-@router.post("/register", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", status_code=status.HTTP_201_CREATED)
 def register_student(user_data: schemas.UserRegister, db: Session = Depends(get_db)):
     """Registers a new student account. Sends 6-digit email verification code."""
     existing_user = db.query(models.User).filter(models.User.email == user_data.email).first()
@@ -80,7 +80,15 @@ def register_student(user_data: schemas.UserRegister, db: Session = Depends(get_
         daemon=True
     ).start()
 
-    return new_user
+    return {
+        "id": new_user.id, "email": new_user.email, "role": new_user.role,
+        "category": new_user.category, "is_verified_for_enrollment": new_user.is_verified_for_enrollment,
+        "verified_by": new_user.verified_by, "verified_at": new_user.verified_at,
+        "is_email_verified": new_user.is_email_verified,
+        "privacy_consent": new_user.privacy_consent, "privacy_consent_at": new_user.privacy_consent_at,
+        "created_at": new_user.created_at.isoformat() if new_user.created_at else None,
+        "verification_code": code if not settings.SMTP_HOST else None,
+    }
 
 @router.post("/login", response_model=schemas.TokenResponse)
 @limiter.limit(settings.LOGIN_RATE_LIMIT)
@@ -150,12 +158,12 @@ def login_json(
         "user": user
     }
 
-@router.get("/profile", response_model=schemas.UserResponse)
+@router.get("/profile")
 def read_current_user_profile(current_user: models.User = Depends(get_current_user)):
     """Retrieves the authenticated user's profile details."""
     return current_user
 
-@router.post("/category", response_model=schemas.UserResponse)
+@router.post("/category")
 def set_student_category(
     data: schemas.UserCategorySelect,
     current_user: models.User = Depends(get_current_user),
@@ -247,7 +255,7 @@ def resend_verification(data: schemas.ResendVerificationRequest, db: Session = D
 
     return {"message": "A new 6-digit verification code has been sent to your email.", "email": user.email}
 
-@router.post("/privacy-consent", response_model=schemas.UserResponse)
+@router.post("/privacy-consent")
 def accept_privacy_consent(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)

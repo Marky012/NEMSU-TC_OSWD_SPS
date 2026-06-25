@@ -28,7 +28,10 @@ export default function VerifyEmail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "";
-  const [digits, setDigits] = useState(["", "", "", "", "", ""]);
+  const codeParam = searchParams.get("code") || "";
+  const [digits, setDigits] = useState(
+    codeParam ? codeParam.split("").concat(Array(6).fill("")).slice(0, 6) : ["", "", "", "", "", ""]
+  );
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -132,6 +135,11 @@ export default function VerifyEmail() {
         )
       }
     >
+      {codeParam && (
+        <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+          <strong>Test Mode:</strong> Your verification code is <span className="font-mono font-bold text-lg tracking-widest">{codeParam}</span>
+        </div>
+      )}
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
           {error}

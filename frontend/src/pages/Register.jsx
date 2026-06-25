@@ -49,7 +49,10 @@ export default function Register() {
     setLoading(true);
     const result = await register({ email, password, privacy_consent: true });
     if (result.success) {
-      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+      const code = result.data?.verification_code;
+      const params = new URLSearchParams({ email });
+      if (code) params.set("code", code);
+      navigate(`/verify-email?${params.toString()}`);
     } else {
       setError(result.error || "Registration failed");
     }
