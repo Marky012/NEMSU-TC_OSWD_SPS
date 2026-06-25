@@ -189,6 +189,22 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_database(db)
+
+        # Ensure admin user is always properly configured after seeding
+        admin_user = db.query(models.User).filter(
+            models.User.email == settings.ADMIN_INITIAL_EMAIL
+        ).first()
+        if admin_user:
+            needs_update = False
+            if admin_user.role != "admin":
+                admin_user.role = "admin"
+                needs_update = True
+            if not admin_user.is_email_verified:
+                admin_user.is_email_verified = True
+                needs_update = True
+            if needs_update:
+                db.commit()
+                print(f"[Startup] Admin user repaired (role=admin, verified=True): {admin_user.email}")
     finally:
         db.close()
         
