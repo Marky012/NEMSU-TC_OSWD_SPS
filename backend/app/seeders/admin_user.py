@@ -13,25 +13,32 @@ def create_admin_if_missing() -> None:
 
     * Reads ``ADMIN_INITIAL_EMAIL`` and ``ADMIN_INITIAL_PASSWORD`` from the
       Pydantic ``settings`` singleton (populated from ``.env``).
-    * If a user with that email is already present, the function does nothing.
+    * If a user with that email is already present with ``role='admin'``,
+      the function ensures ``is_email_verified`` is ``True`` and does nothing
+      else.
+    * If the user exists but has the wrong role, it is repaired.
     * Otherwise it creates a ``User`` with ``role='admin'`` and a bcrypt‑hashed
       password.
-    * This function is deliberately lightweight and can be called on every
-      application start without side‑effects.
     """
     db = SessionLocal()
     try:
         admin = db.query(User).filter(User.email == settings.ADMIN_INITIAL_EMAIL).first()
         if admin:
-            logger.info("Admin user already exists: %s", admin.email)
+            if admin.role != "admin" or not admin.is_email_verified:
+                admin.role = "admin"
+                admin.is_email_verified = True
+                db.commit()
+                logger.info("✅ Admin user repaired: %s (role=%s, verified=%s)", admin.email, admin.role, admin.is_email_verified)
+            else:
+                logger.info("Admin user already exists: %s", admin.email)
             return
-        # Create the admin user
         admin = User(
             email=settings.ADMIN_INITIAL_EMAIL,
             password_hash=get_password_hash(settings.ADMIN_INITIAL_PASSWORD),
             role="admin",
             category=None,
             is_verified_for_enrollment=False,
+            is_email_verified=True,
         )
         db.add(admin)
         db.commit()
