@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text, func
+from sqlalchemy import text as sa_text
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -85,7 +86,7 @@ class Submission(Base):
     draft_data_json = Column(Text, nullable=True)  # JSON string representing unsubmitted draft answers
     is_final = Column(Boolean, default=False, nullable=False)
     is_archived = Column(Boolean, default=False, nullable=False)
-    status = Column(String, default='pending', nullable=False)  # pending, returned, declined, verified
+    status = Column(String, default='pending', server_default=sa_text("'pending'"), nullable=False)  # pending, returned, declined, verified
     admin_comment = Column(Text, nullable=True)
     is_senior_citizen = Column(Boolean, default=False, nullable=False)
     is_magna_carta_poor = Column(Boolean, default=False, nullable=False)
