@@ -1,0 +1,273 @@
+================================================================================
+  OSWD STUDENT PROFILING SYSTEM — ENTITY RELATIONSHIP DIAGRAM (ERD v2)
+================================================================================
+  North Eastern Mindanao State University
+  Office of Student Welfare and Development
+================================================================================
+
+
+TABLE: users
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+     email                STRING        (unique, indexed, NOT NULL)
+     password_hash        STRING        (NOT NULL)
+     role                 STRING        (default="student")  [student | super_admin | verification_officer | analytics_viewer]
+     category             STRING?       [New | Transferee | Returnee | Continuing]
+     is_verified_for_enrollment BOOLEAN (default=FALSE, NOT NULL)
+     created_at           DATETIME      (default=now, NOT NULL)
+
+  RELATIONSHIPS:
+    1───< submissions       (user_id → users.id)          CASCADE DELETE
+    1───< pwd_assistance_tasks (student_id → users.id)    CASCADE DELETE
+    1───< admin_logs        (admin_id → users.id)         CASCADE DELETE
+
+
+TABLE: semesters
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+     label                STRING        (unique, NOT NULL)  e.g. "AY 2026-2027 1st Semester"
+     is_active            BOOLEAN       (default=FALSE, NOT NULL)
+     opens_at             DATETIME(TZ)  (NOT NULL)
+     closes_at            DATETIME(TZ)  (NOT NULL)
+
+  RELATIONSHIPS:
+    1───< submissions       (semester_id → semesters.id)   CASCADE DELETE
+
+
+TABLE: question_categories
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+     name                 STRING        (unique, NOT NULL)  e.g. "Personal Information"
+     display_order        INTEGER       (default=0, NOT NULL)
+
+  RELATIONSHIPS:
+    1───< questions         (category_id → question_categories.id)  CASCADE DELETE
+
+
+TABLE: questions
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+  FK category_id          INTEGER       (NOT NULL, indexed) → question_categories.id
+  FK semester_id          INTEGER?      (indexed)          → semesters.id
+  FK conditional_parent_question_id INTEGER? (indexed)     → questions.id (self-ref)
+     system_key           STRING?       e.g. "program", "gender", "pwd_status"
+     question_text        TEXT          (NOT NULL)
+     field_type           STRING        (NOT NULL)  [text|number|radio|checkbox|dropdown|file|multi-select|table|textarea|date|datetime]
+     options_json         TEXT?         JSON string of choices or table column headers
+     conditional_value    STRING?       Value of parent that triggers this question
+     required             BOOLEAN       (default=TRUE, NOT NULL)
+     active               BOOLEAN       (default=TRUE, NOT NULL)
+     applicable_categories_json TEXT   (NOT NULL)  JSON list ["New","Transferee",...] or ["all"]
+     display_order        INTEGER       (default=0, NOT NULL)
+
+  RELATIONSHIPS:
+    *───1 question_categories  (category_id)
+    *───1 semesters            (semester_id)
+    1───< answers              (question_id → questions.id)       CASCADE DELETE
+    *───1 conditional_parent   (self-ref via conditional_parent_question_id)
+    1───< conditional_children (self-ref backref)
+    1───< questions_history    (question_id → questions.id)
+
+
+TABLE: submissions
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+  FK user_id              INTEGER       (NOT NULL, indexed)  → users.id
+  FK semester_id          INTEGER       (NOT NULL, indexed)  → semesters.id
+     submitted_at         DATETIME(TZ)?  NULL = draft status
+     draft_data_json      TEXT?          JSON representing unsubmitted draft answers
+     is_final             BOOLEAN        (default=FALSE, NOT NULL)
+     verification_code    STRING?        (unique, indexed)  format: "OSWD-YYYY-S-NNNNN"
+
+  RELATIONSHIPS:
+    *───1 users            (user_id)
+    *───1 semesters        (semester_id)
+    1───< answers           (submission_id → submissions.id)   CASCADE DELETE
+
+
+TABLE: answers
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+  FK submission_id        INTEGER       (NOT NULL, indexed) → submissions.id
+  FK question_id          INTEGER       (NOT NULL, indexed) → questions.id
+     answer_text          TEXT?          Stored value, selected option, or serialized JSON
+     file_path            STRING?        File path if field_type is 'file'
+
+  RELATIONSHIPS:
+    *───1 submissions     (submission_id)
+    *───1 questions       (question_id)
+
+
+TABLE: pwd_assistance_tasks
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+  FK student_id           INTEGER       (NOT NULL, indexed) → users.id
+     created_at           DATETIME(TZ)  (default=now, NOT NULL)
+     status               STRING        (default="pending")  [pending | in_progress | completed]
+     notes                TEXT?
+
+  RELATIONSHIPS:
+    *───1 users (as "student")         (student_id)
+
+
+TABLE: admin_logs
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+  FK admin_id             INTEGER       (NOT NULL, indexed) → users.id
+     action               STRING        (NOT NULL)  e.g. "edit_question", "verify_student"
+     details              TEXT?
+     timestamp            DATETIME(TZ)  (default=now, NOT NULL)
+
+  RELATIONSHIPS:
+    *───1 users (as "admin")           (admin_id)
+
+
+TABLE: questions_history
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+  FK question_id          INTEGER       (NOT NULL, indexed) → questions.id
+  FK changed_by_admin_id  INTEGER       (NOT NULL, indexed) → users.id
+
+  --- Snapshot of question BEFORE the edit ---
+     question_text        TEXT          (NOT NULL)
+     field_type           STRING        (NOT NULL)
+     options_json         TEXT?
+     applicable_categories_json TEXT   (NOT NULL)
+     required             BOOLEAN       (NOT NULL)
+
+  --- Audit metadata ---
+     changed_at           DATETIME(TZ)  (default=now, NOT NULL)
+     change_note          TEXT?         Human-readable reason for the edit
+
+  RELATIONSHIPS:
+    *───1 questions       (question_id)
+    *───1 users           (changed_by_admin_id)
+
+
+TABLE: email_rate_limits
+--------------------------------------------------------------------------------
+  PK id                   INTEGER
+     email                STRING        (indexed, NOT NULL)
+     sent_at              DATETIME(TZ)  (default=now, NOT NULL)
+
+
+================================================================================
+  RELATIONSHIP SUMMARY
+================================================================================
+
+  users  ──1───< submissions               (one user → many submissions)
+  users  ──1───< pwd_assistance_tasks      (one user → many PWD tasks as student)
+  users  ──1───< admin_logs                (one user → many audit logs as admin)
+  users  ──1───< questions_history          (one user → many history entries as changer)
+
+  semesters  ──1───< submissions            (one semester → many submissions)
+  semesters  ──1───< questions              (one semester → many questions)
+
+  question_categories  ──1───< questions    (one category → many questions)
+
+  questions  ──1───< answers                (one question → many answers)
+  questions  ──?───> questions              (self-ref: conditional parent → child)
+  questions  ──1───< questions_history      (one question → many history snapshots)
+
+  submissions  ──1───< answers              (one submission → many answers)
+
+  answers  ──*───1 questions                (many answers belong to one question)
+  answers  ──*───1 submissions              (many answers belong to one submission)
+
+
+================================================================================
+  KEY USE CASES (how tables interact)
+================================================================================
+
+  1. STUDENT PROFILING FLOW
+     Student logs in → selects category → form loads questions
+       (questions filtered by: active=T + applicable_categories includes student category)
+     Student fills form & submits:
+       submissions row created (user_id + semester_id)
+       answer rows created (submission_id + question_id + answer_text)
+       verification_code auto-generated (sequential per semester)
+
+  2. CONDITIONAL QUESTION LOGIC
+     Question A has conditional_parent_question_id → Question B
+     Question A has conditional_value = "YES"
+       → A is only shown when B's answer is "YES"
+       → Resolved recursively for nested conditionals
+
+  3. QUESTION VERSIONING
+     Admin edits Question → BEFORE update:
+       Current state copied to questions_history (snapshot)
+     Past submissions remain interpretable
+       Answer links to question_id → historical snapshots show what was asked
+
+  4. PWD ASSISTANCE WORKFLOW
+     Student selects "I want a PWD card" → system auto-creates:
+       pwd_assistance_tasks row (student_id, status="pending")
+     Admin tracks: pending → in_progress → completed
+
+  5. VERIFICATION & ENROLLMENT
+     Student submits → gets verification_code (unique per submission)
+     Registrar calls GET /api/verify/{code} → checks is_final=T
+     Admin bulk-verifies → users.is_verified_for_enrollment set to TRUE
+
+  6. EMAIL RATE LIMITING
+     On each verification email send → email_rate_limits row created
+     Before sending → count recent rows (within 1hr) per email
+     Max 5/hr → enforced via DB query
+
+  7. ADMIN AUDIT TRAIL
+     Every admin action → admin_logs row created
+     admin_id + action + details + timestamp
+     Used for accountability & rollback tracking
+
+
+================================================================================
+  DATA VOLUME ESTIMATES (per semester)
+================================================================================
+
+  users                    ~500-2,000  (active students + ~5 admins)
+  semesters                1 active + history
+  question_categories      8
+  questions                ~57 active per semester
+  submissions              ~500-2,000  (one per student per semester)
+  answers                  ~28,500-114,000  (57 questions × submissions)
+  pwd_assistance_tasks     ~10-100     (based on PWD card requests)
+  admin_logs               ~100-500    (admin actions)
+  questions_history        ~10-100     (question edits × snapshots)
+  email_rate_limits        ~1,000-4,000  (5 emails/hr × ~200 students × few days)
+
+
+================================================================================
+  INDEXES (for query performance)
+================================================================================
+
+  Table                 Column(s)                        Type
+  ───────────────────── ──────────────────────────────── ─────────
+  users                 id                               PK
+  users                 email                            UNIQUE
+  users                 role                             (future: for role filtering)
+  semesters             id                               PK
+  question_categories   id                               PK
+  questions             id                               PK
+  questions             category_id                      FK
+  questions             semester_id                      FK
+  questions             conditional_parent_question_id   FK
+  submissions           id                               PK
+  submissions           user_id                          FK
+  submissions           semester_id                      FK
+  submissions           verification_code                UNIQUE
+  answers               id                               PK
+  answers               submission_id                    FK
+  answers               question_id                      FK
+  pwd_assistance_tasks  id                               PK
+  pwd_assistance_tasks  student_id                       FK
+  admin_logs            id                               PK
+  admin_logs            admin_id                         FK
+  questions_history     id                               PK
+  questions_history     question_id                      FK
+  questions_history     changed_by_admin_id              FK
+  email_rate_limits     id                               PK
+  email_rate_limits     email                            (for rate limit queries)
+
+================================================================================
+  END OF ERD v2
+================================================================================

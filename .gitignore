@@ -1,0 +1,30 @@
+# .gitignore
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+.venv/
+.idea/
+.vscode/
+*.swp
+.DS_Store
+*.docx
+*.env
+.env.local
+
+*.db
+
+# Uploads & Backups (ephemeral in production)
+uploads/
+backups/
+
+# Node
+node_modules/
+
+# Frontend build
+frontend/dist/
+
+# IDE
+.vscode/

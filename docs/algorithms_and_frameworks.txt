@@ -1,0 +1,349 @@
+================================================================
+NEMSU OSWD STUDENT PROFILING SYSTEM
+COMPREHENSIVE LIST OF ALL ALGORITHMS, FRAMEWORKS, AND LIBRARIES
+================================================================
+
+A. FRAMEWORKS & CORE LIBRARIES
+================================================================
+
+   Framework/Library       | Purpose                                    | Location
+  -------------------------+--------------------------------------------+---------------------------
+   FastAPI (Python 3.13+)  | Core async API framework, automatic        | backend/app/main.py:158
+                           | OpenAPI/Swagger docs generation            |
+  -------------------------+--------------------------------------------+---------------------------
+   SQLAlchemy              | ORM for database modeling, query           | backend/app/models.py:1-2
+                           | building, relationship mapping             |
+  -------------------------+--------------------------------------------+---------------------------
+   Pydantic v2             | Request/response schema validation,        | backend/app/schemas.py:1-290
+                           | field validators, serialization            |
+  -------------------------+--------------------------------------------+---------------------------
+   Pydantic-Settings       | Environment-based configuration            | backend/app/config.py:1-44
+                           | management via .env files                  |
+  -------------------------+--------------------------------------------+---------------------------
+   Alembic                 | Database migration framework               | backend/alembic.ini
+                           | (configured, auto-migrations)              |
+  -------------------------+--------------------------------------------+---------------------------
+   React 18                | Frontend SPA framework                     | frontend/package.json
+  -------------------------+--------------------------------------------+---------------------------
+   Vite                    | Frontend build tool and dev server         | frontend/vite.config.js
+  -------------------------+--------------------------------------------+---------------------------
+   Tailwind CSS            | Utility-first CSS styling framework        | frontend/tailwind.config.js
+  -------------------------+--------------------------------------------+---------------------------
+   Framer Motion           | React animation library (page/component    | frontend/src/pages/
+                           | transitions, stagger containers)           | ProfileForm.jsx:2
+  -------------------------+--------------------------------------------+---------------------------
+   shadcn/ui (Radix UI)    | Accessible React component primitives      | frontend/src/components/ui/
+                           | (Select, RadioGroup, Dialog, Card, etc.)   | *.jsx
+  -------------------------+--------------------------------------------+---------------------------
+   React Router DOM v6     | Client-side SPA routing with protected     | frontend/src/App.jsx
+                           | routes                                     |
+  -------------------------+--------------------------------------------+---------------------------
+   Axios                   | HTTP client for API communication          | frontend/src/api/apiClient.js
+  -------------------------+--------------------------------------------+---------------------------
+   Sonner                  | Toast notification library                 | ProfileForm.jsx:17
+  -------------------------+--------------------------------------------+---------------------------
+   Lucide React            | SVG icon library (Save, Send, Loader2,     | ProfileForm.jsx:18
+                           | GraduationCap, Trash2, ArrowLeft)          |
+
+
+B. AUTHENTICATION & SECURITY
+================================================================
+
+   Technology              | Purpose                                    | Location
+  -------------------------+--------------------------------------------+---------------------------
+   python-jose (JWT)       | JWT token creation and decoding            | backend/app/utils/
+                           | Algorithm: HS256                           | security.py:1-43
+  -------------------------+--------------------------------------------+---------------------------
+   bcrypt                  | Password hashing with random salt          | backend/app/utils/
+                           | ($2b$ prefix, 60-char hash)                | security.py:4,11-24
+  -------------------------+--------------------------------------------+---------------------------
+   OAuth2 Password Flow    | Standard token-based auth (Bearer header)  | backend/app/
+                           |                                             | dependencies.py:10
+  -------------------------+--------------------------------------------+---------------------------
+   slowapi                 | Rate limiting middleware, in-memory        | backend/app/
+                           | counter with configurable limits           | rate_limiter.py:1-5
+  -------------------------+--------------------------------------------+---------------------------
+   CSRF Token              | Anti-forgery: cookie + X-CSRF-Token        | backend/app/main.py:21-48
+                           | header comparison; 32-byte URL-safe token  |
+  -------------------------+--------------------------------------------+---------------------------
+   multipart/form-data     | File upload validation with magic bytes,   | backend/app/routers/
+   (FastAPI UploadFile)    | MIME type, extension, and size checks      | students.py:388-458
+
+
+C. DATABASE & PERSISTENCE
+================================================================
+
+   Technology              | Purpose                                    | Location
+  -------------------------+--------------------------------------------+---------------------------
+   SQLite                  | Local dev database (default)               | backend/app/config.py:12
+  -------------------------+--------------------------------------------+---------------------------
+   PostgreSQL              | Production database (switchable via .env)  | backend/app/config.py:12
+  -------------------------+--------------------------------------------+---------------------------
+   ReportLab               | PDF generation for verification receipts   | backend/app/utils/pdf.py
+                           | and CHED report PDF exports                | backend/app/routers/
+                           |                                             | reports.py:787-953
+  -------------------------+--------------------------------------------+---------------------------
+   csv (stdlib)            | CSV export streaming for CHED reports      | backend/app/routers/
+                           | and flat submission dumps                  | reports.py:446-480
+  -------------------------+--------------------------------------------+---------------------------
+   File System (uploads/)  | PWD card document storage (PDF/JPG/PNG)    | backend/app/routers/
+                           |                                             | students.py:446-458
+  -------------------------+--------------------------------------------+---------------------------
+   File System (backups/)  | Automated daily SQLite backups             | backend/app/main.py:53-94
+
+
+D. ALGORITHMS & DESIGN PATTERNS
+================================================================
+
+D.1  Conditional Visibility Resolution — DFS with Memoization
+---------------------------------------------------------------
+   File:      backend/app/routers/students.py:62-134
+   Purpose:   Determines which dynamic form questions are visible to the
+              student based on submitted answers and conditional parent-child
+              relationships.
+   Algorithm: Depth-First Search (DFS) traversal of the question graph.
+              Uses visibility_cache (dict[int, bool]) for memoization.
+              Each question's visibility depends on:
+                (a) its parent being visible (recursive check), and
+                (b) the parent's answer matching conditional_value.
+              For multi-select/checkbox parents, uses json.loads() to parse
+              the answer array and checks membership via `in`.
+   Edge Case: "Basic phone" survey-termination gate — if cellphone_type =
+              "Basic phone (call and text only)", all child questions of
+              cellphone_type are hidden (skipped).
+
+
+D.2  Verification Code Generation — Semester-Scoped Sequence
+---------------------------------------------------------------
+   File:      backend/app/routers/students.py:38-47, 317-323
+   Purpose:   Generate unique OSWD verification codes for each finalized
+              submission.
+   Algorithm: Pattern: OSWD-{year}-{sem_num}-{increment:05d}
+              - Year extracted from semester label using
+                re.search(r"(\d{4})", label)
+              - Semester digit: "1" for 1st, "2" for 2nd, "S" for summer
+              - Increment: count of existing finalized submissions for this
+                semester + 1, zero-padded to 5 digits
+
+
+D.3  Question Applicability Filtering — Category-wise Inclusion
+---------------------------------------------------------------
+   File:      backend/app/routers/forms.py:57-68
+   Purpose:   Filter questions by student category at retrieval time.
+   Algorithm: Deserializes applicable_categories_json (JSON string -> list).
+              If list contains "all" or student's category string, the
+              question is included; otherwise excluded.
+
+
+D.4  Question Cloning with Conditional Parent Repair — Two-Pass Algorithm
+---------------------------------------------------------------
+   File:      backend/app/routers/admin.py:163-211
+   Purpose:   When creating a new semester with clone_questions=True, copies
+              all questions from the previous semester while preserving
+              conditional parent-child relationships.
+   Algorithm:
+     Pass 1: Clone questions with conditional_parent_question_id=None,
+             build old_to_new_map dict (old_question_id -> new_question_id)
+     Pass 2: Iterate cloned pairs, look up old parent ID in map,
+             assign new parent ID to conditional_parent_question_id
+             and copy conditional_value
+
+
+D.5  Question History Versioning — Snapshot-Before-Write
+---------------------------------------------------------------
+   File:      backend/app/routers/forms.py:170-182
+   Purpose:   Immutable audit trail ensuring past semester answers remain
+              interpretable after question edits.
+   Algorithm: Before any question update, the entire current state
+              (question_text, field_type, options_json,
+              applicable_categories_json, required) is serialized into a
+              QuestionHistory row with admin_id, timestamp, and change_note.
+              Only then is the question modified.
+
+
+D.6  Email Retry with Exponential Backoff
+---------------------------------------------------------------
+   File:      backend/app/utils/email.py:142-173
+   Purpose:   Reliable email delivery with automatic retries.
+   Algorithm: Retries up to EMAIL_MAX_RETRIES (default 3) with
+              EMAIL_RETRY_DELAY_SECONDS (default 2) base.
+              sleep_time = retry_delay * (2 ** attempt)
+              Falls back to PDF receipt generation via ReportLab if all
+              retries fail.
+
+
+D.7  Email Rate Limiting — Sliding Window with Periodic Cleanup
+---------------------------------------------------------------
+   File:      backend/app/utils/email.py:17-46
+   Purpose:   Prevent email flooding (max 5 verification emails per hour
+              per address).
+   Algorithm: On each send request:
+              1. DELETE entries older than 1 hour for this email
+              2. SELECT COUNT of entries within last hour
+              3. If count >= 5, reject
+              4. Else, INSERT new timestamp entry
+
+
+D.8  File Upload Validation — Magic Byte Signature Verification
+---------------------------------------------------------------
+   File:      backend/app/routers/students.py:406-444
+   Purpose:   Multi-layer security for PWD card document uploads.
+   Algorithm: Reads first 2048 bytes, checks against known signatures:
+              - PDF:   b"%PDF-"
+              - JPEG:  b"\xff\xd8\xff"
+              - PNG:   b"\x89PNG\r\n\x1a\n"
+              Then validates:
+              - File extension (.pdf, .jpg, .jpeg, .png)
+              - MIME type (application/pdf, image/jpeg, image/png)
+              - File size (max 10MB via file.tell())
+
+
+D.9  Dashboard Analytics Aggregation — Map-Reduce Pattern
+---------------------------------------------------------------
+   File:      backend/app/routers/reports.py:128-194
+   Purpose:   Aggregated statistics for Chart.js dashboard graphs.
+   Algorithm: Iterates filtered submissions, builds frequency maps:
+              - Category distribution (merges Continuing+Returnee->"Returning")
+              - Program counts
+              - Learning modality counts (shortens labels by splitting on " (")
+              - Internet reliability counts
+
+
+D.10 CHED Report Generation — Grid-Accumulation Pattern
+---------------------------------------------------------------
+   File:      backend/app/routers/reports.py:199-412
+   Purpose:   5 pre-built CHED compliance reports.
+   Algorithm:
+     Report 1: Pre-allocates 2D grid {program: {year: count}} with fixed
+               headers (BSED, BSBA HRM, etc. x 1st-4th Year), increments
+               cells, computes row totals.
+     Report 2: Pre-defines 9 disability types, matches answers (exact string
+               or JSON array membership), accumulates, appends total row.
+     Report 3: Pre-defines 8 IP groups, matches indigenous_peoples_group
+               answers, separates "Non-IP Students" and unspecified.
+     Report 4: Counts smartphone/basic-phone/laptop/tablet/no-internet/
+               weekly-load-tier across submissions, computes percentages.
+     Report 5: Counts solo_parent and child_of_solo_parent flags,
+               computes percentages of total.
+
+
+D.11 Password Hashing — Bcrypt with Random Salt
+---------------------------------------------------------------
+   File:      backend/app/utils/security.py:20-24
+   Purpose:   Secure password storage.
+   Algorithm: bcrypt.gensalt() generates random 16-byte salt (embedded in
+              resulting 60-char $2b$ hash). hashpw applies Blowfish-based
+              key derivation (~2-10ms per call for work factor 12).
+
+
+D.12 JWT Token — HS256 with Expiry Claim
+---------------------------------------------------------------
+   File:      backend/app/utils/security.py:26-43
+   Purpose:   Stateless authentication tokens.
+   Algorithm: HMAC-SHA256 symmetric signing using SECRET_KEY.
+              Payload: sub (email), role, exp (expiration).
+              Default expiry: 1440 minutes (24 hours).
+
+
+D.13 SEG Distribution Merge — Hardcoded Reclassification
+---------------------------------------------------------------
+   File:      backend/app/routers/reports.py:154
+   Purpose:   CHED reporting consolidates Returnee and Continuing into
+              "Returning" bucket.
+   Algorithm: category_map = {"New": "New", "Transferee": "Transferee",
+                              "Returnee": "Returning", "Continuing": "Returning"}
+
+
+D.14 Auto-Backup with 30-Day Retention — Time-Based Pruning
+---------------------------------------------------------------
+   File:      backend/app/main.py:53-94
+   Purpose:   Automated daily SQLite backups with retention policy.
+   Algorithm: Background thread sleeps 30s on startup, then loops every
+              86400s (24h). Copies SQLite file to backups/ with timestamp.
+              On each run, iterates backup directory, deletes files where
+              os.path.getmtime() is older than 30 days from UTC now.
+
+
+D.15 Schema Migration Detection — Inspect-and-Add
+---------------------------------------------------------------
+   File:      backend/app/main.py:105-141
+   Purpose:   Automatically add missing columns to existing databases.
+   Algorithm: Uses SQLAlchemy inspect(engine) -> get_columns() to list
+              existing columns per table. Checks for missing columns
+              (is_archived, SEG flags, receipt_pdf_path). Executes raw
+              ALTER TABLE ADD COLUMN SQL for each missing column.
+              Non-failing — catches and logs exceptions.
+
+
+D.16 Reuse-Preview Diff — Key-by-Key Comparison
+---------------------------------------------------------------
+   File:      backend/app/routers/students.py:604-632
+   Purpose:   Diff view for "Reuse Past Entry" flow showing what changed
+              between old submission and current draft.
+   Algorithm: Iterates past submission answers, matches question ID
+              against current draft data (parsed from draft_data_json).
+              Computes changed = (old_answer != new_answer).
+              Attempts json.loads() on answer values for proper
+              array/dict comparison. Counts changed_count.
+
+
+E. TESTING FRAMEWORK
+================================================================
+
+   Technology              | Purpose                                    | Location
+  -------------------------+--------------------------------------------+---------------------------
+   Pytest                  | Test runner with module-scoped fixtures    | backend/test_main.py:1
+  -------------------------+--------------------------------------------+---------------------------
+   FastAPI TestClient      | HTTP test client for integration tests     | backend/test_main.py:2,10
+  -------------------------+--------------------------------------------+---------------------------
+   SQLAlchemy              | Test database isolation (drop/create all)   | backend/test_main.py:15
+   drop_all/create_all     |                                             |
+
+
+F. DEPLOYMENT INFRASTRUCTURE
+================================================================
+
+   Technology              | Purpose                                    | Documented In
+  -------------------------+--------------------------------------------+---------------------------
+   Uvicorn                 | ASGI development server (hot-reload)       | backend/run.py
+  -------------------------+--------------------------------------------+---------------------------
+   Gunicorn + Uvicorn      | Production ASGI worker manager             | README.md systemd config
+   Workers                 |                                             |
+  -------------------------+--------------------------------------------+---------------------------
+   Nginx                   | Reverse proxy, static file serving,        | README.md
+                           | HTTPS termination                          |
+  -------------------------+--------------------------------------------+---------------------------
+   Certbot (Let's Encrypt) | Automated SSL/TLS certificate issuance     | README.md
+  -------------------------+--------------------------------------------+---------------------------
+   systemd                 | Linux service management (auto-restart,     | README.md
+                           | environment file loading)                  |
+  -------------------------+--------------------------------------------+---------------------------
+   pg_dump (cron)          | PostgreSQL backup strategy                 | README.md (crontab)
+
+
+G. SEED DATA ALGORITHMS
+================================================================
+
+   Algorithm               | Purpose                                    | File
+  -------------------------+--------------------------------------------+---------------------------
+   First-run detection     | Check if DB has users/admin; seed only     | seed_questions.py:29-93
+                           | when empty                                 |
+  -------------------------+--------------------------------------------+---------------------------
+   CSV-to-DB mapping       | 43 OSWD questions mapped from              | seed_questions.py:98-950
+                           | oswd_field_inventory-2.csv with category,  |
+                           | field_type, options, conditional rules,    |
+                           | and applicable_categories                  |
+  -------------------------+--------------------------------------------+---------------------------
+   Shortcut helpers        | ALL=["all"], NTR=["New","Transferee",      | seed_questions.py:99-100
+                           | "Returnee"] for concise question seeding   |
+  -------------------------+--------------------------------------------+---------------------------
+   Shorthand syntax        | Question field_types normalized: "select"  | seed_questions.py
+                           | for simple dropdown, "multi_select" for    | (throughout)
+                           | JSON-array checkboxes, "radio" for single  |
+                           | choice, "checkbox" for multiple choices,   |
+                           | "table" for sports/arts participation,     |
+                           | "file" for PWD card upload                 |
+
+================================================================
+END OF DOCUMENT
+================================================================

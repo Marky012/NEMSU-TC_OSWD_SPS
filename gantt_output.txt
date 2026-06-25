@@ -1,0 +1,201 @@
+OSWD Student Profiling System
+Production-Grade Project Gantt Chart — Final Version
+June 10 – July 13, 2026  ·  3 Developers  ·  Mon–Sat  ·  6–8 hrs/day  ·  Data Privacy Act Compliant
+Gantt Chart
+Task / Phase
+J10
+J15
+J22
+J29
+Jl6
+Jl13
+Week 1 · Foundation, Risk & Legal Compliance  (Jun 10–13)
+  · Scope sign-off + explicit out-of-scope list
+  · Draft Data Privacy Act compliance notice
+  · Contingency & Rollback Plan document
+  · Staging environment setup
+  · ERD v2 (audit logs, pwd_tasks, email_attempts, versioning)
+  · Data retention policy + audit log schema
+  · Version control + branch protection rules
+▸ Scope & contingency plan signed
+◆
+Week 2 · Security Layer — No Feature Code Yet  (Jun 15–20)
+  · HTTPS enforcement + rate limiting (login/email/API)
+  · File upload security (MIME, ClamAV, webroot, rename)
+  · CSRF tokens on all state-changing forms
+  · Password policy + parameterized queries (SQLi prevention)
+  · XSS sanitization on all outputs
+  · Role-Based Access Control (3 roles)
+▸ Security layer complete — pentest-ready
+◆
+Week 3 · Core Backend, Production-Ready  (Jun 22–27)
+  · EAV schema + academic term management
+  · Question versioning (snapshot in submissions.question_snapshot_json)
+  · Conditional logic engine (BE validation + FE)
+  · Dynamic form API (category filtering)
+  · Draft save + auto-save every 30 seconds
+  · Reuse past entry API (returns previous submission data)
+  · Unit tests >70% coverage
+▸ Backend + unit tests + question versioning done
+◆
+Week 4 · Student UX Depth  (Jun 29 – Jul 4)
+  · Wizard multi-step form + progress indicator (step X of 5)
+  · Real-time inline validation (errors as user types)
+  · Visual diff for reuse past entry (yellow highlight)
+  · File upload preview + delete capability
+  · Email receipt: queue + 3 retries + PDF fallback
+  · Student dashboard (status + history + download PDF)
+  · Integration tests — student flow
+▸ Student UI + email fallback + integration tests done
+◆
+Week 5 · Admin Panel & Staging Deployment  (Jul 6–8)
+  · Admin dashboard + role-based views
+  · Dynamic question editor (CRUD, reorder, conditional parent)
+  · Semester management (create / clone / activate)
+  · Analytics dashboard + 5 CHED reports (CSV/PDF)
+  · Bulk verification + PWD task panel + audit log viewer
+  · Deploy v1.0 to staging environment (EOD Jul 8)
+▸ Admin panel MVP + staging deployment complete
+◆
+Week 6 · 80-Hour Testing Gauntlet  (Jul 9–11)
+  · Day 1 (Jul 9): Unit & integration tests + fixes
+  · Day 1 (Jul 9): Test question versioning (edit Q → old submissions intact)
+  · Day 2 (Jul 10): Security pentest (SQLi, XSS, file bypass, rate limit)
+  · Day 2 (Jul 10): Verify audit log captures all admin actions
+  · Day 3 (Jul 11): Load test 100 concurrent users (k6/JMeter)
+  · Day 3 (Jul 11): Rollback drill — restore from backup, verify integrity
+  · Day 3 (Jul 11): UAT — OSWD staff + 10 students; fix P0/P1 EOD
+★ Full development & security hardening complete ★
+◆
+★ Testing (80 hrs) + rollback drill + UAT sign-off ★
+◆
+Buffer Day · Emergency Fixes Only  (Jul 12)
+  · Emergency P0/P1 fixes (if any remain from UAT)
+  · Pilot prep: feedback form, sign-off sheet, checklist
+Pilot Day  (Jul 13)
+  · AM: 20–30 real students — live pilot
+  · AM: OSWD staff practice verification + CHED reports
+  · AM: Monitor logs in real-time (Grafana/log tail)
+  · PM: Fix P0/P1 bugs (4-hr window) + document P2/P3
+  · PM: Pilot results to Dr. Nemiño + obtain signed acceptance
+★ PILOT GO-LIVE + Full deployment approved ★
+◆
+Legend:
+Foundation & Risk
+Security Layer
+Core Backend
+Student UX
+Admin Panel
+Testing
+Buffer Day
+Pilot
+Milestones Summary
+Milestone
+Target Date
+Buffer
+Scope & contingency plan signed
+June 13
+0 days
+Security layer complete (pentest-ready)
+June 20
+1 day
+Backend + unit tests + question versioning done
+June 27
+1 day
+Student UI + email fallback + integration tests done
+July 4
+1 day
+Admin panel MVP + staging deployment complete
+July 8
+2 days
+★  Full development & security hardening complete
+July 10
+0 days
+★  Testing (80 hrs) + rollback drill + UAT sign-off
+July 11 (EOD)
+1 day (Jul 12 buffer)
+★  Pilot go-live + deployment approved
+July 13
+N/A
+Workload Distribution
+190 hrs/person is well within the 324-hr OJT allocation — 134 hrs of buffer remaining.
+Week
+Days
+Total Team Hours
+Per Person
+Week 1 (Jun 10–13)
+4
+72 hrs
+24 hrs
+Week 2 (Jun 15–20)
+6
+108 hrs
+36 hrs
+Week 3 (Jun 22–27)
+6
+108 hrs
+36 hrs
+Week 4 (Jun 29 – Jul 4)
+6
+108 hrs
+36 hrs
+Week 5 (Jul 6–8)
+3
+54 hrs
+18 hrs
+Week 6 (Jul 9–11)
+3
+96 hrs
+32 hrs
+Buffer (Jul 12)
+1
+0 hrs (emergency only)
+0 hrs
+Pilot (Jul 13)
+1
+24 hrs
+8 hrs
+TOTAL
+30
+570 hrs
+190 hrs
+Risk Register
+Risk
+Prob.
+Impact
+Mitigation
+Owner
+Email service fails during pilot
+Medium
+High
+Fallback: generate downloadable PDF receipt immediately if SMTP fails after 3 retries (exponential backoff). Log all attempts.
+Dev 1
+Database corruption
+Low
+Critical
+Daily automated pg_dump with 30-day retention stored off-server. Rollback drill performed on July 11.
+Dev 2
+Admin edits question, breaks past submissions
+Medium
+High
+Question versioning: store question snapshot in submissions.question_snapshot_json. Admin editor shows version history.
+Dev 3
+Load >100 concurrent users causes timeout
+Medium
+Medium
+Load test on July 11 with k6. Optimize CHED report queries. Target: <5 sec for 1,000 records.
+Dev 1
+Major changes requested post-pilot
+Medium
+Medium
+Change request form requires written sign-off from Dr. Nemiño. All P2/P3 changes deferred to next semester.
+All
+Non-Negotiable Rules
+1.  Security first — no feature code is written before Week 2 security layer is complete.
+2.  Scope is locked June 13. Explicit out-of-scope: admission system, registrar integration.
+3.  Contingency & rollback plan (backup, 4-hr max downtime, step-by-step rollback) must be signed before coding begins.
+4.  Question versioning is mandatory — every submission stores a snapshot of questions in submissions.question_snapshot_json.
+5.  Email fallback is a development task (Week 4): if SMTP fails after 3 retries, auto-generate downloadable PDF receipt.
+6.  Rollback drill is scheduled July 11 — restore from backup and verify data integrity before pilot.
+7.  UAT completes July 11 EOD. July 12 is a full buffer day for emergency fixes. Only P0/P1 bugs are fixed.
+8.  Post-pilot P2/P3 changes are deferred to Version 2 next semester. Document, don't fix.

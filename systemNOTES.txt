@@ -1,0 +1,11 @@
+-username uniqueness in login, to be used as for welcome name e.g.(Welcome, Juan!) & in profile tab. but also have a settings to hide it for privacy or security concern.
+
+-modal for view student details in Students tab in Admin is too small, to be fixed, i think it is set to width for mobile, it needs to be full screen for desktop view or based on the size of the content or screen admin is using in short it must be responsive as well
+
+-hover over for all icons, buttons, and clickable elements, etc. with proper tooltips 
+
+-in student dashboard in home tab, the buttons in the top part (Profile, Form 1, etc.) are to big, can be adjusted or set as a clickable heading of the form or card it contains. the same goes with the icons, for student dashboard in form tab 1, the icons are to big.
+
+-when students address is not yet available in the field(house number, street, purok, barangay, city, province), let the student have the manual paper profiling after they verified their email
+
+-

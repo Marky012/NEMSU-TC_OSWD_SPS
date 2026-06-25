@@ -1,0 +1,119 @@
+erDiagram
+    %% ──────────────────────────────────────────────────────
+    %% OSWD STUDENT PROFILING SYSTEM — Mermaid ERD v2
+    %% Paste this into: https://mermaid.live/ or any Mermaid renderer
+    %% ──────────────────────────────────────────────────────
+
+    users {
+        int id PK
+        string email UK "NOT NULL"
+        string password_hash "NOT NULL"
+        string role "student | super_admin | verification_officer | analytics_viewer"
+        string category "New | Transferee | Returnee | Continuing"
+        bool is_verified_for_enrollment "default FALSE"
+        datetime created_at
+    }
+
+    semesters {
+        int id PK
+        string label UK "e.g. AY 2026-2027 1st Semester"
+        bool is_active
+        datetime opens_at "timezone-aware"
+        datetime closes_at "timezone-aware"
+    }
+
+    question_categories {
+        int id PK
+        string name UK "e.g. Personal Information"
+        int display_order
+    }
+
+    questions {
+        int id PK
+        int category_id FK
+        int semester_id FK "nullable"
+        int conditional_parent_question_id FK "self-ref, nullable"
+        string system_key "nullable, e.g. program"
+        text question_text
+        string field_type "text|number|radio|checkbox|dropdown|file|multi-select|table|textarea|date|datetime"
+        text options_json "nullable, JSON"
+        string conditional_value "nullable"
+        bool required "default TRUE"
+        bool active "default TRUE"
+        text applicable_categories_json "JSON array"
+        int display_order
+    }
+
+    submissions {
+        int id PK
+        int user_id FK
+        int semester_id FK
+        datetime submitted_at "nullable = draft"
+        text draft_data_json "nullable, JSON"
+        bool is_final "default FALSE"
+        string verification_code UK "nullable, format: OSWD-YYYY-S-NNNNN"
+    }
+
+    answers {
+        int id PK
+        int submission_id FK
+        int question_id FK
+        text answer_text "nullable"
+        string file_path "nullable"
+    }
+
+    pwd_assistance_tasks {
+        int id PK
+        int student_id FK
+        datetime created_at
+        string status "pending | in_progress | completed"
+        text notes "nullable"
+    }
+
+    admin_logs {
+        int id PK
+        int admin_id FK
+        string action "e.g. edit_question"
+        text details "nullable"
+        datetime timestamp
+    }
+
+    questions_history {
+        int id PK
+        int question_id FK
+        int changed_by_admin_id FK
+        text question_text
+        string field_type
+        text options_json "nullable"
+        text applicable_categories_json
+        bool required
+        datetime changed_at
+        text change_note "nullable"
+    }
+
+    email_rate_limits {
+        int id PK
+        string email "indexed"
+        datetime sent_at
+    }
+
+    %% ──── RELATIONSHIPS ────
+
+    users ||--o{ submissions : "has"
+    users ||--o{ pwd_assistance_tasks : "assisted as student"
+    users ||--o{ admin_logs : "audited as admin"
+    users ||--o{ questions_history : "authored changes"
+
+    semesters ||--o{ submissions : "contains"
+    semesters ||--o{ questions : "versioned"
+
+    question_categories ||--o{ questions : "groups"
+
+    questions ||--o{ answers : "receives"
+    questions ||--o{ questions_history : "snapshotted before edits"
+    questions ||--o{ questions : "conditional parent->child"
+
+    submissions ||--o{ answers : "contains"
+
+    answers }o--|| questions : "belongs to"
+    answers }o--|| submissions : "belongs to"

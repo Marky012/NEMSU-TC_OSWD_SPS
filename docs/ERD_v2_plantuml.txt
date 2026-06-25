@@ -1,0 +1,134 @@
+@startuml
+' ──────────────────────────────────────────────────────────────
+' OSWD STUDENT PROFILING SYSTEM — PlantUML ERD v2
+' Paste into: https://www.planttext.com/
+' ──────────────────────────────────────────────────────────────
+
+!define PK <color:blue>*
+!define FK <color:green>+
+
+entity "users" as users {
+  PK int id
+  --
+  string email
+  string password_hash
+  string role
+  string category
+  bool is_verified_for_enrollment
+  datetime created_at
+}
+
+entity "semesters" as semesters {
+  PK int id
+  --
+  string label
+  bool is_active
+  datetime opens_at
+  datetime closes_at
+}
+
+entity "question_categories" as question_categories {
+  PK int id
+  --
+  string name
+  int display_order
+}
+
+entity "questions" as questions {
+  PK int id
+  --
+  FK int category_id
+  FK int semester_id
+  FK int conditional_parent_question_id
+  string system_key
+  text question_text
+  string field_type
+  text options_json
+  string conditional_value
+  bool required
+  bool active
+  text applicable_categories_json
+  int display_order
+}
+
+entity "submissions" as submissions {
+  PK int id
+  --
+  FK int user_id
+  FK int semester_id
+  datetime submitted_at
+  text draft_data_json
+  bool is_final
+  string verification_code
+}
+
+entity "answers" as answers {
+  PK int id
+  --
+  FK int submission_id
+  FK int question_id
+  text answer_text
+  string file_path
+}
+
+entity "pwd_assistance_tasks" as pwd_assistance_tasks {
+  PK int id
+  --
+  FK int student_id
+  datetime created_at
+  string status
+  text notes
+}
+
+entity "admin_logs" as admin_logs {
+  PK int id
+  --
+  FK int admin_id
+  string action
+  text details
+  datetime timestamp
+}
+
+entity "questions_history" as questions_history {
+  PK int id
+  --
+  FK int question_id
+  FK int changed_by_admin_id
+  text question_text
+  string field_type
+  text options_json
+  text applicable_categories_json
+  bool required
+  datetime changed_at
+  text change_note
+}
+
+entity "email_rate_limits" as email_rate_limits {
+  PK int id
+  --
+  string email
+  datetime sent_at
+}
+
+' ──── RELATIONSHIPS ────
+
+users ||--o{ submissions : "has"
+users ||--o{ pwd_assistance_tasks : "assisted as"
+users ||--o{ admin_logs : "audited as"
+users ||--o{ questions_history : "authored"
+
+semesters ||--o{ submissions : "contains"
+semesters ||--o{ questions : "versioned"
+
+question_categories ||--o{ questions : "groups"
+
+questions ||--o{ answers : "receives"
+questions ||--o{ questions_history : "snapshotted"
+questions ||--o{ questions : "conditional parent->child"
+
+submissions ||--o{ answers : "contains"
+
+answers }o--|| questions : "belongs to"
+answers }o--|| submissions : "belongs to"
+
+@enduml
