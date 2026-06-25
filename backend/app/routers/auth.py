@@ -3,6 +3,7 @@ import logging
 import random
 from datetime import timedelta, datetime, timezone
 from typing import Dict, Any
+import threading
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
@@ -73,10 +74,11 @@ def register_student(user_data: schemas.UserRegister, db: Session = Depends(get_
     db.commit()
     db.refresh(new_user)
 
-    try:
-        send_registration_verification_email(user_data.email, code)
-    except Exception as e:
-        logger.warning(f"Failed to send verification email to {user_data.email}: {e}")
+    threading.Thread(
+        target=send_registration_verification_email,
+        args=(user_data.email, code),
+        daemon=True
+    ).start()
 
     return new_user
 
@@ -237,11 +239,11 @@ def resend_verification(data: schemas.ResendVerificationRequest, db: Session = D
     user.email_verification_code_expires_at = expires_at
     db.commit()
 
-    try:
-        send_registration_verification_email(user.email, code)
-    except Exception as e:
-        logger.warning(f"Failed to resend verification email to {user.email}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to send verification email. Please try again later.")
+    threading.Thread(
+        target=send_registration_verification_email,
+        args=(user.email, code),
+        daemon=True
+    ).start()
 
     return {"message": "A new 6-digit verification code has been sent to your email.", "email": user.email}
 
