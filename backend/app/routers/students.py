@@ -26,7 +26,7 @@ def get_active_semester(db: Session) -> models.Semester:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="There is currently no active semester for student profiling."
         )
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if now < active_sem.opens_at or now > active_sem.closes_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
