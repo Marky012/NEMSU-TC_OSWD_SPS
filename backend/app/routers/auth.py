@@ -356,6 +356,36 @@ def get_security_question(
     return {"question": user.security_question, "fallback": False, "message": None}
 
 
+class SetSecurityQuestionRequest(BaseModel):
+    email: EmailStr
+    security_question: str
+    security_answer: str
+
+@router.post("/set-security-question")
+def set_security_question(
+    data: SetSecurityQuestionRequest,
+    db: Session = Depends(get_db),
+):
+    """Sets a security question and answer for an existing account that doesn't have one."""
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No account found with that email.",
+        )
+    if user.security_question:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This account already has a security question set.",
+        )
+
+    user.security_question = data.security_question
+    user.security_answer_hash = security.get_password_hash(data.security_answer.upper())
+    db.commit()
+
+    return {"message": "Security question saved. You can now answer it to recover your password.", "question": user.security_question}
+
+
 @router.post("/verify-security-answer")
 def verify_security_answer(
     data: schemas.SecurityAnswerVerify,

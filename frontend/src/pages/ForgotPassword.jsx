@@ -3,8 +3,23 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Mail, Loader2, CheckCircle2, ArrowLeft, HelpCircle, Eye, EyeOff, Copy, ClipboardCheck } from "lucide-react";
 import apiClient from "@/api/apiClient";
+
+const SECURITY_QUESTIONS = [
+  "What is the name of your pet?",
+  "What is your mother's maiden name?",
+  "What is the name of your elementary school?",
+  "What was the model of your first car?",
+  "What city were you born in?",
+];
 
 export default function ForgotPassword() {
   const [searchParams] = useSearchParams();
@@ -12,6 +27,9 @@ export default function ForgotPassword() {
   const [question, setQuestion] = useState(null);
   const [answer, setAnswer] = useState("");
   const [tempPassword, setTempPassword] = useState("");
+  const [setupMode, setSetupMode] = useState(false);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newAnswer, setNewAnswer] = useState("");
   const [fallbackMessage, setFallbackMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -40,6 +58,28 @@ export default function ForgotPassword() {
     }
   };
 
+  const handleSetup = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!newQuestion) { setError("Please select a security question."); return; }
+    if (!newAnswer.trim()) { setError("Please enter your answer."); return; }
+    setLoading(true);
+    try {
+      const res = await apiClient.post("/auth/set-security-question", {
+        email, security_question: newQuestion, security_answer: newAnswer,
+      });
+      setQuestion(res.data.question);
+      setAnswer(newAnswer);
+      setSetupMode(false);
+      setFallbackMessage("");
+      setError("");
+    } catch (err) {
+      setError(err.response?.data?.detail || "Failed to save security question.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleVerify = async (e) => {
     e.preventDefault();
     setError("");
@@ -61,7 +101,6 @@ export default function ForgotPassword() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback: select the text
       const el = document.querySelector("#temp-password");
       if (el) { el.select(); }
     }
@@ -84,7 +123,9 @@ export default function ForgotPassword() {
           <p className="text-muted-foreground text-sm mt-1">
             {tempPassword
               ? "Use this temporary password to log in."
-              : "Verify your identity with your security question."}
+              : setupMode
+                ? "Set up a security question for your account."
+                : "Verify your identity with your security question."}
           </p>
         </div>
         <div className="bg-card rounded-xl border shadow-sm p-6">
@@ -94,10 +135,9 @@ export default function ForgotPassword() {
             </div>
           )}
 
-          {fallbackMessage && (
-            <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm flex items-start gap-2">
-              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
-              <span>{fallbackMessage}</span>
+          {fallbackMessage && !setupMode && (
+            <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-700 text-sm">
+              Email sending is not available in this environment. Please set up a security question instead.
             </div>
           )}
 
@@ -165,6 +205,50 @@ export default function ForgotPassword() {
                 )}
               </Button>
             </form>
+          ) : setupMode ? (
+            /* Step 1.5: Set up security question (fallback when none exists) */
+            <form onSubmit={handleSetup} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new-question">Choose a Security Question</Label>
+                <Select value={newQuestion} onValueChange={setNewQuestion}>
+                  <SelectTrigger id="new-question" className="h-12">
+                    <SelectValue placeholder="Select a question" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SECURITY_QUESTIONS.map((q) => (
+                      <SelectItem key={q} value={q}>{q}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-answer">Your Answer</Label>
+                <Input
+                  id="new-answer"
+                  type="text"
+                  autoFocus
+                  placeholder="Type your answer"
+                  value={newAnswer}
+                  onChange={(e) => setNewAnswer(e.target.value)}
+                  className="h-12"
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+                {loading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                ) : (
+                  "Save & Continue"
+                )}
+              </Button>
+              <button
+                type="button"
+                onClick={() => { setSetupMode(false); setFallbackMessage(""); setError(""); }}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer"
+              >
+                Try a different email
+              </button>
+            </form>
           ) : question ? (
             /* Step 2: Show question + answer */
             <form onSubmit={handleVerify} className="space-y-4">
@@ -205,7 +289,24 @@ export default function ForgotPassword() {
                 Not your account? Use a different email
               </button>
             </form>
-          ) : null}
+          ) : (
+            /* Fallback: show setup button */
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center">
+                Your account doesn't have a security question set yet.
+              </p>
+              <Button className="w-full h-12 font-medium" onClick={() => setSetupMode(true)}>
+                Set Up Security Question
+              </Button>
+              <button
+                type="button"
+                onClick={() => { setFallbackMessage(""); setError(""); }}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer"
+              >
+                Try a different email
+              </button>
+            </div>
+          )}
 
           {!tempPassword && (
             <div className="mt-6 text-center">
