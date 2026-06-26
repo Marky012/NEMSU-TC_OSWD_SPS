@@ -12,6 +12,7 @@ export default function ForgotPassword() {
   const [question, setQuestion] = useState(null);
   const [answer, setAnswer] = useState("");
   const [tempPassword, setTempPassword] = useState("");
+  const [fallbackMessage, setFallbackMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -21,13 +22,14 @@ export default function ForgotPassword() {
   const handleLookup = async (e) => {
     e.preventDefault();
     setError("");
+    setFallbackMessage("");
     if (!email.trim()) { setError("Please enter your email."); return; }
     setLoading(true);
     setQuestion(null);
     try {
       const res = await apiClient.post("/auth/security-question", { email });
       if (res.data.fallback) {
-        setError("This account doesn't have a security question set up. Please contact support.");
+        setFallbackMessage(res.data.message || "A password reset link has been sent to your email.");
       } else {
         setQuestion(res.data.question);
       }
@@ -92,6 +94,13 @@ export default function ForgotPassword() {
             </div>
           )}
 
+          {fallbackMessage && (
+            <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm flex items-start gap-2">
+              <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{fallbackMessage}</span>
+            </div>
+          )}
+
           {tempPassword ? (
             /* Step 3: Show temp password */
             <div className="space-y-5">
@@ -128,7 +137,7 @@ export default function ForgotPassword() {
                 Go to Login
               </Button>
             </div>
-          ) : !question ? (
+          ) : !question && !fallbackMessage ? (
             /* Step 1: Enter email */
             <form onSubmit={handleLookup} className="space-y-4">
               <div className="space-y-2">
