@@ -118,14 +118,14 @@ export default function Register() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
+          <Label htmlFor="firstName" className="text-sm font-medium">Full Name</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="firstName"
               type="text"
-              autoComplete="given-name"
-              placeholder="Juan"
+              autoComplete="name"
+              placeholder="Juan Dela Cruz"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               className="pl-10 h-12 bg-white/50 focus:bg-white transition-colors"
