@@ -93,12 +93,17 @@ export default function VerifyEmail() {
     setResending(true);
     setError("");
     try {
-      await apiClient.post("/auth/resend-verification", { email });
-      setDigits(["", "", "", "", "", ""]);
+      const res = await apiClient.post("/auth/resend-verification", { email });
+      const newCode = res.data?.verification_code;
+      if (newCode) {
+        setDigits(newCode.split("").concat(Array(6).fill("")).slice(0, 6));
+        setSuccess(`A new code has been sent! Test mode code: ${newCode}`);
+      } else {
+        setDigits(["", "", "", "", "", ""]);
+        setSuccess("A new code has been sent!");
+      }
       if (inputRefs.current[0]) inputRefs.current[0].focus();
-      setError("");
-      setSuccess("A new code has been sent!");
-      setTimeout(() => setSuccess(""), 4000);
+      setTimeout(() => setSuccess(""), 8000);
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to resend code.");
     } finally {

@@ -229,7 +229,7 @@ def verify_email(data: schemas.EmailVerificationRequest, db: Session = Depends(g
 
     return {"message": "Email verified successfully. You can now log in.", "email": user.email}
 
-@router.post("/resend-verification", response_model=schemas.EmailVerificationResponse)
+@router.post("/resend-verification")
 def resend_verification(data: schemas.ResendVerificationRequest, db: Session = Depends(get_db)):
     """Resends a new 6-digit verification code to the user's email."""
     user = db.query(models.User).filter(models.User.email == data.email).first()
@@ -241,7 +241,7 @@ def resend_verification(data: schemas.ResendVerificationRequest, db: Session = D
 
     code = generate_verification_code()
     code_hash = hash_verification_code(code)
-    expires_at = datetime.utcnow() + timedelta(minutes=15)
+    expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
 
     user.email_verification_code_hash = code_hash
     user.email_verification_code_expires_at = expires_at
@@ -253,7 +253,11 @@ def resend_verification(data: schemas.ResendVerificationRequest, db: Session = D
         daemon=True
     ).start()
 
-    return {"message": "A new 6-digit verification code has been sent to your email.", "email": user.email}
+    return {
+        "message": "A new 6-digit verification code has been sent to your email.",
+        "email": user.email,
+        "verification_code": code if not settings.SMTP_HOST else None,
+    }
 
 @router.post("/forgot-password", response_model=schemas.ForgotPasswordResponse)
 def forgot_password(
