@@ -8,4 +8,6 @@
 
 -when students address is not yet available in the field(house number, street, purok, barangay, city, province), let the student have the manual paper profiling after they verified their email
 
--
+-skeleton loading in transition form login form to register form, is not accurate to the form, is shows many cards instead of just one for register form
+
+-save draft bug, and submission failed

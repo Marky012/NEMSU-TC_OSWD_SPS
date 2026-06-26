@@ -13,6 +13,7 @@ env/
 *.docx
 *.env
 .env.local
+.env.example
 
 *.db
 
