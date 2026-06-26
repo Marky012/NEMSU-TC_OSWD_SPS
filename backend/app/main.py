@@ -167,6 +167,9 @@ async def lifespan(app: FastAPI):
         if 'email_verification_code_expires_at' not in user_columns:
             _db.execute(text("ALTER TABLE users ADD COLUMN email_verification_code_expires_at TIMESTAMP"))
             print("[Migration] Added email_verification_code_expires_at column to users table.")
+        if 'first_name' not in user_columns:
+            _db.execute(text("ALTER TABLE users ADD COLUMN first_name VARCHAR"))
+            print("[Migration] Added first_name column to users table.")
         if 'verified_by' not in user_columns:
             _db.execute(text("ALTER TABLE users ADD COLUMN verified_by VARCHAR"))
             print("[Migration] Added verified_by column to users table.")

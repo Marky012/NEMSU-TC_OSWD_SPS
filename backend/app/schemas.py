@@ -6,12 +6,14 @@ import json
 # --- AUTH SCHEMAS ---
 class UserRegister(BaseModel):
     email: EmailStr
+    first_name: Optional[str] = None
     password: str = Field(..., min_length=6, description="Password must be at least 6 characters.")
     privacy_consent: bool = Field(False, description="Consent to Data Privacy Act of 2012.")
 
 class UserResponse(BaseModel):
     id: int
     email: str
+    first_name: Optional[str] = None
     role: str
     category: Optional[str] = None
     is_verified_for_enrollment: bool

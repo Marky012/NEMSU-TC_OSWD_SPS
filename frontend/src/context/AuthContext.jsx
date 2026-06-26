@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const payload = { email: userData.email, password: userData.password, privacy_consent: userData.privacy_consent };
+      const payload = { email: userData.email, first_name: userData.first_name, password: userData.password, privacy_consent: userData.privacy_consent };
       const response = await apiClient.post('/auth/register', payload);
       return { success: true, data: response.data, email: response.data?.email };
     } catch (error) {

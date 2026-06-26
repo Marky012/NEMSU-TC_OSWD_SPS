@@ -54,6 +54,7 @@ def register_student(user_data: schemas.UserRegister, db: Session = Depends(get_
 
     new_user = models.User(
         email=user_data.email,
+        first_name=user_data.first_name,
         password_hash=security.get_password_hash(user_data.password),
         role="student",
         category=None,
@@ -81,7 +82,7 @@ def register_student(user_data: schemas.UserRegister, db: Session = Depends(get_
     ).start()
 
     return {
-        "id": new_user.id, "email": new_user.email, "role": new_user.role,
+        "id": new_user.id, "email": new_user.email, "first_name": new_user.first_name, "role": new_user.role,
         "category": new_user.category, "is_verified_for_enrollment": new_user.is_verified_for_enrollment,
         "verified_by": new_user.verified_by, "verified_at": new_user.verified_at,
         "is_email_verified": new_user.is_email_verified,

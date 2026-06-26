@@ -16,11 +16,8 @@
 
 -frontend in README.md
 
--add first name in the register form to be used in welcome name in dashboard instead of using the email address, for exmaple "Welcome, Juan!" instead of "Welcome, [EMAIL_ADDRESS]!"
+-add a text field in teh register form below email, with the text field placeholder "First name", and be used in welcome name in dashboard instead of using the email address, for exmaple "Welcome, Juan!" instead of "Welcome, [EMAIL_ADDRESS]!"
 
 -student cannot submit after saving a draft after a successful save for 
 
--functional reset passowrd feature
-
--verification code displaying in the modal will (when requesting resend code), it will stay in the first verification code instead of generating a new one, this is for testing purposes only of course, but it needs to be fixed
 

@@ -192,7 +192,7 @@ export default function Home() {
     <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
       <motion.div variants={fadeIn}>
         <h1 className="font-heading text-2xl md:text-3xl font-bold text-foreground">
-          Welcome, {profile?.email || user?.email || 'Student'}
+          Welcome, {profile?.first_name || user?.first_name || profile?.email || user?.email || 'Student'}
         </h1>
         <p className="text-muted-foreground mt-1 text-sm">
           NEMSU Tagbina Campus —{' '}

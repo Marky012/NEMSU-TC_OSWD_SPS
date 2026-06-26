@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2, ShieldCheck } from "lucide-react";
+import { UserPlus, Mail, Lock, User, Loader2, ShieldCheck } from "lucide-react";
 import PrivacyConsent from "@/components/PrivacyConsent";
 
 const AuthLayout = ({ icon: Icon, title, subtitle, children, footer }) => (
@@ -28,6 +28,7 @@ const AuthLayout = ({ icon: Icon, title, subtitle, children, footer }) => (
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,7 +48,7 @@ export default function Register() {
       return;
     }
     setLoading(true);
-    const result = await register({ email, password, privacy_consent: true });
+    const result = await register({ email, first_name: firstName || undefined, password, privacy_consent: true });
     if (result.success) {
       const code = result.data?.verification_code;
       const params = new URLSearchParams({ email });
@@ -94,6 +95,22 @@ export default function Register() {
               onChange={(e) => setEmail(e.target.value)}
               className="pl-10 h-12 bg-white/50 focus:bg-white transition-colors"
               required
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Input
+              id="firstName"
+              type="text"
+              autoComplete="given-name"
+              placeholder="Juan"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="pl-10 h-12 bg-white/50 focus:bg-white transition-colors"
             />
           </div>
         </div>
