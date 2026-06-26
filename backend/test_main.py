@@ -114,7 +114,7 @@ def test_dynamic_form_fetching():
     program_q = next((q for q in questions if q["system_key"] == "program"), None)
     assert program_q is not None
     assert program_q["field_type"] == "select"
-    assert "BSED" in program_q["options"]
+    assert "Bachelor of Secondary Education" in program_q["options"]
 
 def test_student_draft_and_final_submit():
     """Simulates dynamic form rendering, draft saving, and final submissions."""
@@ -133,7 +133,7 @@ def test_student_draft_and_final_submit():
     # 3. Save draft progress
     draft_data = {
         "draft_data": {
-            str(q_map["program"]): "BSCS",
+            str(q_map["program"]): "Bachelor of Science in Computer Science",
             str(q_map["religion"]): "Catholic",
             str(q_map["active_contact_number"]): "09123456789"
         }
@@ -141,7 +141,7 @@ def test_student_draft_and_final_submit():
     response = client.post("/api/students/draft", json=draft_data, headers=headers)
     assert response.status_code == 200
     assert response.json()["is_final"] is False
-    assert response.json()["draft_data"][str(q_map["program"])] == "BSCS"
+    assert response.json()["draft_data"][str(q_map["program"])] == "Bachelor of Science in Computer Science"
     
     # Verify active-submission route shows draft
     response = client.get("/api/students/active-submission", headers=headers)
@@ -154,7 +154,7 @@ def test_student_draft_and_final_submit():
     # Fill in Personal Information
     answers_payload.append({"question_id": q_map["surname"], "answer_text": "Santos"})
     answers_payload.append({"question_id": q_map["first_name"], "answer_text": "Maria"})
-    answers_payload.append({"question_id": q_map["program"], "answer_text": "BSCS"})
+    answers_payload.append({"question_id": q_map["program"], "answer_text": "Bachelor of Science in Computer Science"})
     answers_payload.append({"question_id": q_map["year_level"], "answer_text": "1st Year"})
     answers_payload.append({"question_id": q_map["birthdate"], "answer_text": "2005-12-15"})
     answers_payload.append({"question_id": q_map["active_contact_number"], "answer_text": "09171234567"})
@@ -253,7 +253,7 @@ def test_analytics_and_ched_reports():
     assert response.status_code == 200
     stats = response.json()
     assert stats["summary"]["total_submissions"] == 1
-    assert stats["charts"]["programs"]["BSCS"] == 1
+    assert stats["charts"]["programs"]["Bachelor of Science in Computer Science"] == 1
     
     # 3. Verify CHED Report JSON endpoints
     for i in [1, 2, 3, 4, 5]:
@@ -269,7 +269,7 @@ def test_analytics_and_ched_reports():
     assert response.headers["content-type"] == "text/csv; charset=utf-8"
     assert "attachment; filename=" in response.headers["content-disposition"]
     csv_data = response.text
-    assert "BSCS" in csv_data
+    assert "Bachelor of Science in Computer Science" in csv_data
     
     # 5. Verify PDF Export (ReportLab generation)
     response = client.get("/api/reports/ched-report/1/export-pdf", headers=admin_headers)
@@ -285,7 +285,7 @@ def test_analytics_and_ched_reports():
     assert response.headers["content-type"] == "text/csv; charset=utf-8"
     csv_data_flat = response.text
     assert "student1@nemsu.edu.ph" in csv_data_flat
-    assert "BSCS" in csv_data_flat
+    assert "Bachelor of Science in Computer Science" in csv_data_flat
     assert "Diatagon" in csv_data_flat
     
     # 7. Verify new CHED template CSV exports match frontend table formats
@@ -298,11 +298,11 @@ def test_analytics_and_ched_reports():
     response = client.get("/api/reports/ched-program/export-csv", headers=admin_headers)
     assert response.status_code == 200
     assert "Degree Program" in response.text
-    assert "BSCS" in response.text
+    assert "Bachelor of Science in Computer Science" in response.text
     assert "Grand Total" in response.text
     
     response = client.get("/api/reports/ched-sex-year/export-csv", headers=admin_headers)
     assert response.status_code == 200
     assert "Degree Program" in response.text
-    assert "BSCS" in response.text
+    assert "Bachelor of Science in Computer Science" in response.text
     assert "Total" in response.text

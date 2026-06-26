@@ -367,7 +367,7 @@ def seed_database(db: Session):
             "system_key":     "program",
             "question_text":  "Program/Course",
             "field_type":     "select",
-            "options":        ["BSED", "BSBA HRM", "BSA", "BSBA FM", "BEEd", "BSCS", "BAT", "BSHM", "Other"],
+            "options":        ["Bachelor of Secondary Education", "Bachelor of Science in Business Administration major in Human Resource Management", "Bachelor of Science in Accountancy", "Bachelor of Science in Business Administration major in Financial Management", "Bachelor of Elementary Education", "Bachelor of Science in Computer Science", "Bachelor of Arts in Tourism", "Bachelor of Science in Hospitality Management", "Other"],
             "required":       True,
             "applicable_cats": ALL,
             "display_order":  19,

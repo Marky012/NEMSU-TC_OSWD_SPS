@@ -203,7 +203,7 @@ def generate_ched_dataset(db: Session, report_num: int) -> Dict[str, Any]:
     if report_num == 1:
         # REPORT 1: Student counts per program/year level
         # Setup grid structure
-        programs = ["BSED", "BSBA HRM", "BSA", "BSBA FM", "BEEd", "BSCS", "BAT", "BSHM", "Other"]
+        programs = ["Bachelor of Secondary Education", "Bachelor of Science in Business Administration major in Human Resource Management", "Bachelor of Science in Accountancy", "Bachelor of Science in Business Administration major in Financial Management", "Bachelor of Elementary Education", "Bachelor of Science in Computer Science", "Bachelor of Arts in Tourism", "Bachelor of Science in Hospitality Management", "Other"]
         years = ["1st Year", "2nd Year", "3rd Year", "4th Year", "Unspecified"]
         
         grid = {p: {y: 0 for y in years} for p in programs}
