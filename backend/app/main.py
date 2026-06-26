@@ -285,7 +285,7 @@ from sqlalchemy.orm import Session
     summary="Registrar Verification Lookup",
     description=(
         "Public endpoint — no login required. "
-        "Enter a student's OSWD verification code (e.g. OSWD-2026-1-00012) "
+        "Enter a student's OSWD verification code (e.g. OSWD-TG-2026-1-00012) "
         "to confirm whether they have completed OSWD profiling for the current semester."
     ),
 )

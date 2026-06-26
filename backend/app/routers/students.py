@@ -353,7 +353,7 @@ def finalize_submission(
         verification_code = existing_sub.verification_code
     else:
         # Use submission ID as suffix — guaranteed unique, no race condition
-        verification_code = f"OSWD-{year}-{sem_num}-{existing_sub.id:05d}"
+        verification_code = f"OSWD-TG-{year}-{sem_num}-{existing_sub.id:05d}"
 
     # --- 6. Populate draft_data_json with final answers for admin views ---
     existing_sub.draft_data_json = json.dumps(answers_map)

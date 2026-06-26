@@ -27,7 +27,7 @@ export const SECURITY_QUESTIONS = [
 ];
 
 export const generateVerificationCode = (semesterNumber, year) => {
-  const prefix = `OSWD-${year || '2025'}`;
+  const prefix = `OSWD-TG-${year || '2025'}`;
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   return `${prefix}-${semesterNumber || '1'}-${random}`;
 };

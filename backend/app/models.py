@@ -96,7 +96,7 @@ class Submission(Base):
     is_senior_citizen = Column(Boolean, default=False, nullable=False)
     is_magna_carta_poor = Column(Boolean, default=False, nullable=False)
     is_underprivileged = Column(Boolean, default=False, nullable=False)
-    verification_code = Column(String, unique=True, nullable=True, index=True)  # e.g., OSWD-2026-1-1002
+    verification_code = Column(String, unique=True, nullable=True, index=True)  # e.g., OSWD-TG-2026-1-1002
     receipt_pdf_path = Column(String, nullable=True)
 
     # Relationships
