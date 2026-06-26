@@ -29,8 +29,9 @@ export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "";
   const codeParam = searchParams.get("code") || "";
+  const [testCode, setTestCode] = useState(codeParam);
   const [digits, setDigits] = useState(
-    codeParam ? codeParam.split("").concat(Array(6).fill("")).slice(0, 6) : ["", "", "", "", "", ""]
+    testCode ? testCode.split("").concat(Array(6).fill("")).slice(0, 6) : ["", "", "", "", "", ""]
   );
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -96,6 +97,7 @@ export default function VerifyEmail() {
       const res = await apiClient.post("/auth/resend-verification", { email });
       const newCode = res.data?.verification_code;
       if (newCode) {
+        setTestCode(newCode);
         setDigits(newCode.split("").concat(Array(6).fill("")).slice(0, 6));
         setSuccess(`A new code has been sent! Test mode code: ${newCode}`);
       } else {
@@ -140,9 +142,9 @@ export default function VerifyEmail() {
         )
       }
     >
-      {codeParam && (
+      {testCode && (
         <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
-          <strong>Test Mode:</strong> Your verification code is <span className="font-mono font-bold text-lg tracking-widest">{codeParam}</span>
+          <strong>Test Mode:</strong> Your verification code is <span className="font-mono font-bold text-lg tracking-widest">{testCode}</span>
         </div>
       )}
       {error && (
