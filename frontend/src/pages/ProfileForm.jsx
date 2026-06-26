@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedPage, { staggerContainer, fadeIn } from '@/components/AnimatedPage';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { STUDENT_CATEGORIES } from '@/lib/constants';
 import apiClient from '@/api/apiClient';
@@ -232,7 +231,6 @@ const ParticipationField = ({ value, onChange, error, minRows = 0 }) => {
 };
 
 export default function ProfileForm() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -247,8 +245,8 @@ export default function ProfileForm() {
   const [submission, setSubmission] = useState(null);
 
   useEffect(() => {
-    if (user) loadData();
-  }, [user]);
+    loadData();
+  }, []);
 
   const loadData = async () => {
     try {
