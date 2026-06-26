@@ -179,6 +179,12 @@ async def lifespan(app: FastAPI):
         if 'privacy_consent_at' not in user_columns:
             _db.execute(text("ALTER TABLE users ADD COLUMN privacy_consent_at TIMESTAMP"))
             print("[Migration] Added privacy_consent_at column to users table.")
+        if 'password_reset_token_hash' not in user_columns:
+            _db.execute(text("ALTER TABLE users ADD COLUMN password_reset_token_hash VARCHAR"))
+            print("[Migration] Added password_reset_token_hash column to users table.")
+        if 'password_reset_token_expires_at' not in user_columns:
+            _db.execute(text("ALTER TABLE users ADD COLUMN password_reset_token_expires_at TIMESTAMP"))
+            print("[Migration] Added password_reset_token_expires_at column to users table.")
         _db.commit()
     except Exception as e:
         print(f"[Migration] Note: {e}")

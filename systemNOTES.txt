@@ -10,4 +10,17 @@
 
 -skeleton loading in transition form login form to register form, is not accurate to the form, is shows many cards instead of just one for register form
 
--save draft bug, and submission failed
+-refresh button for students tab in admin
+
+-radius for change student category button
+
+-frontend in README.md
+
+-add first name in the register form to be used in welcome name in dashboard instead of using the email address, for exmaple "Welcome, Juan!" instead of "Welcome, [EMAIL_ADDRESS]!"
+
+-student cannot submit after saving a draft after a successful save for 
+
+-functional reset passowrd feature
+
+-verification code displaying in the modal will (when requesting resend code), it will stay in the first verification code instead of generating a new one, this is for testing purposes only of course, but it needs to be fixed
+

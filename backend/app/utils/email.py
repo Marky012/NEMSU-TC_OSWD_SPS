@@ -1,10 +1,11 @@
 import smtplib
 import logging
 import time
+import secrets
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta, timezone
-from typing import List, Dict
+from typing import List, Dict, Optional
 from app.config import settings
 
 # Setup logging
@@ -92,6 +93,88 @@ def send_registration_verification_email(email: str, code: str) -> bool:
                 time.sleep(sleep_time)
             else:
                 logger.error(f"Failed to send verification email to {email} after {max_retries} attempts.")
+                raise e
+
+def generate_password_reset_email_html(email: str, reset_url: str) -> str:
+    """Generates a styled HTML email for password reset."""
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>Reset Your Password - NEMSU OSWD</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f7fafc; margin: 0; padding: 20px;">
+        <div style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <div style="background-color: #1a365d; padding: 20px; text-align: center; color: #ffffff;">
+                <h2 style="margin: 0; font-size: 18px; letter-spacing: 1px;">NORTH EASTERN MINDANAO STATE UNIVERSITY</h2>
+                <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">Office of Student Welfare and Development</p>
+            </div>
+            <div style="padding: 24px; text-align: center;">
+                <h3 style="color: #2d3748; margin-top: 0;">Reset Your Password</h3>
+                <p style="color: #4a5568; line-height: 1.5;">We received a request to reset the password for your OSWD Student Profiling account.</p>
+                <a href="{reset_url}" style="display: inline-block; background-color: #1a365d; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-size: 16px; font-weight: bold; margin: 20px 0;">Reset Password</a>
+                <p style="color: #718096; font-size: 13px; line-height: 1.5;">This link will expire in <strong>1 hour</strong>. If you did not request a password reset, please ignore this email.</p>
+                <p style="color: #718096; font-size: 12px; line-height: 1.5;">Or copy and paste this URL into your browser:<br><span style="color: #2b6cb0;">{reset_url}</span></p>
+                <div style="border-top: 1px solid #edf2f7; padding-top: 15px; margin-top: 20px; font-size: 12px; color: #a0aec0;">
+                    <p style="margin: 0;">This is an automated message from NEMSU OSWD. Do not reply to this email.</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def generate_password_reset_token() -> str:
+    """Generate a secure random token for password reset."""
+    return secrets.token_urlsafe(48)
+
+def send_password_reset_email(email: str, reset_url: str) -> bool:
+    """
+    Sends password reset email with a magic link.
+    Falls back to console mock logging when SMTP_HOST is empty.
+    """
+    if not check_email_rate_limit(email):
+        logger.warning(f"Password reset blocked: Rate limit exceeded for {email}")
+        raise ValueError("Rate limit exceeded. Please try again later.")
+
+    html_content = generate_password_reset_email_html(email, reset_url)
+
+    if not settings.SMTP_HOST:
+        logger.info(f"=== [MOCK EMAIL] Password Reset ===")
+        logger.info(f"To: {email}")
+        logger.info(f"Subject: Reset Your Password - NEMSU OSWD")
+        logger.info(f"Reset URL: {reset_url}")
+        logger.info(f"=== [END OF MOCK EMAIL] ===")
+        return True
+
+    max_retries = settings.EMAIL_MAX_RETRIES
+    retry_delay = settings.EMAIL_RETRY_DELAY_SECONDS
+
+    for attempt in range(max_retries):
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "Reset Your Password - NEMSU OSWD Student Profiling"
+            msg["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL}>"
+            msg["To"] = email
+            msg.attach(MIMEText(html_content, "html"))
+
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+                if settings.SMTP_USERNAME and settings.SMTP_PASSWORD:
+                    server.starttls()
+                    server.login(settings.SMTP_USERNAME, settings.SMTP_PASSWORD)
+                server.sendmail(settings.SMTP_FROM_EMAIL, [email], msg.as_string())
+
+            logger.info(f"Password reset email sent to {email}")
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to send password reset email to {email} (attempt {attempt + 1}/{max_retries}): {str(e)}")
+            if attempt < max_retries - 1:
+                sleep_time = retry_delay * (2 ** attempt)
+                logger.info(f"Retrying in {sleep_time} seconds...")
+                time.sleep(sleep_time)
+            else:
+                logger.error(f"Failed to send password reset email to {email} after {max_retries} attempts.")
                 raise e
 
 def check_email_rate_limit(email: str) -> bool:

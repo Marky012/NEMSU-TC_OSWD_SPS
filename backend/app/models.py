@@ -19,6 +19,8 @@ class User(Base):
     email_verification_code_expires_at = Column(DateTime, nullable=True)
     privacy_consent = Column(Boolean, default=False, nullable=False)
     privacy_consent_at = Column(DateTime, nullable=True)
+    password_reset_token_hash = Column(String, nullable=True)
+    password_reset_token_expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     
     # Relationships

@@ -41,6 +41,19 @@ class EmailVerificationResponse(BaseModel):
     message: str
     email: str
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str = Field(..., min_length=6, description="Password must be at least 6 characters.")
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
 

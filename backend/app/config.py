@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     CSRF_ENABLED: bool = True
     CSRF_SECRET_KEY: str = ""
     
+    FRONTEND_URL: str = "http://localhost:5173"
+
     EMAIL_MAX_RETRIES: int = 3
     EMAIL_RETRY_DELAY_SECONDS: int = 2
 
