@@ -165,7 +165,7 @@ export default function ForgotPassword() {
                 )}
               </Button>
             </form>
-          ) : (
+          ) : question ? (
             /* Step 2: Show question + answer */
             <form onSubmit={handleVerify} className="space-y-4">
               <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
@@ -205,7 +205,7 @@ export default function ForgotPassword() {
                 Not your account? Use a different email
               </button>
             </form>
-          )}
+          ) : null}
 
           {!tempPassword && (
             <div className="mt-6 text-center">
