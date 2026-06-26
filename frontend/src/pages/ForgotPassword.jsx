@@ -25,8 +25,12 @@ export default function ForgotPassword() {
     setLoading(true);
     try {
       const res = await apiClient.post("/auth/security-question", { email });
-      setQuestion(res.data.question);
-      setStep("question");
+      if (res.data.fallback) {
+        setSuccess(res.data.message || "A password reset link has been sent to your email.");
+      } else {
+        setQuestion(res.data.question);
+        setStep("question");
+      }
     } catch (err) {
       setError(err.response?.data?.detail || "No account found with that email.");
     } finally {

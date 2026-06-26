@@ -323,19 +323,37 @@ def reset_password(
     return {"message": "Password has been reset successfully. You can now log in with your new password."}
 
 
-@router.post("/security-question", response_model=schemas.SecurityQuestionResponse)
+@router.post("/security-question")
 def get_security_question(
     data: schemas.SecurityQuestionRequest,
     db: Session = Depends(get_db),
 ):
-    """Returns the security question for a given email."""
+    """Returns the security question for a given email.
+    Falls back to email-based password reset if no security question is set."""
     user = db.query(models.User).filter(models.User.email == data.email).first()
-    if not user or not user.security_question:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No security question found for this account.",
-        )
-    return {"question": user.security_question}
+    if not user:
+        # Always return same message to avoid email enumeration
+        return {"question": None, "fallback": True, "message": "If an account with that email exists, a password reset link has been sent."}
+
+    if not user.security_question:
+        # User exists but registered before security Q&A feature — send email reset
+        token = generate_password_reset_token()
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+        user.password_reset_token_hash = token_hash
+        user.password_reset_token_expires_at = expires_at
+        db.commit()
+
+        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+        threading.Thread(
+            target=send_password_reset_email,
+            args=(user.email, reset_url),
+            daemon=True
+        ).start()
+
+        return {"question": None, "fallback": True, "message": "A password reset link has been sent to your email."}
+
+    return {"question": user.security_question, "fallback": False, "message": None}
 
 
 @router.post("/verify-security-answer")
