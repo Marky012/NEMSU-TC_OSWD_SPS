@@ -233,6 +233,7 @@ const ParticipationField = ({ value, onChange, error, minRows = 0 }) => {
 export default function ProfileForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [showSubmitDialog, setShowSubmitDialog] = useState(false);
@@ -274,6 +275,7 @@ export default function ProfileForm() {
       console.error('Failed to load data:', e);
     }
     setLoading(false);
+    setDataLoaded(true);
   };
 
   const handleCategorySelect = async (cat) => {
@@ -427,7 +429,7 @@ export default function ProfileForm() {
     setSubmitting(false);
   };
 
-  if (loading) {
+  if (!dataLoaded) {
     return (
       <div className="p-6 space-y-6 max-w-3xl mx-auto">
         <Skeleton className="h-8 w-48" />
