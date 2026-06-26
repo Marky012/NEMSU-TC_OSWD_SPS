@@ -942,6 +942,26 @@ def seed_database(db: Session):
 
     print("\n  Database seeding completed successfully.\n")
 
+    # -----------------------------------------------------------------------
+    # 7. Update existing questions' options to match seed data (for non-empty DB)
+    # -----------------------------------------------------------------------
+    for q_info in questions_to_seed:
+        if q_info["options"] is None:
+            continue
+        existing_q = db.query(models.Question).filter(
+            models.Question.system_key == q_info["system_key"]
+        ).first()
+        if existing_q:
+            seeded_opts = json.dumps(q_info["options"])
+            if existing_q.options_json != seeded_opts:
+                existing_q.options_json = seeded_opts
+                if q_info.get("question_text"):
+                    existing_q.question_text = q_info["question_text"]
+                if q_info.get("required") is not None:
+                    existing_q.required = bool(q_info["required"])
+                print(f"  [Update] '{q_info['system_key']}' options/text updated from seed.")
+    db.commit()
+
 
 if __name__ == "__main__":
     print("\n=== OSWD_SPS Database Seeder ===\n")
