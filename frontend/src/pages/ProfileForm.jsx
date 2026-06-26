@@ -374,6 +374,9 @@ export default function ProfileForm() {
     const errs = {};
     const visible = getVisibleQuestions();
     visible.forEach(q => {
+      if (q.system_key === 'emergency_contact_name' && answers[q.id] && !/[a-zA-Z]/.test(answers[q.id])) {
+        errs[q.id] = 'Must contain at least one letter';
+      }
       if (q.required) {
         const val = answers[q.id];
         if (!val) {

@@ -186,10 +186,16 @@ def set_student_category(
             models.Submission.user_id == current_user.id
         ).first()
         if existing_submission:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Category cannot be changed after you have started or submitted the profiling form."
-            )
+            # Allow change if submission is draft or has been returned by admin
+            if existing_submission.is_final and existing_submission.status != "returned":
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Category cannot be changed once your submission is under review or has been verified."
+                )
+            # Clear existing draft/answers when category changes (different questions may apply)
+            db.query(models.Answer).filter(models.Answer.submission_id == existing_submission.id).delete()
+            existing_submission.draft_data_json = None
+            existing_submission.answers = []
 
     current_user.category = data.category
     db.commit()

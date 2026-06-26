@@ -241,6 +241,7 @@ def finalize_submission(
     visible_ids = resolve_visible_questions(applicable_questions, answers_map)
 
     # --- 1. Validate all required visible fields are answered ---
+    missing_fields = []
     for q in applicable_questions:
         if q.id not in visible_ids:
             continue
@@ -250,21 +251,27 @@ def finalize_submission(
                 # File fields: skip if a file was already uploaded (path stored separately)
                 if q.field_type == "file":
                     continue
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Required field missing: '{q.question_text}'",
-                )
+                missing_fields.append(q.question_text)
+                continue
             # multi_select/checkbox: empty array [] should fail required check
             if q.field_type in ("checkbox", "multi_select"):
                 try:
                     parsed = json.loads(ans_val) if isinstance(ans_val, str) else ans_val
                     if isinstance(parsed, list) and len(parsed) == 0:
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"Required field missing: '{q.question_text}'",
-                        )
+                        missing_fields.append(q.question_text)
                 except (json.JSONDecodeError, TypeError):
                     pass
+
+    if missing_fields:
+        if len(missing_fields) == 1:
+            detail = f"Required field missing: '{missing_fields[0]}'"
+        else:
+            field_list = "', '".join(missing_fields)
+            detail = f"Required fields missing: '{field_list}'"
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail,
+        )
 
     # --- 1b. Validate min_rows for table-type questions ---
     for q in applicable_questions:
@@ -286,7 +293,19 @@ def finalize_submission(
                         detail=f"'{q.question_text}' has an invalid format.",
                     )
 
-    # --- 2. Cross-field validation: emergency_contact_number != active_contact_number ---
+    # --- 2a. Emergency contact name must contain at least one letter ---
+    ec_name_q = next(
+        (q for q in applicable_questions if q.system_key == "emergency_contact_name"), None
+    )
+    if ec_name_q:
+        ec_name_val = (answers_map.get(ec_name_q.id) or "").strip()
+        if ec_name_val and not any(c.isalpha() for c in ec_name_val):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Emergency Contact Name must contain at least one letter.",
+            )
+
+    # --- 2b. Cross-field validation: emergency_contact_number != active_contact_number ---
     active_contact_q = next(
         (q for q in applicable_questions if q.system_key == "active_contact_number"), None
     )
