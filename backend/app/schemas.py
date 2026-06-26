@@ -7,8 +7,15 @@ import json
 class UserRegister(BaseModel):
     email: EmailStr
     first_name: Optional[str] = None
-    password: str = Field(..., min_length=6, description="Password must be at least 6 characters.")
+    password: str = Field(..., description="Password must be at least 6 characters.")
     privacy_consent: bool = Field(False, description="Consent to Data Privacy Act of 2012.")
+
+    @field_validator("password")
+    @classmethod
+    def check_password_length(cls, v):
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters")
+        return v
 
 class UserResponse(BaseModel):
     id: int
@@ -51,7 +58,14 @@ class ForgotPasswordResponse(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    password: str = Field(..., min_length=6, description="Password must be at least 6 characters.")
+    password: str = Field(..., description="Password must be at least 6 characters.")
+
+    @field_validator("password")
+    @classmethod
+    def check_password_length(cls, v):
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters")
+        return v
 
 class ResetPasswordResponse(BaseModel):
     message: str
