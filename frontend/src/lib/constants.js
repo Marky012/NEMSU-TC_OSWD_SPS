@@ -18,6 +18,14 @@ export const FIELD_TYPES = [
   { value: 'table', label: 'Table' },
 ];
 
+export const SECURITY_QUESTIONS = [
+  "What is your favorite pet?",
+  "What is the name of your elementary school?",
+  "What is the middle name of your mother?",
+  "What is the name of your first teacher?",
+  "What is your favorite book?",
+];
+
 export const generateVerificationCode = (semesterNumber, year) => {
   const prefix = `OSWD-${year || '2025'}`;
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');

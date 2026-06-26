@@ -12,14 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Mail, Loader2, CheckCircle2, ArrowLeft, HelpCircle, Eye, EyeOff, Copy, ClipboardCheck } from "lucide-react";
 import apiClient from "@/api/apiClient";
-
-const SECURITY_QUESTIONS = [
-  "What is the name of your pet?",
-  "What is your mother's maiden name?",
-  "What is the name of your elementary school?",
-  "What was the model of your first car?",
-  "What city were you born in?",
-];
+import { SECURITY_QUESTIONS } from "@/lib/constants";
 
 export default function ForgotPassword() {
   const [searchParams] = useSearchParams();

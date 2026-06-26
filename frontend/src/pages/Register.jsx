@@ -7,14 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UserPlus, Mail, Lock, User, Loader2, ShieldCheck, Eye, EyeOff, HelpCircle } from "lucide-react";
 import PrivacyConsent from "@/components/PrivacyConsent";
-
-const SECURITY_QUESTIONS = [
-  "What is your favorite pet?",
-  "What is the name of your elementary school?",
-  "What is the middle name of your mother?",
-  "What is the name of your first teacher?",
-  "What is your favorite book?",
-];
+import { SECURITY_QUESTIONS } from "@/lib/constants";
 
 const AuthLayout = ({ icon: Icon, title, subtitle, children, footer }) => (
   <div className="min-h-screen flex items-center justify-center bg-background p-4">
