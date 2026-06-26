@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, User, Loader2, ShieldCheck } from "lucide-react";
+import { UserPlus, Mail, Lock, User, Loader2, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import PrivacyConsent from "@/components/PrivacyConsent";
 
 const AuthLayout = ({ icon: Icon, title, subtitle, children, footer }) => (
@@ -35,6 +35,8 @@ export default function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,6 +47,10 @@ export default function Register() {
     }
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      return;
+    }
+    if (!email.includes("@")) {
+      setError("Please enter a valid email address.");
       return;
     }
     setLoading(true);
@@ -121,14 +127,22 @@ export default function Register() {
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12 bg-white/50 focus:bg-white transition-colors"
+              className="pl-10 pr-10 h-12 bg-white/50 focus:bg-white transition-colors"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              tabIndex={-1}
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 
@@ -138,14 +152,22 @@ export default function Register() {
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
               id="confirm"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               autoComplete="new-password"
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-12 bg-white/50 focus:bg-white transition-colors"
+              className="pl-10 pr-10 h-12 bg-white/50 focus:bg-white transition-colors"
               required
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              tabIndex={-1}
+            >
+              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 

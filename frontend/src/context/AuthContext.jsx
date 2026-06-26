@@ -1,6 +1,14 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import apiClient from '../api/apiClient';
 
+const extractError = (error) => {
+  const detail = error.response?.data?.detail;
+  if (Array.isArray(detail)) {
+    return detail.map((e) => e.msg).join("; ");
+  }
+  return detail || error.response?.data?.message || "Request failed";
+};
+
 const normalizeCategory = (cat) => {
   if (!cat) return cat;
   return cat.charAt(0).toUpperCase() + cat.slice(1).toLowerCase();
@@ -30,7 +38,7 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
       return { success: true };
     } catch (error) {
-      return { success: false, error: error.response?.data?.detail || error.response?.data?.message || 'Login failed' };
+      return { success: false, error: extractError(error) };
     }
   };
 
@@ -40,7 +48,7 @@ export const AuthProvider = ({ children }) => {
       const response = await apiClient.post('/auth/register', payload);
       return { success: true, data: response.data, email: response.data?.email };
     } catch (error) {
-      return { success: false, error: error.response?.data?.detail || error.response?.data?.message || 'Registration failed' };
+      return { success: false, error: extractError(error) };
     }
   };
 

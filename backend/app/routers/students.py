@@ -348,20 +348,15 @@ def finalize_submission(
             pwd_wants_card = True
 
     # --- 5. Generate verification code ---
-    # Reuse existing code if resubmitting after a return
+    year, sem_num = parse_semester_details(active_sem.label)
     if existing_sub.verification_code:
         verification_code = existing_sub.verification_code
     else:
-        year, sem_num = parse_semester_details(active_sem.label)
-        seq_count = db.query(models.Submission).filter(
-            models.Submission.semester_id == active_sem.id,
-            models.Submission.verification_code.isnot(None),
-        ).count()
-        verification_code = f"OSWD-{year}-{sem_num}-{seq_count + 1:05d}"
+        # Use submission ID as suffix — guaranteed unique, no race condition
+        verification_code = f"OSWD-{year}-{sem_num}-{existing_sub.id:05d}"
 
     # --- 6. Populate draft_data_json with final answers for admin views ---
     existing_sub.draft_data_json = json.dumps(answers_map)
-
     existing_sub.submitted_at = datetime.now(timezone.utc)
     existing_sub.is_final = True
     existing_sub.status = "pending"
