@@ -361,7 +361,7 @@ def verify_security_answer(
     data: schemas.SecurityAnswerVerify,
     db: Session = Depends(get_db),
 ):
-    """Verifies the security answer. If correct, returns a password reset token."""
+    """Verifies the security answer. If correct, generates and returns a temporary password."""
     user = db.query(models.User).filter(models.User.email == data.email).first()
     if not user or not user.security_answer_hash:
         raise HTTPException(
@@ -375,15 +375,11 @@ def verify_security_answer(
             detail="Incorrect answer. Please try again.",
         )
 
-    token = generate_password_reset_token()
-    token_hash = hashlib.sha256(token.encode()).hexdigest()
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
-
-    user.password_reset_token_hash = token_hash
-    user.password_reset_token_expires_at = expires_at
+    temp_password = generate_verification_code()  # 6-digit numeric temp password
+    user.password_hash = security.get_password_hash(temp_password)
     db.commit()
 
-    return {"token": token, "message": "Answer correct. You can now reset your password."}
+    return {"temp_password": temp_password, "message": "Answer correct. Your temporary password is shown below."}
 
 
 @router.post("/privacy-consent")
