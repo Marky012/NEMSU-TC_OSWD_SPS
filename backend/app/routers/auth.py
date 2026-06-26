@@ -63,7 +63,9 @@ def register_student(user_data: schemas.UserRegister, db: Session = Depends(get_
         email_verification_code_hash=code_hash,
         email_verification_code_expires_at=expires_at,
         privacy_consent=True,
-        privacy_consent_at=datetime.now(timezone.utc)
+        privacy_consent_at=datetime.now(timezone.utc),
+        security_question=user_data.security_question,
+        security_answer_hash=security.get_password_hash(user_data.security_answer.upper()) if user_data.security_answer else None,
     )
     # Auto-verify admin users (seeded or created directly)
     if new_user.role == "admin":
@@ -319,6 +321,51 @@ def reset_password(
     db.commit()
 
     return {"message": "Password has been reset successfully. You can now log in with your new password."}
+
+
+@router.post("/security-question", response_model=schemas.SecurityQuestionResponse)
+def get_security_question(
+    data: schemas.SecurityQuestionRequest,
+    db: Session = Depends(get_db),
+):
+    """Returns the security question for a given email."""
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user or not user.security_question:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No security question found for this account.",
+        )
+    return {"question": user.security_question}
+
+
+@router.post("/verify-security-answer")
+def verify_security_answer(
+    data: schemas.SecurityAnswerVerify,
+    db: Session = Depends(get_db),
+):
+    """Verifies the security answer. If correct, returns a password reset token."""
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user or not user.security_answer_hash:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No security question found for this account.",
+        )
+
+    if not security.verify_password(data.answer.upper(), user.security_answer_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect answer. Please try again.",
+        )
+
+    token = generate_password_reset_token()
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+
+    user.password_reset_token_hash = token_hash
+    user.password_reset_token_expires_at = expires_at
+    db.commit()
+
+    return {"token": token, "message": "Answer correct. You can now reset your password."}
 
 
 @router.post("/privacy-consent")

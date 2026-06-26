@@ -4,8 +4,17 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, User, Loader2, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { UserPlus, Mail, Lock, User, Loader2, ShieldCheck, Eye, EyeOff, HelpCircle } from "lucide-react";
 import PrivacyConsent from "@/components/PrivacyConsent";
+
+const SECURITY_QUESTIONS = [
+  "What is your favorite pet?",
+  "What is the name of your elementary school?",
+  "What is the middle name of your mother?",
+  "What is the name of your first teacher?",
+  "What is your favorite book?",
+];
 
 const AuthLayout = ({ icon: Icon, title, subtitle, children, footer }) => (
   <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -37,6 +46,8 @@ export default function Register() {
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [securityQuestion, setSecurityQuestion] = useState("");
+  const [securityAnswer, setSecurityAnswer] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,8 +64,16 @@ export default function Register() {
       setError("Please enter a valid email address.");
       return;
     }
+    if (!securityQuestion) {
+      setError("Please select a security question.");
+      return;
+    }
+    if (!securityAnswer.trim()) {
+      setError("Please enter an answer to your security question.");
+      return;
+    }
     setLoading(true);
-    const result = await register({ email, first_name: firstName || undefined, password, privacy_consent: true });
+    const result = await register({ email, first_name: firstName || undefined, password, privacy_consent: true, security_question: securityQuestion, security_answer: securityAnswer });
     if (result.success) {
       const code = result.data?.verification_code;
       const params = new URLSearchParams({ email });
@@ -168,6 +187,48 @@ export default function Register() {
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-card px-3 text-xs text-muted-foreground flex items-center gap-1.5">
+              <HelpCircle className="w-3.5 h-3.5" />
+              Account Recovery
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Security Question</Label>
+          <Select value={securityQuestion} onValueChange={setSecurityQuestion} required>
+            <SelectTrigger className="h-12 bg-white/50 focus:bg-white">
+              <SelectValue placeholder="-- Select a question --" />
+            </SelectTrigger>
+            <SelectContent>
+              {SECURITY_QUESTIONS.map((q) => (
+                <SelectItem key={q} value={q}>{q}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="securityAnswer" className="text-sm font-medium">Your Answer</Label>
+          <div className="relative">
+            <HelpCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <Input
+              id="securityAnswer"
+              type="text"
+              placeholder="Enter your answer"
+              value={securityAnswer}
+              onChange={(e) => setSecurityAnswer(e.target.value)}
+              className="pl-10 h-12 bg-white/50 focus:bg-white transition-colors"
+              required
+            />
           </div>
         </div>
 

@@ -22,6 +22,8 @@ class User(Base):
     privacy_consent_at = Column(DateTime, nullable=True)
     password_reset_token_hash = Column(String, nullable=True)
     password_reset_token_expires_at = Column(DateTime, nullable=True)
+    security_question = Column(String, nullable=True)
+    security_answer_hash = Column(String, nullable=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     
     # Relationships

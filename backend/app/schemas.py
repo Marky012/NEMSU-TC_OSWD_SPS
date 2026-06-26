@@ -9,6 +9,8 @@ class UserRegister(BaseModel):
     first_name: Optional[str] = None
     password: str = Field(..., description="Password must be at least 6 characters.")
     privacy_consent: bool = Field(False, description="Consent to Data Privacy Act of 2012.")
+    security_question: Optional[str] = None
+    security_answer: Optional[str] = None
 
     @field_validator("password")
     @classmethod
@@ -72,6 +74,16 @@ class ResetPasswordResponse(BaseModel):
 
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
+
+class SecurityQuestionRequest(BaseModel):
+    email: EmailStr
+
+class SecurityQuestionResponse(BaseModel):
+    question: str
+
+class SecurityAnswerVerify(BaseModel):
+    email: EmailStr
+    answer: str
 
 # --- SEMESTER SCHEMAS ---
 class SemesterCreate(BaseModel):
