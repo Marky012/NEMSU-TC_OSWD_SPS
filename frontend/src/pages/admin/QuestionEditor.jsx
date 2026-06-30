@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -342,100 +341,161 @@ export default function QuestionEditor() {
         <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{editQ?.id ? 'Edit' : 'Add'} Question</DialogTitle></DialogHeader>
           {editQ && (
-            <div className="space-y-4">
-              <div>
-                <Label>Question Text</Label>
-                <Textarea value={editQ.question_text} onChange={e => setEditQ(prev => ({ ...prev, question_text: e.target.value }))} />
-              </div>
-              <div>
-                <Label>Field Type</Label>
-                <Select value={editQ.field_type} onValueChange={v => setEditQ(prev => ({ ...prev, field_type: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FIELD_TYPES.map(ft => (
-                      <SelectItem key={ft.value} value={ft.value}>{ft.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {(HAS_OPTIONS.includes(editQ.field_type) || HAS_TABLE_COLUMNS.includes(editQ.field_type)) && (
+            <div className="space-y-5">
+              {/* Basic Settings */}
+              <div className="border border-border rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Basic Settings</h3>
                 <div>
-                  <Label>{HAS_TABLE_COLUMNS.includes(editQ.field_type) ? 'Table Columns' : 'Options'}</Label>
-                  <Textarea
-                    value={editQ.options_json}
-                    onChange={e => setEditQ(prev => ({ ...prev, options_json: e.target.value }))}
-                    placeholder={HAS_TABLE_COLUMNS.includes(editQ.field_type) ? '["Column 1", "Column 2"]' : '["Option 1", "Option 2"]'}
-                    className="font-mono text-xs"
-                  />
+                  <Label>Question Text</Label>
+                  <Textarea value={editQ.question_text} onChange={e => setEditQ(prev => ({ ...prev, question_text: e.target.value }))} />
                 </div>
-              )}
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Conditional Parent Question</Label>
-                  <Select value={editQ.conditional_parent_id || 'none'} onValueChange={v => setEditQ(prev => ({ ...prev, conditional_parent_id: v === 'none' ? '' : v }))}>
-                    <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                  <Label>Field Type</Label>
+                  <Select value={editQ.field_type} onValueChange={v => setEditQ(prev => ({ ...prev, field_type: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {questions.filter(q => q.id !== editQ.id).map(q => (
-                        <SelectItem key={q.id} value={String(q.id)}>{q.question_text?.substring(0, 50)}</SelectItem>
+                      {FIELD_TYPES.map(ft => (
+                        <SelectItem key={ft.value} value={ft.value}>{ft.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Show when parent =</Label>
-                  <Input value={editQ.conditional_value || ''} onChange={e => setEditQ(prev => ({ ...prev, conditional_value: e.target.value }))} />
+                  <Label>Display Order</Label>
+                  <Input type="number" value={editQ.display_order || 0} onChange={e => setEditQ(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))} />
                 </div>
               </div>
-              <div>
-                <Label className="mb-2 block">Applicable Student Categories</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={editQ.applicable_cats?.includes('all')}
-                      onCheckedChange={(checked) => {
-                        setEditQ(prev => ({ ...prev, applicable_cats: checked ? ['all'] : [] }));
-                      }}
+
+              {/* Options */}
+              {(HAS_OPTIONS.includes(editQ.field_type) || HAS_TABLE_COLUMNS.includes(editQ.field_type)) && (
+                <div className="border border-border rounded-lg p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Options</h3>
+                  <div>
+                    <Label>{HAS_TABLE_COLUMNS.includes(editQ.field_type) ? 'Table Columns' : 'Options'}</Label>
+                    <Textarea
+                      value={editQ.options_json}
+                      onChange={e => setEditQ(prev => ({ ...prev, options_json: e.target.value }))}
+                      placeholder={HAS_TABLE_COLUMNS.includes(editQ.field_type) ? '["Column 1", "Column 2"]' : '["Option 1", "Option 2"]'}
+                      className="font-mono text-xs"
                     />
-                    <Label className="font-normal">All Categories</Label>
                   </div>
-                  {!editQ.applicable_cats?.includes('all') && STUDENT_CATEGORIES.map(cat => (
-                    <div key={cat.value} className="flex items-center gap-2">
-                      <Checkbox
-                        checked={editQ.applicable_cats?.includes(cat.value)}
-                        onCheckedChange={(checked) => {
-                          setEditQ(prev => ({
-                            ...prev,
-                            applicable_cats: checked
-                              ? [...(prev.applicable_cats || []), cat.value]
-                              : (prev.applicable_cats || []).filter(c => c !== cat.value)
-                          }));
-                        }}
-                      />
-                      <Label className="font-normal">{cat.label}</Label>
+                  {HAS_TABLE_COLUMNS.includes(editQ.field_type) && (
+                    <div>
+                      <Label>Min Rows (0 = no minimum)</Label>
+                      <Input type="number" min="0" value={editQ.min_rows ?? 0} onChange={e => setEditQ(prev => ({ ...prev, min_rows: parseInt(e.target.value) || 0 }))} />
                     </div>
-                  ))}
-                </div>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <Switch checked={editQ.required} onCheckedChange={v => setEditQ(prev => ({ ...prev, required: v }))} />
-                  <Label>Required</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch checked={editQ.active !== false} onCheckedChange={v => setEditQ(prev => ({ ...prev, active: v }))} />
-                  <Label>Active</Label>
-                </div>
-              </div>
-              {HAS_TABLE_COLUMNS.includes(editQ.field_type) && (
-                <div>
-                  <Label>Min Rows (0 = no minimum)</Label>
-                  <Input type="number" min="0" value={editQ.min_rows ?? 0} onChange={e => setEditQ(prev => ({ ...prev, min_rows: parseInt(e.target.value) || 0 }))} />
+                  )}
                 </div>
               )}
-              <div>
-                <Label>Display Order</Label>
-                <Input type="number" value={editQ.display_order || 0} onChange={e => setEditQ(prev => ({ ...prev, display_order: parseInt(e.target.value) || 0 }))} />
+
+              {/* Visibility */}
+              <div className="border border-border rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Visibility</h3>
+                <div>
+                  <Label className="mb-2 block">Applicable Student Categories</Label>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={editQ.applicable_cats?.includes('all')}
+                        onCheckedChange={(checked) => {
+                          setEditQ(prev => ({ ...prev, applicable_cats: checked ? ['all'] : [] }));
+                        }}
+                      />
+                      <Label className="font-normal">All Categories</Label>
+                    </div>
+                    {!editQ.applicable_cats?.includes('all') && STUDENT_CATEGORIES.map(cat => (
+                      <div key={cat.value} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={editQ.applicable_cats?.includes(cat.value)}
+                          onCheckedChange={(checked) => {
+                            setEditQ(prev => ({
+                              ...prev,
+                              applicable_cats: checked
+                                ? [...(prev.applicable_cats || []), cat.value]
+                                : (prev.applicable_cats || []).filter(c => c !== cat.value)
+                            }));
+                          }}
+                        />
+                        <Label className="font-normal">{cat.label}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Conditional Parent Question</Label>
+                    <Select value={editQ.conditional_parent_id || 'none'} onValueChange={v => setEditQ(prev => ({ ...prev, conditional_parent_id: v === 'none' ? '' : v }))}>
+                      <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {questions.filter(q => q.id !== editQ.id).map(q => (
+                          <SelectItem key={q.id} value={String(q.id)}>{q.question_text?.substring(0, 50)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Show when parent =</Label>
+                    <Input value={editQ.conditional_value || ''} onChange={e => setEditQ(prev => ({ ...prev, conditional_value: e.target.value }))} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="border border-border rounded-lg p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Status</h3>
+                <div className="flex gap-8">
+                  <div>
+                    <Label className="mb-2 block">Required</Label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input
+                          type="radio"
+                          name="required"
+                          className="accent-primary"
+                          checked={editQ.required === true}
+                          onChange={() => setEditQ(prev => ({ ...prev, required: true }))}
+                        />
+                        Yes
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input
+                          type="radio"
+                          name="required"
+                          className="accent-primary"
+                          checked={editQ.required === false}
+                          onChange={() => setEditQ(prev => ({ ...prev, required: false }))}
+                        />
+                        No
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="mb-2 block">Active</Label>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input
+                          type="radio"
+                          name="active"
+                          className="accent-primary"
+                          checked={editQ.active !== false}
+                          onChange={() => setEditQ(prev => ({ ...prev, active: true }))}
+                        />
+                        Yes
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer text-sm">
+                        <input
+                          type="radio"
+                          name="active"
+                          className="accent-primary"
+                          checked={editQ.active === false}
+                          onChange={() => setEditQ(prev => ({ ...prev, active: false }))}
+                        />
+                        No
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
