@@ -15,7 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle } from 'lucide-react';
+import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
@@ -264,6 +264,11 @@ export default function StudentList() {
           <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)} className="rounded-lg">
             <Download className="w-3 h-3 mr-1" /> Export CSV
           </Button>
+          <TooltipBox label="Refresh data">
+            <Button variant="outline" size="sm" onClick={loadData} className="rounded-lg">
+              <RefreshCw className="w-3 h-3 mr-1" /> Refresh
+            </Button>
+          </TooltipBox>
         </div>
       </motion.div>
 
