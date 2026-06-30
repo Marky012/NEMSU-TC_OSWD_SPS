@@ -86,12 +86,12 @@ def seed_database(db: Session):
     print("  [+] Seeded Question Categories.")
 
     # -----------------------------------------------------------------------
-    # Skip if questions already seeded to avoid duplicates
+    # Check if questions already exist (skip creation but still sync options)
     # -----------------------------------------------------------------------
-    if db.query(models.Question).first() is not None:
+    questions_exist = db.query(models.Question).first() is not None
+    if questions_exist:
         count = db.query(models.Question).count()
-        print(f"  [!] Questions already seeded ({count} rows). Skipping question seed.")
-        return
+        print(f"  [!] Questions already seeded ({count} rows). Skipping question creation.")
 
     # -----------------------------------------------------------------------
     # 4. Question Seed Data (aligned 1:1 with oswd_field_inventory-2.csv)
@@ -917,56 +917,57 @@ def seed_database(db: Session):
     # -----------------------------------------------------------------------
     # 5. Insert questions (two-pass: first without conditional links)
     # -----------------------------------------------------------------------
-    temp_id_map: dict[str, int] = {}
+    if not questions_exist:
+        temp_id_map: dict[str, int] = {}
 
-    for q_info in questions_to_seed:
-        db_question = models.Question(
-            category_id=q_info["category_id"],
-            semester_id=active_semester.id,
-            system_key=q_info["system_key"],
-            question_text=q_info["question_text"],
-            field_type=q_info["field_type"],
-            options_json=json.dumps(q_info["options"]) if q_info["options"] is not None else None,
-            conditional_parent_question_id=None,
-            conditional_value=None,
-            required=bool(q_info["required"]),
-            min_rows=q_info.get("min_rows"),
-            active=True,
-            applicable_categories_json=json.dumps(q_info["applicable_cats"]),
-            display_order=q_info["display_order"],
-        )
-        db.add(db_question)
-        db.flush()
-        temp_id_map[q_info["temp_id"]] = db_question.id
+        for q_info in questions_to_seed:
+            db_question = models.Question(
+                category_id=q_info["category_id"],
+                semester_id=active_semester.id,
+                system_key=q_info["system_key"],
+                question_text=q_info["question_text"],
+                field_type=q_info["field_type"],
+                options_json=json.dumps(q_info["options"]) if q_info["options"] is not None else None,
+                conditional_parent_question_id=None,
+                conditional_value=None,
+                required=bool(q_info["required"]),
+                min_rows=q_info.get("min_rows"),
+                active=True,
+                applicable_categories_json=json.dumps(q_info["applicable_cats"]),
+                display_order=q_info["display_order"],
+            )
+            db.add(db_question)
+            db.flush()
+            temp_id_map[q_info["temp_id"]] = db_question.id
 
-    # Second pass: wire up conditional parent → child relationships
-    for q_info in questions_to_seed:
-        parent_key = q_info.get("parent_temp_id")
-        if parent_key:
-            parent_db_id = temp_id_map.get(parent_key)
-            child_db_id  = temp_id_map.get(q_info["temp_id"])
-            if parent_db_id and child_db_id:
-                child_q = db.query(models.Question).filter(models.Question.id == child_db_id).first()
-                if child_q:
-                    child_q.conditional_parent_question_id = parent_db_id
-                    child_q.conditional_value = q_info["conditional_val"]
+        # Second pass: wire up conditional parent → child relationships
+        for q_info in questions_to_seed:
+            parent_key = q_info.get("parent_temp_id")
+            if parent_key:
+                parent_db_id = temp_id_map.get(parent_key)
+                child_db_id  = temp_id_map.get(q_info["temp_id"])
+                if parent_db_id and child_db_id:
+                    child_q = db.query(models.Question).filter(models.Question.id == child_db_id).first()
+                    if child_q:
+                        child_q.conditional_parent_question_id = parent_db_id
+                        child_q.conditional_value = q_info["conditional_val"]
 
-    db.commit()
+        db.commit()
 
-    # -----------------------------------------------------------------------
-    # 6. Sanity Check
-    # -----------------------------------------------------------------------
-    actual_count = db.query(models.Question).count()
-    seeded_now   = len(questions_to_seed)
+        # -----------------------------------------------------------------------
+        # 6. Sanity Check
+        # -----------------------------------------------------------------------
+        actual_count = db.query(models.Question).count()
+        seeded_now   = len(questions_to_seed)
 
-    print(f"\n  [OK] Seeded {seeded_now} form questions.")
-    print(f"     DB total: {actual_count} | Expected ~{seeded_now}")
+        print(f"\n  [OK] Seeded {seeded_now} form questions.")
+        print(f"     DB total: {actual_count} | Expected ~{seeded_now}")
 
-    if actual_count < seeded_now - 5:
-        print(f"  [WARN] Question count ({actual_count}) is below expected range ({seeded_now - 5} – {seeded_now + 5}).")
-        print(f"      Double-check that no CSV fields were accidentally skipped.")
-    else:
-        print(f"  [OK] Sanity check PASSED — count within expected range.")
+        if actual_count < seeded_now - 5:
+            print(f"  [WARN] Question count ({actual_count}) is below expected range ({seeded_now - 5} – {seeded_now + 5}).")
+            print(f"      Double-check that no CSV fields were accidentally skipped.")
+        else:
+            print(f"  [OK] Sanity check PASSED — count within expected range.")
 
     # Verify participation_in_sports_arts has correct options
     sports_q = db.query(models.Question).filter(

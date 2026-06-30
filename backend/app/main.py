@@ -194,6 +194,13 @@ async def lifespan(app: FastAPI):
         if 'security_answer_hash' not in user_columns:
             _db.execute(text("ALTER TABLE users ADD COLUMN security_answer_hash VARCHAR"))
             print("[Migration] Added security_answer_hash column to users table.")
+        # Force-update Program/Course options to full degree names
+        prog_opts = '["Bachelor of Secondary Education", "Bachelor of Science in Business Administration major in Human Resource Management", "Bachelor of Science in Accountancy", "Bachelor of Science in Business Administration major in Financial Management", "Bachelor of Elementary Education", "Bachelor of Science in Computer Science", "Bachelor of Arts in Tourism", "Bachelor of Science in Hospitality Management", "Other"]'
+        result = _db.execute(
+            text("UPDATE questions SET options_json = :opts WHERE system_key = 'program'"),
+            {"opts": prog_opts}
+        )
+        print(f"[Migration] Program/Course options force-updated (rows affected: {result.rowcount}).")
         _db.commit()
     except Exception as e:
         print(f"[Migration] Note: {e}")
