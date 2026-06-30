@@ -34,7 +34,7 @@ def generate_verification_pdf(email: str, category: str, verification_code: str,
     
     # Title
     elements.append(Paragraph("NORTH EASTERN MINDANAO STATE UNIVERSITY", styles['CenterTitle']))
-    elements.append(Paragraph("Office of Student Welfare and Development", styles['CenterSubtitle']))
+    elements.append(Paragraph("Office of the Student Welfare and Development", styles['CenterSubtitle']))
     elements.append(Spacer(1, 12))
     
     # Intro

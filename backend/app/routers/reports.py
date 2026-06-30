@@ -858,7 +858,7 @@ def export_ched_report_pdf(
     
     # Page Header Elements (NEMSU Branding)
     story.append(Paragraph("NORTH EASTERN MINDANAO STATE UNIVERSITY", title_style))
-    story.append(Paragraph("Office of Student Welfare and Development  ·  Student Profiling System", subtitle_style))
+    story.append(Paragraph("Office of the Student Welfare and Development  ·  Student Profiling System", subtitle_style))
     story.append(Paragraph(title.upper(), report_title_style))
     story.append(Spacer(1, 5))
     

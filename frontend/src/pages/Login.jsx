@@ -16,7 +16,7 @@ const PRIVACY_NOTICE_SECTIONS = [
   },
   {
     title: "2. Purpose of Collection",
-    content: "The collected data is used exclusively for: (a) student profiling and needs assessment by the Office of Student Welfare and Development (OSWD); (b) determining eligibility for scholarships, grants, and other student support programs; (c) generating statistical reports for institutional planning and compliance with government agencies such as CHED and DSWD; and (d) enrollment verification through the OSWD verification system."
+    content: "The collected data is used exclusively for: (a) student profiling and needs assessment by the Office of the Student Welfare and Development (OSWD); (b) determining eligibility for scholarships, grants, and other student support programs; (c) generating statistical reports for institutional planning and compliance with government agencies such as CHED and DSWD; and (d) enrollment verification through the OSWD verification system."
   },
   {
     title: "3. Legal Basis",

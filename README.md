@@ -6,7 +6,7 @@
 <div align="center">
 
 <h1>OSWD Student Profiling System</h1>
-<p><strong>Office of Student Welfare and Development</strong><br>North Eastern Mindanao State University — Tagbina Campus</p>
+<p><strong>Office of the Student Welfare and Development</strong><br>North Eastern Mindanao State University — Tagbina Campus</p>
 
 ![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi&logoColor=white)
@@ -307,5 +307,5 @@ This project is licensed under the [MIT License](./LICENSE).
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for the Office of Student Welfare and Development — NEMSU Tagbina Campus</sub>
+  <sub>Built with ❤️ for the Office of the Student Welfare and Development — NEMSU Tagbina Campus</sub>
 </div>

@@ -197,7 +197,7 @@ export default function Home() {
         <p className="text-muted-foreground mt-1 text-sm">
           NEMSU Tagbina Campus —{' '}
           <span className="text-brand-blue font-medium">
-            Office of Student Welfare and Development
+            Office of the Student Welfare and Development
           </span>
         </p>
       </motion.div>

@@ -28,7 +28,7 @@ def generate_registration_verification_email_html(email: str, code: str) -> str:
         <div style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             <div style="background-color: #1a365d; padding: 20px; text-align: center; color: #ffffff;">
                 <h2 style="margin: 0; font-size: 18px; letter-spacing: 1px;">NORTH EASTERN MINDANAO STATE UNIVERSITY</h2>
-                <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">Office of Student Welfare and Development</p>
+                <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">Office of the Student Welfare and Development</p>
             </div>
             <div style="padding: 24px; text-align: center;">
                 <h3 style="color: #2d3748; margin-top: 0;">Verify Your Email Address</h3>
@@ -108,7 +108,7 @@ def generate_password_reset_email_html(email: str, reset_url: str) -> str:
         <div style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             <div style="background-color: #1a365d; padding: 20px; text-align: center; color: #ffffff;">
                 <h2 style="margin: 0; font-size: 18px; letter-spacing: 1px;">NORTH EASTERN MINDANAO STATE UNIVERSITY</h2>
-                <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">Office of Student Welfare and Development</p>
+                <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.9;">Office of the Student Welfare and Development</p>
             </div>
             <div style="padding: 24px; text-align: center;">
                 <h3 style="color: #2d3748; margin-top: 0;">Reset Your Password</h3>
@@ -234,7 +234,7 @@ def generate_verification_email_html(email: str, category: str, verification_cod
         <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
             <div style="background-color: #1a365d; padding: 20px; text-align: center; color: #ffffff;">
                 <h2 style="margin: 0; font-size: 20px; letter-spacing: 1px;">NORTH EASTERN MINDANAO STATE UNIVERSITY</h2>
-                <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Office of Student Welfare and Development</p>
+                <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">Office of the Student Welfare and Development</p>
             </div>
             
             <div style="padding: 24px;">

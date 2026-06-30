@@ -2,7 +2,7 @@
   OSWD STUDENT PROFILING SYSTEM — ENTITY RELATIONSHIP DIAGRAM (ERD v2)
 ================================================================================
   North Eastern Mindanao State University
-  Office of Student Welfare and Development
+  Office of the Student Welfare and Development
 ================================================================================
 
 

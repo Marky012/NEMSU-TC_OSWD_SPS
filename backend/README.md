@@ -1,6 +1,6 @@
 # OSWD Student Profiling System - Backend API
 
-This is the production-ready FastAPI backend for the **Office of Student Welfare and Development (OSWD) Student Profiling System** at North Eastern Mindanao State University.
+This is the production-ready FastAPI backend for the **Office of the Student Welfare and Development (OSWD) Student Profiling System** at North Eastern Mindanao State University.
 
 ## Technical Stack
 - **Framework**: FastAPI (Python 3.13+)
