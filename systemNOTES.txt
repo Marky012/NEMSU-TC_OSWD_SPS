@@ -16,8 +16,7 @@
 
 -frontend in README.md
 
--add a text field in teh register form below email, with the text field placeholder "First name", and be used in welcome name in dashboard instead of using the email address, for exmaple "Welcome, Juan!" instead of "Welcome, [EMAIL_ADDRESS]!"
-
--student cannot submit after saving a draft after a successful save for 
+-rate limit for login after 5 failed attemps must block or user cannot login for 5 minutes
 
 
+-emergency contact name receieves number 

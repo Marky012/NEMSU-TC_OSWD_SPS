@@ -535,6 +535,19 @@ def seed_database(db: Session):
             "display_order":  38,
         },
 
+        # other_skills_hobbies — NTR only, free text after sports/arts
+        {
+            "temp_id":        "other_skills_hobbies",
+            "category_id":    6,
+            "system_key":     "other_skills_hobbies",
+            "question_text":  "Other skills/hobbies/talents related to sports, literary, dance, music, visual arts",
+            "field_type":     "textarea",
+            "options":        None,
+            "required":       False,
+            "applicable_cats": NTR,
+            "display_order":  39,
+        },
+
         # ===================================================================
         # CATEGORY 7: INTERNET & DIGITAL TECHNOLOGY
         # ===================================================================
@@ -544,13 +557,13 @@ def seed_database(db: Session):
             "temp_id":        "primary_mode_of_residence",
             "category_id":    7,
             "system_key":     "primary_mode_of_residence",
-            "question_text":  "Primary Mode of Residence",
+            "question_text":  "What is your primary mode of residence while attending college?",
             "field_type":     "radio",
             "options":        [
                 "Campus Dormitory",
-                "Off-Campus Apartment",
-                "Commuter with family",
-                "Commuter with relatives",
+                "Off-Campus Apartment/Boarding House",
+                "Commuter Student (living with family)",
+                "Commuter Student (living with relatives)",
             ],
             "required":       True,
             "applicable_cats": ALL,
@@ -721,7 +734,7 @@ def seed_database(db: Session):
             "conditional_val": "Smartphone",
         },
 
-        # assignment_incomplete_due_to_internet
+        # assignment_incomplete_due_to_internet — Continuing only (top-level, not conditional)
         {
             "temp_id":        "assignment_incomplete_due_to_internet",
             "category_id":    7,
@@ -730,13 +743,11 @@ def seed_database(db: Session):
             "field_type":     "radio",
             "options":        ["Frequently", "Occasionally", "Rarely", "Never"],
             "required":       True,
-            "applicable_cats": ALL,
+            "applicable_cats": ["Continuing"],
             "display_order":  50,
-            "parent_temp_id":  "cellphone_type",
-            "conditional_val": "Smartphone",
         },
 
-        # campus_wifi_used
+        # campus_wifi_used — Continuing only (top-level, not conditional)
         {
             "temp_id":        "campus_wifi_used",
             "category_id":    7,
@@ -749,13 +760,11 @@ def seed_database(db: Session):
                 "Mobile data instead",
             ],
             "required":       True,
-            "applicable_cats": ALL,
+            "applicable_cats": ["Continuing"],
             "display_order":  51,
-            "parent_temp_id":  "cellphone_type",
-            "conditional_val": "Smartphone",
         },
 
-        # campus_strong_wifi_locations — CHECKBOX
+        # campus_strong_wifi_locations — Continuing only (top-level, not conditional)
         {
             "temp_id":        "campus_strong_wifi_locations",
             "category_id":    7,
@@ -776,10 +785,8 @@ def seed_database(db: Session):
                 "Computer Laboratories",
             ],
             "required":       True,
-            "applicable_cats": ALL,
+            "applicable_cats": ["Continuing"],
             "display_order":  52,
-            "parent_temp_id":  "cellphone_type",
-            "conditional_val": "Smartphone",
         },
 
         # is_smartphone_essential
@@ -851,6 +858,58 @@ def seed_database(db: Session):
             "display_order":  56,
             "parent_temp_id":  "cellphone_type",
             "conditional_val": "Smartphone",
+        },
+
+        # own_computer_laptop — N (Continuing) / K (NTR): Do you have your own computer/laptop?
+        {
+            "temp_id":        "own_computer_laptop",
+            "category_id":    7,
+            "system_key":     "own_computer_laptop",
+            "question_text":  "Do you have your own computer/laptop?",
+            "field_type":     "radio",
+            "options":        ["Yes", "No"],
+            "required":       True,
+            "applicable_cats": ALL,
+            "display_order":  57,
+        },
+
+        # gadget_for_internet_access — O (Continuing) / L (NTR): What gadget do you use in accessing the internet?
+        {
+            "temp_id":        "gadget_for_internet_access",
+            "category_id":    7,
+            "system_key":     "gadget_for_internet_access",
+            "question_text":  "What gadget do you use in accessing the internet?",
+            "field_type":     "multi_select",
+            "options":        ["Smartphone", "Laptop", "Tablet", "Desktop", "No gadget"],
+            "required":       True,
+            "applicable_cats": ALL,
+            "display_order":  58,
+        },
+
+        # comfortable_with_computer — P (Continuing) / M (NTR): Are you comfortable with using a computer?
+        {
+            "temp_id":        "comfortable_with_computer",
+            "category_id":    7,
+            "system_key":     "comfortable_with_computer",
+            "question_text":  "Are you comfortable with using a computer?",
+            "field_type":     "radio",
+            "options":        ["Yes", "No"],
+            "required":       True,
+            "applicable_cats": ALL,
+            "display_order":  59,
+        },
+
+        # other_computer_skills — Q (Continuing) / N (NTR): List other computer related skills
+        {
+            "temp_id":        "other_computer_skills",
+            "category_id":    7,
+            "system_key":     "other_computer_skills",
+            "question_text":  "List other computer/smartphone related skills",
+            "field_type":     "textarea",
+            "options":        None,
+            "required":       False,
+            "applicable_cats": ALL,
+            "display_order":  60,
         },
 
     ]
@@ -946,20 +1005,60 @@ def seed_database(db: Session):
     # 7. Update existing questions' options to match seed data (for non-empty DB)
     # -----------------------------------------------------------------------
     for q_info in questions_to_seed:
-        if q_info["options"] is None:
-            continue
         existing_q = db.query(models.Question).filter(
             models.Question.system_key == q_info["system_key"]
         ).first()
         if existing_q:
-            seeded_opts = json.dumps(q_info["options"])
-            if existing_q.options_json != seeded_opts:
-                existing_q.options_json = seeded_opts
-                if q_info.get("question_text"):
-                    existing_q.question_text = q_info["question_text"]
-                if q_info.get("required") is not None:
-                    existing_q.required = bool(q_info["required"])
-                print(f"  [Update] '{q_info['system_key']}' options/text updated from seed.")
+            updated = False
+            if q_info["options"] is not None:
+                seeded_opts = json.dumps(q_info["options"])
+                if existing_q.options_json != seeded_opts:
+                    existing_q.options_json = seeded_opts
+                    updated = True
+            if q_info.get("question_text") and existing_q.question_text != q_info["question_text"]:
+                existing_q.question_text = q_info["question_text"]
+                updated = True
+            if q_info.get("required") is not None and existing_q.required != bool(q_info["required"]):
+                existing_q.required = bool(q_info["required"])
+                updated = True
+            if q_info.get("applicable_cats") is not None:
+                seeded_cats = json.dumps(q_info["applicable_cats"])
+                if existing_q.applicable_categories_json != seeded_cats:
+                    existing_q.applicable_categories_json = seeded_cats
+                    updated = True
+            if updated:
+                print(f"  [Update] '{q_info['system_key']}' updated from seed.")
+        else:
+            # Insert new question that didn't exist before
+            db_question = models.Question(
+                category_id=q_info["category_id"],
+                semester_id=active_semester.id,
+                system_key=q_info["system_key"],
+                question_text=q_info["question_text"],
+                field_type=q_info["field_type"],
+                options_json=json.dumps(q_info["options"]) if q_info["options"] is not None else None,
+                conditional_parent_question_id=None,
+                conditional_value=None,
+                required=bool(q_info["required"]),
+                min_rows=q_info.get("min_rows"),
+                active=True,
+                applicable_categories_json=json.dumps(q_info["applicable_cats"]),
+                display_order=q_info["display_order"],
+            )
+            # Handle conditional parent-child if specified
+            parent_key = q_info.get("parent_temp_id")
+            if parent_key:
+                parent_q = db.query(models.Question).filter(
+                    models.Question.system_key == next(
+                        (qi["system_key"] for qi in questions_to_seed if qi["temp_id"] == parent_key), None
+                    )
+                ).first()
+                if parent_q:
+                    db_question.conditional_parent_question_id = parent_q.id
+                    db_question.conditional_value = q_info.get("conditional_val")
+            db.add(db_question)
+            db.flush()
+            print(f"  [Insert] '{q_info['system_key']}' created from seed.")
     db.commit()
 
 
