@@ -166,7 +166,7 @@ def read_current_user_profile(current_user: models.User = Depends(get_current_us
     """Retrieves the authenticated user's profile details."""
     return current_user
 
-@router.post("/category")
+@router.post("/category", response_model=schemas.UserResponse)
 def set_student_category(
     data: schemas.UserCategorySelect,
     current_user: models.User = Depends(get_current_user),

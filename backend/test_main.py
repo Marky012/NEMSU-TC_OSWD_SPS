@@ -1,3 +1,8 @@
+import os
+os.environ["SMTP_HOST"] = ""  # Test mode — return verification code in register response
+os.environ["ADMIN_INITIAL_EMAIL"] = "admin@nemsu.edu.ph"  # Consistent test admin email
+os.environ["LOGIN_RATE_LIMIT"] = "100/minute"  # Disable rate limiting in tests
+
 import pytest
 import json
 from fastapi.testclient import TestClient
@@ -30,19 +35,29 @@ def test_health_endpoint():
     assert response.json()["status"] == "online"
 
 def test_auth_and_category_flow():
-    """Verify registration, login, and student category selection."""
+    """Verify registration, email verification, login, and student category selection."""
     # 1. Register a student
     reg_payload = {
         "email": "student1@nemsu.edu.ph",
-        "password": "studentpassword"
+        "password": "studentpassword",
+        "privacy_consent": True
     }
     response = client.post("/api/auth/register", json=reg_payload)
     assert response.status_code == 201
-    assert response.json()["email"] == "student1@nemsu.edu.ph"
-    assert response.json()["role"] == "student"
-    assert response.json()["category"] is None
+    reg_data = response.json()
+    assert reg_data["email"] == "student1@nemsu.edu.ph"
+    assert reg_data["role"] == "student"
+    assert reg_data["category"] is None
+    assert reg_data["is_email_verified"] is False
+    code = reg_data.get("verification_code")
+    assert code is not None, "verification_code must be returned in test mode"
     
-    # 2. Login student
+    # 2. Verify email
+    response = client.post("/api/auth/verify-email", json={"email": "student1@nemsu.edu.ph", "code": code})
+    assert response.status_code == 200
+    assert response.json()["message"] == "Email verified successfully. You can now log in."
+    
+    # 3. Login student (now allowed after email verification)
     login_data = {
         "username": "student1@nemsu.edu.ph",
         "password": "studentpassword"
@@ -53,13 +68,13 @@ def test_auth_and_category_flow():
     assert "access_token" in token_data
     token = token_data["access_token"]
     
-    # 3. Access student profile (authenticated)
+    # 4. Access student profile (authenticated)
     headers = {"Authorization": f"Bearer {token}"}
     response = client.get("/api/auth/profile", headers=headers)
     assert response.status_code == 200
     assert response.json()["email"] == "student1@nemsu.edu.ph"
     
-    # 4. Set category as New
+    # 5. Set category as New
     cat_payload = {"category": "New"}
     response = client.post("/api/auth/category", json=cat_payload, headers=headers)
     assert response.status_code == 200
@@ -184,9 +199,19 @@ def test_student_draft_and_final_submit():
     answers_payload.append({"question_id": q_map["pwd_card_status"], "answer_text": "No, but would like to have one"})
     
     # Fill in Internet Tech
-    answers_payload.append({"question_id": q_map["primary_mode_of_residence"], "answer_text": "Commuter with family"})
+    answers_payload.append({"question_id": q_map["primary_mode_of_residence"], "answer_text": "Commuter Student (living with family)"})
     answers_payload.append({"question_id": q_map["cellphone_type"], "answer_text": "Basic Phone"})  # Shortcut submission
     answers_payload.append({"question_id": q_map["preferred_learning_modality"], "answer_text": "100% On-site"})
+
+    # Fill in required NTR sports/arts (min 1 row)
+    answers_payload.append({"question_id": q_map["participation_in_sports_arts"], "answer_text": json.dumps([
+        {"Event Participated": "Basketball", "Skills Competed (specify)": "Player", "Year": "2022", "Award (if any)": "Champion"}
+    ])})
+
+    # Fill in new computer skills questions
+    answers_payload.append({"question_id": q_map["own_computer_laptop"], "answer_text": "Yes"})
+    answers_payload.append({"question_id": q_map["gadget_for_internet_access"], "answer_text": json.dumps(["Laptop"])})
+    answers_payload.append({"question_id": q_map["comfortable_with_computer"], "answer_text": "Yes"})
 
     # Submit finalized profiling details
     submit_payload = {"answers": answers_payload}
@@ -286,7 +311,7 @@ def test_analytics_and_ched_reports():
     csv_data_flat = response.text
     assert "student1@nemsu.edu.ph" in csv_data_flat
     assert "Bachelor of Science in Computer Science" in csv_data_flat
-    assert "Diatagon" in csv_data_flat
+    assert "DIATAGON" in csv_data_flat
     
     # 7. Verify new CHED template CSV exports match frontend table formats
     response = client.get("/api/reports/ched-consolidated/export-csv", headers=admin_headers)
