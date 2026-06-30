@@ -1,6 +1,7 @@
 import os
 os.environ["SMTP_HOST"] = ""  # Test mode — return verification code in register response
-os.environ["ADMIN_INITIAL_EMAIL"] = "admin@nemsu.edu.ph"  # Consistent test admin email
+os.environ["ADMIN_INITIAL_EMAIL"] = "rcnemino@nemsu.edu.ph"
+os.environ["ADMIN_INITIAL_PASSWORD"] = "09515139366"
 os.environ["LOGIN_RATE_LIMIT"] = "100/minute"  # Disable rate limiting in tests
 
 import pytest
@@ -84,8 +85,8 @@ def test_admin_auth_and_protections():
     """Verify standard admin credentials and endpoint role checks."""
     # 1. Admin login with seeded credentials
     admin_login = {
-        "username": "admin@nemsu.edu.ph",
-        "password": "admin12345"
+        "username": "rcnemino@nemsu.edu.ph",
+        "password": "09515139366"
     }
     response = client.post("/api/auth/login", data=admin_login)
     assert response.status_code == 200
@@ -231,8 +232,8 @@ def test_admin_workflows_and_verification():
     """Verify bulk student verifications and PWD follow-up tasks."""
     # 1. Login admin
     admin_login = {
-        "username": "admin@nemsu.edu.ph",
-        "password": "admin12345"
+        "username": "rcnemino@nemsu.edu.ph",
+        "password": "09515139366"
     }
     admin_token = client.post("/api/auth/login", data=admin_login).json()["access_token"]
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
@@ -267,8 +268,8 @@ def test_analytics_and_ched_reports():
     """Verify metrics calculation, PDF/CSV generation, and general spreadsheet exports."""
     # 1. Login admin
     admin_login = {
-        "username": "admin@nemsu.edu.ph",
-        "password": "admin12345"
+        "username": "rcnemino@nemsu.edu.ph",
+        "password": "09515139366"
     }
     admin_token = client.post("/api/auth/login", data=admin_login).json()["access_token"]
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
