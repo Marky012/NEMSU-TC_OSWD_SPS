@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -41,11 +41,13 @@ const PRIVACY_NOTICE_SECTIONS = [
 
 export default function PrivacyConsent({ checked, onCheckedChange }) {
   const [modalOpen, setModalOpen] = useState(false);
-  const contentRef = useRef(null);
 
   useEffect(() => {
-    if (modalOpen && contentRef.current) {
-      contentRef.current.scrollTop = 0;
+    if (modalOpen) {
+      requestAnimationFrame(() => {
+        const el = document.querySelector('[data-slot="dialog-content"]');
+        if (el) el.scrollTop = 0;
+      });
     }
   }, [modalOpen]);
 
@@ -95,7 +97,7 @@ export default function PrivacyConsent({ checked, onCheckedChange }) {
             </DialogDescription>
           </DialogHeader>
 
-          <div ref={contentRef} className="space-y-4 pr-1">
+          <div className="space-y-4 pr-1">
             {PRIVACY_NOTICE_SECTIONS.map((section, i) => (
               <div key={i}>
                 <h4 className="font-medium text-sm mb-1">{section.title}</h4>
