@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -41,6 +41,13 @@ const PRIVACY_NOTICE_SECTIONS = [
 
 export default function PrivacyConsent({ checked, onCheckedChange }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (modalOpen && contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [modalOpen]);
 
   const handleAgreeAndContinue = () => {
     onCheckedChange(true);
@@ -83,12 +90,12 @@ export default function PrivacyConsent({ checked, onCheckedChange }) {
             </div>
             <DialogDescription>
               This Privacy Notice describes how the Office of the Student Welfare and Development (OSWD) of North Eastern
-              Mindanao State University collects, uses, and protects your personal information in compliance with the
+              Mindanao State University - Tagbina Campus collects, uses, and protects your personal information in compliance with the
               Data Privacy Act of 2012 (Republic Act No. 10173).
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pr-1">
+          <div ref={contentRef} className="space-y-4 pr-1">
             {PRIVACY_NOTICE_SECTIONS.map((section, i) => (
               <div key={i}>
                 <h4 className="font-medium text-sm mb-1">{section.title}</h4>
