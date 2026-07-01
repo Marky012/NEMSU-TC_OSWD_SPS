@@ -44,10 +44,11 @@ export default function PrivacyConsent({ checked, onCheckedChange }) {
 
   useEffect(() => {
     if (modalOpen) {
-      requestAnimationFrame(() => {
-        const el = document.querySelector('[data-slot="dialog-content"]');
-        if (el) el.scrollTop = 0;
-      });
+      const t = setTimeout(() => {
+        const popup = document.querySelector('[data-slot="dialog-content"]');
+        if (popup) popup.scrollTop = 0;
+      }, 350);
+      return () => clearTimeout(t);
     }
   }, [modalOpen]);
 
@@ -85,6 +86,7 @@ export default function PrivacyConsent({ checked, onCheckedChange }) {
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <button autoFocus tabIndex={-1} className="sr-only" aria-hidden="true" />
           <DialogHeader>
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-brand-blue" />
