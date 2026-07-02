@@ -15,7 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw, Trash2 } from 'lucide-react';
+import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw, Trash2, ArrowUpDown } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
@@ -44,11 +44,12 @@ export default function StudentList() {
   const [verifyConfirmSub, setVerifyConfirmSub] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [sortMode, setSortMode] = useState('newest');
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
   useEffect(() => { loadData(); }, []);
-  useEffect(() => { setPage(1); }, [search, filterCat, filterSem, filterVerified]);
+  useEffect(() => { setPage(1); }, [search, filterCat, filterSem, filterVerified, sortMode]);
 
   const loadData = async () => {
     try {
@@ -89,7 +90,13 @@ export default function StudentList() {
     return toUpperDisplay(getAnswerBySystemKey(sub, 'program')) || 'N/A';
   };
 
-  const filtered = submissions.filter(sub => {
+  const sorted = [...submissions].sort((a, b) => {
+    if (sortMode === 'asc') return new Date(a.submitted_at || 0) - new Date(b.submitted_at || 0);
+    if (sortMode === 'desc') return new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0);
+    return (b.id || 0) - (a.id || 0);
+  });
+
+  const filtered = sorted.filter(sub => {
     if (filterSem && sub.semester_id !== Number(filterSem)) return false;
     if (filterCat !== 'all' && sub.student_category !== filterCat) return false;
     if (filterVerified === 'verified' && sub.status !== 'verified') return false;
@@ -344,6 +351,19 @@ export default function StudentList() {
         <div className="relative flex-1 min-w-0">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <div className="w-[140px]">
+          <Select value={sortMode} onValueChange={setSortMode}>
+            <SelectTrigger className="w-full pr-8">
+              <ArrowUpDown className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest</SelectItem>
+              <SelectItem value="desc">DESC</SelectItem>
+              <SelectItem value="asc">ASC</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex-1 min-w-0">
           <Select value={filterSem} onValueChange={v => setFilterSem(v)}>
