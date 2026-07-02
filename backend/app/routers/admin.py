@@ -513,15 +513,20 @@ def reset_pilot_data(
     while preserving questions, categories, semesters, and admin accounts.
     Use this before pilot testing to remove sample/development entries.
     """
-    # Delete answers first (FK to submissions + questions)
-    deleted_answers = db.query(models.Answer).delete()
-    # Then delete submissions (FK to users + semesters)
-    deleted_subs = db.query(models.Submission).delete()
-    # Delete PWD assistance tasks (FK to users)
-    deleted_pwd = db.query(models.PWDAssistanceTask).delete()
-    # Then delete non-admin users
-    deleted_users = db.query(models.User).filter(models.User.role != "admin").delete()
-    db.commit()
+    try:
+        # Delete answers first (FK to submissions + questions)
+        deleted_answers = db.query(models.Answer).delete()
+        # Then delete submissions (FK to users + semesters)
+        deleted_subs = db.query(models.Submission).delete()
+        # Delete PWD assistance tasks (FK to users)
+        deleted_pwd = db.query(models.PWDAssistanceTask).delete()
+        # Drop secret_code column from verification_codes if it exists (not needed)
+        # Then delete non-admin users
+        deleted_users = db.query(models.User).filter(models.User.role != "admin").delete()
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to reset pilot data: {str(e)}")
 
     log_admin_action(db, current_user.id, "reset_pilot_data",
         f"Deleted {deleted_users} student(s), {deleted_subs} submission(s), {deleted_answers} answer(s), {deleted_pwd} PWD task(s).")
