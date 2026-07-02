@@ -15,7 +15,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw } from 'lucide-react';
+import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw, Trash2 } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
@@ -42,6 +42,8 @@ export default function StudentList() {
   const [reviewing, setReviewing] = useState(false);
   const [showReviewConfirm, setShowReviewConfirm] = useState(false);
   const [verifyConfirmSub, setVerifyConfirmSub] = useState(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
@@ -267,6 +269,11 @@ export default function StudentList() {
           <TooltipBox label="Refresh data">
             <Button variant="outline" size="sm" onClick={loadData} className="rounded-lg">
               <RefreshCw className="w-3 h-3 mr-1" /> Refresh
+            </Button>
+          </TooltipBox>
+          <TooltipBox label="Clear all student data for pilot testing">
+            <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10">
+              <Trash2 className="w-3 h-3 mr-1" /> Reset Pilot Data
             </Button>
           </TooltipBox>
         </div>
@@ -548,7 +555,20 @@ export default function StudentList() {
                 <div className="border-t pt-3 space-y-2">
                   {Object.entries(JSON.parse(viewSub.draft_data_json)).map(([qId, val]) => {
                     const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-                    return (
+  const handleResetPilotData = async () => {
+    setResetting(true);
+    try {
+      const res = await apiClient.post('/admin/reset-pilot-data');
+      toast.success(res.data?.detail || 'Pilot data reset complete');
+      setShowResetConfirm(false);
+      loadData();
+    } catch (e) {
+      toast.error('Error resetting pilot data');
+    }
+    setResetting(false);
+  };
+
+  return (
                       <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
                         <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q?.question_text || qId}</span>
                         <span className="text-sm">{getAnswerDisplay(qId, JSON.parse(viewSub.draft_data_json))}</span>
@@ -632,6 +652,18 @@ export default function StudentList() {
         description={verifyConfirmSub ? `Verify ${getStudentName(verifyConfirmSub)} for enrollment?` : ''}
         confirmLabel="Verify"
         loading={verifyOneId === verifyConfirmSub?.id}
+      />
+
+      {/* Confirm reset pilot data */}
+      <ConfirmDialog
+        open={showResetConfirm}
+        onOpenChange={setShowResetConfirm}
+        onConfirm={handleResetPilotData}
+        title="Reset Pilot Data"
+        description="This will permanently delete ALL students, submissions, and answers. Questions, categories, semesters, and admin accounts are preserved. This cannot be undone."
+        confirmLabel="Reset All Data"
+        variant="destructive"
+        loading={resetting}
       />
 
       {/* Confirm return/decline */}
