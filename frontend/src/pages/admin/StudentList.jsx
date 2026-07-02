@@ -91,9 +91,10 @@ export default function StudentList() {
   };
 
   const sorted = [...submissions].sort((a, b) => {
-    if (sortMode === 'asc') return new Date(a.submitted_at || 0) - new Date(b.submitted_at || 0);
-    if (sortMode === 'desc') return new Date(b.submitted_at || 0) - new Date(a.submitted_at || 0);
-    return (b.id || 0) - (a.id || 0);
+    if (sortMode === 'newest') return (b.id || 0) - (a.id || 0);
+    const nameA = (getAnswerBySystemKey(a, 'surname') || '').toLowerCase();
+    const nameB = (getAnswerBySystemKey(b, 'surname') || '').toLowerCase();
+    return sortMode === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
   });
 
   const filtered = sorted.filter(sub => {
