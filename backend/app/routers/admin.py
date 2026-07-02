@@ -518,6 +518,7 @@ def reset_pilot_data(
         deleted_answers = db.execute(sa_text("DELETE FROM answers")).rowcount
         deleted_subs = db.execute(sa_text("DELETE FROM submissions")).rowcount
         deleted_pwd = db.execute(sa_text("DELETE FROM pwd_assistance_tasks")).rowcount
+        deleted_logs = db.execute(sa_text("DELETE FROM admin_logs")).rowcount
         deleted_users = db.execute(sa_text("DELETE FROM users WHERE role != 'admin'")).rowcount
         db.commit()
     except Exception as e:
@@ -525,12 +526,13 @@ def reset_pilot_data(
         raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
 
     log_admin_action(db, current_user.id, "reset_pilot_data",
-        f"Deleted {deleted_users} student(s), {deleted_subs} submission(s), {deleted_answers} answer(s), {deleted_pwd} PWD task(s).")
+        f"Deleted {deleted_users} student(s), {deleted_subs} submission(s), {deleted_answers} answer(s), {deleted_pwd} PWD task(s), {deleted_logs} log(s).")
 
     return {
         "detail": f"Pilot data reset complete. Deleted {deleted_users} student(s), {deleted_subs} submission(s), {deleted_answers} answer(s).",
         "deleted_users": deleted_users,
         "deleted_submissions": deleted_subs,
         "deleted_answers": deleted_answers,
-        "deleted_pwd_tasks": deleted_pwd
+        "deleted_pwd_tasks": deleted_pwd,
+        "deleted_logs": deleted_logs
     }
