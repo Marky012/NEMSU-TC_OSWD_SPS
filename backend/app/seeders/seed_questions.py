@@ -684,7 +684,7 @@ def seed_database(db: Session):
             "field_type":     "multi_select",
             "options":        [
                 "High-speed broadband",
-                "DSL",
+                "Digital Subscriber Line (DSL)",
                 "Satellite",
                 "Piso Wifi",
                 "Subscription",
@@ -1026,6 +1026,11 @@ def seed_database(db: Session):
                 seeded_cats = json.dumps(q_info["applicable_cats"])
                 if existing_q.applicable_categories_json != seeded_cats:
                     existing_q.applicable_categories_json = seeded_cats
+                    updated = True
+            if q_info.get("options") is not None:
+                seeded_opts = json.dumps(q_info["options"])
+                if existing_q.options_json != seeded_opts:
+                    existing_q.options_json = seeded_opts
                     updated = True
             if updated:
                 print(f"  [Update] '{q_info['system_key']}' updated from seed.")
