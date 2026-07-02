@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
 from app.dependencies import RoleChecker, get_current_user
+from app.utils import security
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Module"])
 
@@ -537,3 +538,75 @@ def reset_pilot_data(
         "deleted_pwd_tasks": deleted_pwd,
         "deleted_logs": deleted_logs
     }
+
+# --- ADMIN MANAGEMENT ---
+
+@router.get("/admins", status_code=status.HTTP_200_OK)
+def list_admins(
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """List all admin users."""
+    admins = db.query(models.User).filter(models.User.role == "admin").all()
+    return [schemas.UserResponse.model_validate(a).model_dump() for a in admins]
+
+
+@router.post("/admins", status_code=status.HTTP_201_CREATED)
+def create_admin(
+    data: schemas.AdminCreate,
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """Create a new admin staff account."""
+    existing = db.query(models.User).filter(models.User.email == data.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="A user with this email already exists")
+
+    admin = models.User(
+        email=data.email,
+        first_name=data.first_name,
+        password_hash=security.get_password_hash(data.password),
+        role="admin",
+        is_email_verified=True,
+    )
+    db.add(admin)
+    db.commit()
+    db.refresh(admin)
+
+    log_admin_action(
+        db, current_admin.id,
+        "Create Admin",
+        f"Created admin account for {data.email} ({data.first_name})"
+    )
+
+    return schemas.UserResponse.model_validate(admin).model_dump()
+
+
+@router.delete("/admins/{user_id}", status_code=status.HTTP_200_OK)
+def delete_admin(
+    user_id: int,
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """Delete an admin staff account. Cannot delete yourself or the last admin."""
+    if user_id == current_admin.id:
+        raise HTTPException(status_code=400, detail="You cannot delete your own account")
+
+    admin = db.query(models.User).filter(models.User.id == user_id, models.User.role == "admin").first()
+    if not admin:
+        raise HTTPException(status_code=404, detail="Admin not found")
+
+    admin_count = db.query(models.User).filter(models.User.role == "admin").count()
+    if admin_count <= 1:
+        raise HTTPException(status_code=400, detail="Cannot delete the last admin account")
+
+    db.delete(admin)
+    db.commit()
+
+    log_admin_action(
+        db, current_admin.id,
+        "Delete Admin",
+        f"Deleted admin account for {admin.email} ({admin.first_name})"
+    )
+
+    return {"detail": f"Admin {admin.email} deleted successfully"}

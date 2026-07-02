@@ -5,7 +5,7 @@ import NEMSULogo from './NEMSU LOGO.jpg';
 import { 
   LayoutDashboard, FileText, Settings, Users, BarChart3, 
   LogOut, Menu, Shield, ClipboardCheck,
-  GraduationCap
+  GraduationCap, UserCog
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TooltipBox } from '@/components/ui/tooltip';
@@ -40,6 +40,7 @@ export default function AppLayout() {
     { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { to: '/admin/reports', label: 'CHED Reports', icon: FileText },
     { to: '/admin/logs', label: 'Audit Log', icon: Shield },
+    { to: '/admin/admins', label: 'Manage Admins', icon: UserCog },
   ];
 
   const links = isAdmin ? adminLinks : studentLinks;

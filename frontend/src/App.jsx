@@ -23,6 +23,7 @@ const StudentList = lazy(() => import('@/pages/admin/StudentList'));
 const Analytics = lazy(() => import('@/pages/admin/Analytics'));
 const CHEDReports = lazy(() => import('@/pages/admin/CHEDReports'));
 const AuditLog = lazy(() => import('@/pages/admin/AuditLog'));
+const ManageAdmins = lazy(() => import('@/pages/admin/ManageAdmins'));
 
 function PageLoader() {
   return (
@@ -75,6 +76,7 @@ function AppRoutes() {
           <Route path="/admin/analytics" element={<Suspense fallback={<PageLoader />}><Analytics /></Suspense>} />
           <Route path="/admin/reports" element={<Suspense fallback={<PageLoader />}><CHEDReports /></Suspense>} />
           <Route path="/admin/logs" element={<Suspense fallback={<PageLoader />}><AuditLog /></Suspense>} />
+          <Route path="/admin/admins" element={<Suspense fallback={<PageLoader />}><ManageAdmins /></Suspense>} />
         </Route>
 
         {/* Fallback */}

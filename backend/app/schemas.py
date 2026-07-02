@@ -41,6 +41,18 @@ class TokenResponse(BaseModel):
     token_type: str
     user: UserResponse
 
+class AdminCreate(BaseModel):
+    email: EmailStr
+    first_name: str = Field(..., min_length=1, description="Full name of the admin staff")
+    password: str = Field(..., min_length=6, description="Password must be at least 6 characters")
+
+    @field_validator("password")
+    @classmethod
+    def check_password_length(cls, v):
+        if len(v) < 6:
+            raise ValueError("Password must be at least 6 characters")
+        return v
+
 class UserCategorySelect(BaseModel):
     category: str = Field(..., description="Must be one of: New, Transferee, Returnee, Continuing")
 
