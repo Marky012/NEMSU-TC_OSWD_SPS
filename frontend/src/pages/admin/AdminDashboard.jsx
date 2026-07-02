@@ -14,6 +14,16 @@ const CATEGORY_COLORS = {
   Returning: 'hsl(42, 87%, 52%)',
   Transferee: 'hsl(200, 60%, 45%)',
 };
+const PROGRAM_ABBR = {
+  'Bachelor of Secondary Education': 'BSED',
+  'Bachelor of Science in Business Administration major in Human Resource Management': 'BSBA-HRM',
+  'Bachelor of Science in Agriculture': 'BSA',
+  'Bachelor of Science in Business Administration major in Financial Management': 'BSBA-FM',
+  'Bachelor of Elementary Education': 'BEED',
+  'Bachelor of Science in Computer Science': 'BSCS',
+  'Bachelor of Agriculture Technology': 'BAT',
+  'Bachelor of Science in Hospitality Management': 'BSHM',
+};
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -37,9 +47,11 @@ export default function AdminDashboard() {
           value,
           fill: CATEGORY_COLORS[name] || 'hsl(224, 76%, 48%)',
         }));
-      const programData = Object.entries(data.charts?.programs || {}).map(([name, value]) => ({
-        name: name.length > 15 ? name.substring(0, 15) + '...' : name,
-        value,
+      const programCounts = data.charts?.programs || {};
+      const programData = Object.keys(PROGRAM_ABBR).map(name => ({
+        name: PROGRAM_ABBR[name],
+        fullName: name,
+        value: programCounts[name] || 0,
       }));
       setStats({
         totalSubmissions: data.summary?.total_submissions || 0,
@@ -168,12 +180,12 @@ export default function AdminDashboard() {
           <CardContent>
             {stats?.programData?.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={stats.programData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="hsl(224, 76%, 48%)" radius={[4, 4, 0, 0]} />
+                  <BarChart data={stats.programData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11, angle: -45, textAnchor: 'end' }} height={70} interval={0} />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip labelFormatter={(label) => { const d = stats.programData.find(p => p.name === label); return d?.fullName || label; }} />
+                    <Bar dataKey="value" fill="hsl(224, 76%, 48%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
