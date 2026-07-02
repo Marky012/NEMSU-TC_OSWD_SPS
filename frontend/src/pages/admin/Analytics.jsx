@@ -246,7 +246,7 @@ export default function Analytics() {
   const internetData = getAnswerStats('Internet Reliability');
   const modalityData = getAnswerStats('Preferred Learning Modality');
   const gadgetData = getAnswerStats('Gadgets Owned');
-  const residenceData = getAnswerStats('Primary Mode of Residence');
+  const residenceData = getAnswerStats('primary mode of residence');
   const networkData = getAnswerStats('Satisfied Mobile Network');
   const wifiData = getAnswerStats('campus Wi-Fi');
   const ipGroupData = getIpGroupData();
