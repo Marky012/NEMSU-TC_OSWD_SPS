@@ -257,7 +257,7 @@ def activate_semester(
 @router.get("/submissions", response_model=List[schemas.AdminSubmissionItem])
 def list_all_submissions(
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 10000,
     current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin", "verification_officer", "analytics_viewer"])),
     db: Session = Depends(get_db)
 ):
