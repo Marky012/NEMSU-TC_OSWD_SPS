@@ -501,3 +501,29 @@ def get_admin_logs(
             )
         )
     return response_logs
+
+
+@router.post("/reset-pilot-data")
+def reset_pilot_data(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(RoleChecker(["admin"]))
+):
+    """
+    Clears all student data (non-admin users, submissions, answers)
+    while preserving questions, categories, semesters, and admin accounts.
+    Use this before pilot testing to remove sample/development entries.
+    """
+    # Delete submissions (answers cascade)
+    deleted_subs = db.query(models.Submission).delete()
+    # Delete non-admin users
+    deleted_users = db.query(models.User).filter(models.User.role != "admin").delete()
+    db.commit()
+
+    log_admin_action(db, current_user.id, "reset_pilot_data",
+        f"Deleted {deleted_users} student user(s) and {deleted_subs} submission(s).")
+
+    return {
+        "detail": f"Pilot data reset complete. Deleted {deleted_users} student(s) and {deleted_subs} submission(s).",
+        "deleted_users": deleted_users,
+        "deleted_submissions": deleted_subs
+    }
