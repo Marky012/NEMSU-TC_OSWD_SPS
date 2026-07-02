@@ -249,6 +249,19 @@ export default function StudentList() {
     );
   }
 
+  const handleResetPilotData = async () => {
+    setResetting(true);
+    try {
+      const res = await apiClient.post('/admin/reset-pilot-data');
+      toast.success(res.data?.detail || 'Pilot data reset complete');
+      setShowResetConfirm(false);
+      loadData();
+    } catch (e) {
+      toast.error('Error resetting pilot data');
+    }
+    setResetting(false);
+  };
+
   return (
     <AnimatedPage>
     <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="space-y-6">
@@ -555,18 +568,6 @@ export default function StudentList() {
                 <div className="border-t pt-3 space-y-2">
                   {Object.entries(JSON.parse(viewSub.draft_data_json)).map(([qId, val]) => {
                     const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-  const handleResetPilotData = async () => {
-    setResetting(true);
-    try {
-      const res = await apiClient.post('/admin/reset-pilot-data');
-      toast.success(res.data?.detail || 'Pilot data reset complete');
-      setShowResetConfirm(false);
-      loadData();
-    } catch (e) {
-      toast.error('Error resetting pilot data');
-    }
-    setResetting(false);
-  };
 
   return (
                       <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
