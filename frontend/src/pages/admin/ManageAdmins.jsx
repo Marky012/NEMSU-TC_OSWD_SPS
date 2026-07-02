@@ -1,81 +1,97 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedPage, { staggerContainer, fadeIn } from '@/components/AnimatedPage';
-import { Skeleton, TableSkeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import apiClient from '@/api/apiClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Shield, Plus, Trash2, Loader2, Mail, User, ShieldCheck, Eye } from 'lucide-react';
+import { Shield, UserCheck, LogOut, Loader2, Mail, User, Clock, Eye } from 'lucide-react';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
+const STAFF_LABELS = [
+  'OSWD TG Office Staff 1',
+  'OSWD TG Office Staff 2',
+  'OSWD TG Office Staff 3',
+  'OSWD TG Office Staff 4',
+  'OSWD TG Office Staff 5',
+];
+
 export default function ManageAdmins() {
-  const { user } = useAuth();
-  const [admins, setAdmins] = useState([]);
+  const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
+  const [claimSlot, setClaimSlot] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({ email: '', first_name: '', password: '', confirm_password: '', role: 'verification_officer' });
+  const [form, setForm] = useState({ email: '', full_name: '' });
+  const [mySlot, setMySlot] = useState(null);
+  const [showRelease, setShowRelease] = useState(false);
+  const [releasing, setReleasing] = useState(false);
 
-  useEffect(() => { loadAdmins(); }, []);
+  useEffect(() => {
+    const stored = localStorage.getItem('staff_slot');
+    if (stored) {
+      try { setMySlot(JSON.parse(stored)); } catch { localStorage.removeItem('staff_slot'); }
+    }
+    loadSlots();
+  }, []);
 
-  const loadAdmins = async () => {
+  const loadSlots = async () => {
     try {
-      const { data } = await apiClient.get('/admin/admins');
-      setAdmins(data);
+      const { data } = await apiClient.get('/admin/staff-slots');
+      setSlots(data);
     } catch (e) { console.error(e); }
     setLoading(false);
   };
 
-  const handleCreate = async () => {
-    if (!form.email || !form.first_name || !form.password) {
-      toast.error('All fields are required');
-      return;
-    }
-    if (form.password !== form.confirm_password) {
-      toast.error('Passwords do not match');
-      return;
-    }
-    if (form.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+  const handleClaim = async () => {
+    if (!form.email || !form.full_name) {
+      toast.error('Please enter both email and full name');
       return;
     }
     setSaving(true);
     try {
-      await apiClient.post('/admin/admins', {
+      await apiClient.post('/admin/staff-slots/claim', {
+        slot_number: claimSlot,
         email: form.email,
-        first_name: form.first_name,
-        password: form.password,
-        role: form.role,
+        full_name: form.full_name,
       });
-      toast.success(`Admin account created for ${form.email}`);
-      setShowAdd(false);
-      setForm({ email: '', first_name: '', password: '', confirm_password: '', role: 'verification_officer' });
-      loadAdmins();
+      const slotInfo = { slot_number: claimSlot, email: form.email, full_name: form.full_name };
+      localStorage.setItem('staff_slot', JSON.stringify(slotInfo));
+      setMySlot(slotInfo);
+      toast.success(`Slot ${claimSlot} claimed! Redirecting to staff view...`);
+      setClaimSlot(null);
+      setForm({ email: '', full_name: '' });
+      loadSlots();
+      window.location.href = '/admin/staff-view';
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Failed to create admin');
+      toast.error(e.response?.data?.detail || 'Failed to claim slot');
     }
     setSaving(false);
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
+  const handleRelease = async () => {
+    if (!mySlot) return;
+    setReleasing(true);
     try {
-      await apiClient.delete(`/admin/admins/${deleteTarget.id}`);
-      toast.success(`Admin ${deleteTarget.email} deleted`);
-      setDeleteTarget(null);
-      loadAdmins();
+      await apiClient.post('/admin/staff-slots/release', { slot_number: mySlot.slot_number });
+      localStorage.removeItem('staff_slot');
+      setMySlot(null);
+      toast.success('Slot released');
+      setShowRelease(false);
+      loadSlots();
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Failed to delete admin');
+      toast.error(e.response?.data?.detail || 'Failed to release slot');
     }
-    setDeleting(false);
+    setReleasing(false);
+  };
+
+  const handleUnclaim = (slot) => {
+    if (mySlot && slot.slot_number === mySlot.slot_number) {
+      setShowRelease(true);
+    }
   };
 
   if (loading) {
@@ -83,7 +99,11 @@ export default function ManageAdmins() {
       <div className="p-6 space-y-6">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-4 w-40" />
-        <TableSkeleton rows={4} cols={4} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 rounded-xl" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -94,66 +114,89 @@ export default function ManageAdmins() {
       <motion.div variants={fadeIn} className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-heading text-2xl font-bold">Manage Admins</h1>
-          <p className="text-muted-foreground text-sm mt-1">{admins.length} admin(s) in the system</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {mySlot
+              ? `You are currently on Slot ${mySlot.slot_number} (${mySlot.full_name})`
+              : 'Claim an available slot to start managing student submissions'}
+          </p>
         </div>
-        <Button onClick={() => setShowAdd(true)} className="gap-1.5 rounded-lg">
-          <Plus className="w-4 h-4" /> Add Admin
-        </Button>
-      </motion.div>
-
-      <motion.div variants={fadeIn} className="space-y-3">
-        {admins.map(admin => (
-          <Card key={admin.id}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-brand-blue/10 flex items-center justify-center shrink-0">
-                <Shield className="w-5 h-5 text-brand-blue" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-medium">{admin.first_name || 'Admin'}</p>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 ${
-                    admin.role === 'admin'
-                      ? 'bg-brand-blue/10 text-brand-blue'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}>
-                    {admin.role === 'admin' ? <ShieldCheck className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                    {admin.role === 'admin' ? 'Full Admin' : 'Verification Officer'}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">{admin.email}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Joined {new Date(admin.created_at).toLocaleDateString()}
-                </p>
-              </div>
-              {admin.id !== user?.id && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-                  onClick={() => setDeleteTarget(admin)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              )}
-              {admin.id === user?.id && (
-                <span className="text-[10px] text-muted-foreground bg-muted px-2 py-1 rounded-full">You</span>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-        {admins.length === 0 && (
-          <Card>
-            <CardContent className="p-12 text-center text-muted-foreground">
-              No admin accounts found
-            </CardContent>
-          </Card>
+        {mySlot && (
+          <Button variant="outline" size="sm" onClick={() => setShowRelease(true)} className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-lg">
+            <LogOut className="w-4 h-4" /> Release Slot
+          </Button>
         )}
       </motion.div>
 
-      <Dialog open={showAdd} onOpenChange={(open) => { if (!open) { setShowAdd(false); setForm({ email: '', first_name: '', password: '', confirm_password: '' }); } }}>
-        <DialogContent className="sm:max-w-md">
+      <motion.div variants={fadeIn} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        {slots.map((slot) => {
+          const isMine = mySlot && slot.slot_number === mySlot.slot_number;
+          const isClaimed = slot.is_active;
+          const idx = slot.slot_number - 1;
+
+          return (
+            <Card
+              key={slot.slot_number}
+              className={`relative overflow-hidden transition-all hover-lift ${
+                isMine ? 'ring-2 ring-brand-blue' : ''
+              } ${isClaimed && !isMine ? 'opacity-75' : ''}`}
+            >
+              <CardContent className="p-5 flex flex-col h-full">
+                {/* Slot icon */}
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
+                  isMine ? 'bg-brand-blue text-white' : isClaimed ? 'bg-muted text-muted-foreground' : 'bg-brand-blue/10 text-brand-blue'
+                }`}>
+                  {isMine ? <UserCheck className="w-6 h-6" /> : <Shield className="w-6 h-6" />}
+                </div>
+
+                {/* Slot title */}
+                <h3 className="font-heading font-semibold text-sm mb-1">{STAFF_LABELS[idx]}</h3>
+
+                {/* Status / Info */}
+                {isMine && (
+                  <div className="space-y-1 mb-3">
+                    <p className="text-xs font-medium text-brand-blue">{mySlot.full_name}</p>
+                    <p className="text-[10px] text-muted-foreground">{mySlot.email}</p>
+                  </div>
+                )}
+                {isClaimed && !isMine && (
+                  <div className="space-y-1 mb-3">
+                    <p className="text-xs text-muted-foreground">{slot.full_name}</p>
+                    <p className="text-[10px] text-muted-foreground">{slot.email}</p>
+                  </div>
+                )}
+
+                {/* Availability */}
+                <div className="mt-auto">
+                  {!isClaimed && !mySlot && (
+                    <Button size="sm" className="w-full gap-1.5 rounded-lg" onClick={() => { setClaimSlot(slot.slot_number); setForm({ email: '', full_name: '' }); }}>
+                      <Eye className="w-3.5 h-3.5" /> Claim Slot
+                    </Button>
+                  )}
+                  {!isClaimed && mySlot && (
+                    <p className="text-xs text-muted-foreground text-center py-1">Claim another slot first</p>
+                  )}
+                  {isClaimed && !isMine && (
+                    <p className="text-xs text-muted-foreground text-center py-1 flex items-center justify-center gap-1">
+                      <Clock className="w-3 h-3" /> Taken
+                    </p>
+                  )}
+                  {isMine && (
+                    <Button size="sm" className="w-full gap-1.5 rounded-lg" onClick={() => window.location.href = '/admin/staff-view'}>
+                      <Eye className="w-3.5 h-3.5" /> Open Staff View
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </motion.div>
+
+      {/* Claim dialog */}
+      <Dialog open={!!claimSlot} onOpenChange={(open) => { if (!open) { setClaimSlot(null); setForm({ email: '', full_name: '' }); }}}>
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="font-heading">Add New Admin Staff</DialogTitle>
+            <DialogTitle className="font-heading">Claim {STAFF_LABELS[(claimSlot || 1) - 1]}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -162,8 +205,8 @@ export default function ManageAdmins() {
                 <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="e.g. Juan Dela Cruz"
-                  value={form.first_name}
-                  onChange={e => setForm(prev => ({ ...prev, first_name: e.target.value }))}
+                  value={form.full_name}
+                  onChange={e => setForm(prev => ({ ...prev, full_name: e.target.value }))}
                   className="pl-9"
                 />
               </div>
@@ -181,75 +224,29 @@ export default function ManageAdmins() {
                 />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Password</Label>
-              <Input
-                type="password"
-                placeholder="At least 6 characters"
-                value={form.password}
-                onChange={e => setForm(prev => ({ ...prev, password: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Confirm Password</Label>
-              <Input
-                type="password"
-                placeholder="Repeat password"
-                value={form.confirm_password}
-                onChange={e => setForm(prev => ({ ...prev, confirm_password: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Role</Label>
-              <div className="flex gap-3">
-                <label className="flex items-center gap-2 text-sm cursor-pointer border border-border rounded-lg px-3 py-2 flex-1 has-[:checked]:border-brand-blue has-[:checked]:bg-brand-blue/5">
-                  <input
-                    type="radio"
-                    name="role"
-                    value="verification_officer"
-                    checked={form.role === 'verification_officer'}
-                    onChange={e => setForm(prev => ({ ...prev, role: e.target.value }))}
-                    className="accent-brand-blue"
-                  />
-                  <Eye className="w-4 h-4 text-amber-600" />
-                  <span>Verification Officer</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm cursor-pointer border border-border rounded-lg px-3 py-2 flex-1 has-[:checked]:border-brand-blue has-[:checked]:bg-brand-blue/5">
-                  <input
-                    type="radio"
-                    name="role"
-                    value="admin"
-                    checked={form.role === 'admin'}
-                    onChange={e => setForm(prev => ({ ...prev, role: e.target.value }))}
-                    className="accent-brand-blue"
-                  />
-                  <ShieldCheck className="w-4 h-4 text-brand-blue" />
-                  <span>Full Admin</span>
-                </label>
-              </div>
-            </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setShowAdd(false); setForm({ email: '', first_name: '', password: '', confirm_password: '' }); }}>
+            <Button variant="outline" onClick={() => { setClaimSlot(null); setForm({ email: '', full_name: '' }); }}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={saving}>
+            <Button onClick={handleClaim} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Create Admin
+              Claim Slot
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* Release confirm */}
       <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="Delete Admin"
-        description={deleteTarget ? `Remove admin access for ${deleteTarget.email} (${deleteTarget.first_name})? They will no longer be able to access the admin panel.` : ''}
-        confirmLabel="Delete"
+        open={showRelease}
+        onOpenChange={setShowRelease}
+        onConfirm={handleRelease}
+        title="Release Slot"
+        description="Releasing your slot will unassign you from student submissions. You can claim again later."
+        confirmLabel="Release"
         variant="destructive"
-        loading={deleting}
+        loading={releasing}
       />
     </motion.div>
     </AnimatedPage>

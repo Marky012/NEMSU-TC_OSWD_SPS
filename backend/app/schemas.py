@@ -54,6 +54,18 @@ class AdminCreate(BaseModel):
             raise ValueError("Password must be at least 6 characters")
         return v
 
+class StaffSlotClaim(BaseModel):
+    slot_number: int = Field(..., ge=1, le=5)
+    email: str = Field(..., min_length=1)
+    full_name: str = Field(..., min_length=1)
+
+class StaffSlotRelease(BaseModel):
+    slot_number: int = Field(..., ge=1, le=5)
+
+class StaffReviewRequest(BaseModel):
+    status: str  # "returned" | "declined"
+    admin_comment: Optional[str] = None
+
 class UserCategorySelect(BaseModel):
     category: str = Field(..., description="Must be one of: New, Transferee, Returnee, Continuing")
 

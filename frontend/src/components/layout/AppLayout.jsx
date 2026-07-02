@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import NEMSULogo from './NEMSU LOGO.jpg';
 import { 
   LayoutDashboard, FileText, Settings, Users, BarChart3, 
   LogOut, Menu, Shield, ClipboardCheck,
-  GraduationCap, UserCog
+  GraduationCap, UserCog, UserCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TooltipBox } from '@/components/ui/tooltip';
@@ -32,6 +32,19 @@ export default function AppLayout() {
     { to: '/submissions', label: 'My Submissions', icon: ClipboardCheck },
   ];
 
+  const [hasStaffSlot, setHasStaffSlot] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('staff_slot');
+    setHasStaffSlot(!!stored);
+    const handler = () => {
+      const stored = localStorage.getItem('staff_slot');
+      setHasStaffSlot(!!stored);
+    };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, []);
+
   const allAdminLinks = [
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
     { to: '/admin/questions', label: 'Question Editor', icon: Settings, adminOnly: true },
@@ -41,6 +54,7 @@ export default function AppLayout() {
     { to: '/admin/reports', label: 'CHED Reports', icon: FileText, adminOnly: false },
     { to: '/admin/logs', label: 'Audit Log', icon: Shield, adminOnly: false },
     { to: '/admin/admins', label: 'Manage Admins', icon: UserCog, adminOnly: true },
+    ...(hasStaffSlot ? [{ to: '/admin/staff-view', label: 'Staff View', icon: UserCheck, adminOnly: false }] : []),
   ];
 
   const adminLinks = user?.role === 'admin'

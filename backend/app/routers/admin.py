@@ -7,6 +7,7 @@ from app.database import get_db
 from app import models, schemas
 from app.dependencies import RoleChecker, get_current_user
 from app.utils import security
+from app.utils.office_staff import distribute_unassigned_submissions
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Module"])
 
@@ -610,3 +611,190 @@ def delete_admin(
     )
 
     return {"detail": f"Admin {admin.email} deleted successfully"}
+
+
+# --- OFFICE STAFF SLOT SYSTEM ---
+
+@router.get("/staff-slots", status_code=status.HTTP_200_OK)
+def list_staff_slots(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """List all 5 office staff slots with claim status."""
+    slots = db.query(models.OfficeStaffSlot).order_by(models.OfficeStaffSlot.slot_number).all()
+    if not slots:
+        for i in range(1, 6):
+            slot = models.OfficeStaffSlot(slot_number=i, is_active=False)
+            db.add(slot)
+        db.commit()
+        slots = db.query(models.OfficeStaffSlot).order_by(models.OfficeStaffSlot.slot_number).all()
+    return [
+        {
+            "slot_number": s.slot_number,
+            "email": s.email,
+            "full_name": s.full_name,
+            "is_active": s.is_active,
+            "claimed_at": s.claimed_at.isoformat() if s.claimed_at else None,
+            "last_activity": s.last_activity.isoformat() if s.last_activity else None,
+        }
+        for s in slots
+    ]
+
+
+@router.post("/staff-slots/claim", status_code=status.HTTP_200_OK)
+def claim_staff_slot(
+    data: schemas.StaffSlotClaim,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Claim an available office staff slot."""
+    slot = db.query(models.OfficeStaffSlot).filter(
+        models.OfficeStaffSlot.slot_number == data.slot_number
+    ).first()
+    if not slot:
+        raise HTTPException(status_code=404, detail="Slot not found")
+
+    if slot.is_active:
+        raise HTTPException(status_code=409, detail="This slot is already taken")
+
+    slot.email = data.email
+    slot.full_name = data.full_name
+    slot.is_active = True
+    slot.claimed_at = datetime.now(timezone.utc)
+    slot.last_activity = datetime.now(timezone.utc)
+    db.commit()
+
+    distribute_unassigned_submissions(db)
+
+    log_admin_action(
+        db, current_user.id,
+        "Claim Staff Slot",
+        f"Slot {data.slot_number} claimed by {data.full_name} ({data.email})"
+    )
+
+    return {"detail": f"Slot {data.slot_number} claimed successfully", "slot_number": data.slot_number}
+
+
+@router.post("/staff-slots/release", status_code=status.HTTP_200_OK)
+def release_staff_slot(
+    data: schemas.StaffSlotRelease,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Release a claimed office staff slot."""
+    slot = db.query(models.OfficeStaffSlot).filter(
+        models.OfficeStaffSlot.slot_number == data.slot_number,
+        models.OfficeStaffSlot.is_active == True
+    ).first()
+    if not slot:
+        raise HTTPException(status_code=404, detail="Slot not found or already released")
+
+    # Clear email and name but keep the slot record
+    slot.email = None
+    slot.full_name = None
+    slot.is_active = False
+    slot.claimed_at = None
+    slot.last_activity = None
+    db.commit()
+
+    log_admin_action(
+        db, current_user.id,
+        "Release Staff Slot",
+        f"Slot {data.slot_number} released"
+    )
+
+    return {"detail": f"Slot {data.slot_number} released"}
+
+
+# --- STAFF SUBMISSION MANAGEMENT ---
+
+@router.get("/staff-submissions", status_code=status.HTTP_200_OK)
+def list_staff_submissions(
+    slot: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get submissions assigned to a specific staff slot."""
+    subs = db.query(models.Submission).filter(
+        models.Submission.assigned_staff_slot == slot
+    ).order_by(models.Submission.submitted_at.desc().nullslast()).all()
+
+    result = []
+    for sub in subs:
+        user = db.query(models.User).filter(models.User.id == sub.user_id).first()
+        result.append({
+            "id": sub.id,
+            "user_id": sub.user_id,
+            "student_email": user.email if user else None,
+            "student_category": user.category if user else None,
+            "semester_id": sub.semester_id,
+            "verification_code": sub.verification_code,
+            "status": sub.status,
+            "submitted_at": sub.submitted_at.isoformat() if sub.submitted_at else None,
+            "draft_data_json": sub.draft_data_json,
+            "assigned_staff_slot": sub.assigned_staff_slot,
+        })
+    return result
+
+
+@router.post("/staff-submissions/{submission_id}/verify", status_code=status.HTTP_200_OK)
+def staff_verify_submission(
+    submission_id: int,
+    slot: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Verify a submission assigned to this staff slot (marks user + submission)."""
+    sub = db.query(models.Submission).filter(
+        models.Submission.id == submission_id,
+        models.Submission.assigned_staff_slot == slot
+    ).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Submission not found or not assigned to your slot")
+
+    student = db.query(models.User).filter(models.User.id == sub.user_id).first()
+    if student:
+        student.is_verified_for_enrollment = True
+    sub.status = "verified"
+    sub.admin_comment = None
+    db.commit()
+
+    log_admin_action(
+        db, current_user.id,
+        "Staff Verify Submission",
+        f"Slot {slot} verified submission {submission_id} (student: {student.email if student else 'unknown'})"
+    )
+
+    return {"detail": "Submission verified"}
+
+
+@router.post("/staff-submissions/{submission_id}/review", status_code=status.HTTP_200_OK)
+def staff_review_submission(
+    submission_id: int,
+    data: schemas.StaffReviewRequest,
+    slot: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Return or decline a submission assigned to this staff slot."""
+    sub = db.query(models.Submission).filter(
+        models.Submission.id == submission_id,
+        models.Submission.assigned_staff_slot == slot
+    ).first()
+    if not sub:
+        raise HTTPException(status_code=404, detail="Submission not found or not assigned to your slot")
+
+    if data.status not in ("returned", "declined"):
+        raise HTTPException(status_code=400, detail="Status must be 'returned' or 'declined'")
+
+    sub.status = data.status
+    sub.admin_comment = data.admin_comment
+    db.commit()
+
+    log_admin_action(
+        db, current_user.id,
+        f"Staff {data.status.capitalize()} Submission",
+        f"Slot {slot} {data.status} submission {submission_id}"
+    )
+
+    return {"detail": f"Submission {data.status}"}

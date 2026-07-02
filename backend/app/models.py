@@ -98,6 +98,7 @@ class Submission(Base):
     is_underprivileged = Column(Boolean, default=False, nullable=False)
     verification_code = Column(String, unique=True, nullable=True, index=True)  # e.g., OSWD-TG-2026-1-1002
     receipt_pdf_path = Column(String, nullable=True)
+    assigned_staff_slot = Column(Integer, nullable=True, index=True)  # 1-5, for staff workload distribution
 
     # Relationships
     user = relationship("User", back_populates="submissions")
@@ -169,6 +170,17 @@ class QuestionHistory(Base):
     # --- Relationships ---
     question = relationship("Question", foreign_keys=[question_id])
     changed_by = relationship("User", foreign_keys=[changed_by_admin_id])
+
+class OfficeStaffSlot(Base):
+    __tablename__ = "office_staff_slots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    slot_number = Column(Integer, unique=True, nullable=False)  # 1-5
+    email = Column(String, nullable=True)
+    full_name = Column(String, nullable=True)
+    is_active = Column(Boolean, default=False, nullable=False)
+    last_activity = Column(DateTime(timezone=True), nullable=True)
+    claimed_at = Column(DateTime(timezone=True), nullable=True)
 
 class EmailRateLimit(Base):
     __tablename__ = "email_rate_limits"

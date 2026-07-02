@@ -194,6 +194,23 @@ async def lifespan(app: FastAPI):
         if 'security_answer_hash' not in user_columns:
             _db.execute(text("ALTER TABLE users ADD COLUMN security_answer_hash VARCHAR"))
             print("[Migration] Added security_answer_hash column to users table.")
+        # Add assigned_staff_slot to submissions if missing
+        if 'assigned_staff_slot' not in sub_columns:
+            _db.execute(text("ALTER TABLE submissions ADD COLUMN assigned_staff_slot INTEGER"))
+            print("[Migration] Added assigned_staff_slot column to submissions table.")
+        # Seed the 5 office staff slot rows if table exists and is empty
+        try:
+            slot_count = _db.execute(text("SELECT COUNT(*) FROM office_staff_slots")).scalar()
+            if slot_count == 0:
+                for i in range(1, 6):
+                    _db.execute(
+                        text("INSERT INTO office_staff_slots (slot_number, is_active) VALUES (:slot, FALSE)"),
+                        {"slot": i}
+                    )
+                print("[Migration] Seeded 5 office staff slots.")
+                _db.commit()
+        except Exception:
+            pass  # table may not exist yet on first run, that's OK
         # Force-update Program/Course options to full degree names
         prog_opts = '["Bachelor of Secondary Education", "Bachelor of Science in Business Administration major in Human Resource Management", "Bachelor of Science in Agriculture", "Bachelor of Science in Business Administration major in Financial Management", "Bachelor of Elementary Education", "Bachelor of Science in Computer Science", "Bachelor of Agriculture Technology", "Bachelor of Science in Hospitality Management"]'
         result = _db.execute(
