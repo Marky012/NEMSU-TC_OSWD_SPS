@@ -117,7 +117,7 @@ export default function Login() {
     const result = await login(email, password);
     if (result.success) {
       const storedUser = JSON.parse(localStorage.getItem('user'));
-      const redirectTo = storedUser?.role === 'admin' ? '/admin' : '/';
+      const redirectTo = ['admin', 'verification_officer', 'analytics_viewer'].includes(storedUser?.role) ? '/admin' : '/';
       if (!storedUser.privacy_consent && storedUser.role !== 'admin') {
         setPendingRedirect(redirectTo);
         setShowConsent(true);

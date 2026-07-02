@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
-import { Shield, Plus, Trash2, Loader2, Mail, User } from 'lucide-react';
+import { Shield, Plus, Trash2, Loader2, Mail, User, ShieldCheck, Eye } from 'lucide-react';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function ManageAdmins() {
@@ -21,7 +21,7 @@ export default function ManageAdmins() {
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({ email: '', first_name: '', password: '', confirm_password: '' });
+  const [form, setForm] = useState({ email: '', first_name: '', password: '', confirm_password: '', role: 'verification_officer' });
 
   useEffect(() => { loadAdmins(); }, []);
 
@@ -52,10 +52,11 @@ export default function ManageAdmins() {
         email: form.email,
         first_name: form.first_name,
         password: form.password,
+        role: form.role,
       });
       toast.success(`Admin account created for ${form.email}`);
       setShowAdd(false);
-      setForm({ email: '', first_name: '', password: '', confirm_password: '' });
+      setForm({ email: '', first_name: '', password: '', confirm_password: '', role: 'verification_officer' });
       loadAdmins();
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Failed to create admin');
@@ -108,7 +109,17 @@ export default function ManageAdmins() {
                 <Shield className="w-5 h-5 text-brand-blue" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">{admin.first_name || 'Admin'}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-medium">{admin.first_name || 'Admin'}</p>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1 ${
+                    admin.role === 'admin'
+                      ? 'bg-brand-blue/10 text-brand-blue'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {admin.role === 'admin' ? <ShieldCheck className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    {admin.role === 'admin' ? 'Full Admin' : 'Verification Officer'}
+                  </span>
+                </div>
                 <p className="text-xs text-muted-foreground">{admin.email}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
                   Joined {new Date(admin.created_at).toLocaleDateString()}
@@ -187,6 +198,35 @@ export default function ManageAdmins() {
                 value={form.confirm_password}
                 onChange={e => setForm(prev => ({ ...prev, confirm_password: e.target.value }))}
               />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Role</Label>
+              <div className="flex gap-3">
+                <label className="flex items-center gap-2 text-sm cursor-pointer border border-border rounded-lg px-3 py-2 flex-1 has-[:checked]:border-brand-blue has-[:checked]:bg-brand-blue/5">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="verification_officer"
+                    checked={form.role === 'verification_officer'}
+                    onChange={e => setForm(prev => ({ ...prev, role: e.target.value }))}
+                    className="accent-brand-blue"
+                  />
+                  <Eye className="w-4 h-4 text-amber-600" />
+                  <span>Verification Officer</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm cursor-pointer border border-border rounded-lg px-3 py-2 flex-1 has-[:checked]:border-brand-blue has-[:checked]:bg-brand-blue/5">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="admin"
+                    checked={form.role === 'admin'}
+                    onChange={e => setForm(prev => ({ ...prev, role: e.target.value }))}
+                    className="accent-brand-blue"
+                  />
+                  <ShieldCheck className="w-4 h-4 text-brand-blue" />
+                  <span>Full Admin</span>
+                </label>
+              </div>
             </div>
           </div>
           <DialogFooter className="gap-2">

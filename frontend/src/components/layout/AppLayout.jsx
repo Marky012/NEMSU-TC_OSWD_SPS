@@ -32,16 +32,20 @@ export default function AppLayout() {
     { to: '/submissions', label: 'My Submissions', icon: ClipboardCheck },
   ];
 
-  const adminLinks = [
-    { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/admin/questions', label: 'Question Editor', icon: Settings },
-    { to: '/admin/semesters', label: 'Semesters', icon: GraduationCap },
-    { to: '/admin/students', label: 'Students', icon: Users },
-    { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
-    { to: '/admin/reports', label: 'CHED Reports', icon: FileText },
-    { to: '/admin/logs', label: 'Audit Log', icon: Shield },
-    { to: '/admin/admins', label: 'Manage Admins', icon: UserCog },
+  const allAdminLinks = [
+    { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
+    { to: '/admin/questions', label: 'Question Editor', icon: Settings, adminOnly: true },
+    { to: '/admin/semesters', label: 'Semesters', icon: GraduationCap, adminOnly: true },
+    { to: '/admin/students', label: 'Students', icon: Users, adminOnly: false },
+    { to: '/admin/analytics', label: 'Analytics', icon: BarChart3, adminOnly: false },
+    { to: '/admin/reports', label: 'CHED Reports', icon: FileText, adminOnly: false },
+    { to: '/admin/logs', label: 'Audit Log', icon: Shield, adminOnly: false },
+    { to: '/admin/admins', label: 'Manage Admins', icon: UserCog, adminOnly: true },
   ];
+
+  const adminLinks = user?.role === 'admin'
+    ? allAdminLinks
+    : allAdminLinks.filter(l => !l.adminOnly);
 
   const links = isAdmin ? adminLinks : studentLinks;
 

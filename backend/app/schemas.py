@@ -45,6 +45,7 @@ class AdminCreate(BaseModel):
     email: EmailStr
     first_name: str = Field(..., min_length=1, description="Full name of the admin staff")
     password: str = Field(..., min_length=6, description="Password must be at least 6 characters")
+    role: str = Field(default="verification_officer", description="admin or verification_officer")
 
     @field_validator("password")
     @classmethod

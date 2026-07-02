@@ -566,7 +566,7 @@ def create_admin(
         email=data.email,
         first_name=data.first_name,
         password_hash=security.get_password_hash(data.password),
-        role="admin",
+        role=data.role,
         is_email_verified=True,
     )
     db.add(admin)
