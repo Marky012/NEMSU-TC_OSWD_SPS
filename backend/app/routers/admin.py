@@ -518,6 +518,7 @@ def reset_pilot_data(
         deleted_answers = db.execute(sa_text("DELETE FROM answers")).rowcount
         deleted_subs = db.execute(sa_text("DELETE FROM submissions")).rowcount
         deleted_pwd = db.execute(sa_text("DELETE FROM pwd_assistance_tasks")).rowcount
+        deleted_qhist = db.execute(sa_text("DELETE FROM questions_history")).rowcount
         deleted_logs = db.execute(sa_text("DELETE FROM admin_logs")).rowcount
         deleted_users = db.execute(sa_text("DELETE FROM users WHERE role != 'admin'")).rowcount
         db.commit()
