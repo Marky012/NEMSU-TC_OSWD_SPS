@@ -12,7 +12,6 @@ export default function AddressCascade({
   const [regions, setRegions] = useState([]);
   const [provinces, setProvinces] = useState([]);
   const [cities, setCities] = useState([]);
-  const [barangays, setBarangays] = useState([]);
   const [selectedProvince, setSelectedProvince] = useState('');
   const [loading, setLoading] = useState({ regions: true });
 
@@ -53,16 +52,6 @@ export default function AddressCascade({
       .finally(() => setLoading(prev => ({ ...prev, cities: false })));
   }, [selectedProvince, provinces]);
 
-  useEffect(() => {
-    const munCode = nameToCode(cities, municipalityValue);
-    if (!munCode) { setBarangays([]); return; }
-    setLoading(prev => ({ ...prev, barangays: true }));
-    apiClient.get('/address/barangays', { params: { city_code: munCode } })
-      .then(res => setBarangays(res.data || []))
-      .catch(() => {})
-      .finally(() => setLoading(prev => ({ ...prev, barangays: false })));
-  }, [municipalityValue, cities]);
-
   const handleProvinceChange = useCallback((name) => {
     setSelectedProvince(name);
     onMunicipalityChange('');
@@ -73,10 +62,6 @@ export default function AddressCascade({
     onMunicipalityChange(name);
     onBarangayChange('');
   }, [onMunicipalityChange, onBarangayChange]);
-
-  const handleBarangayChange = useCallback((name) => {
-    onBarangayChange(name);
-  }, [onBarangayChange]);
 
   const purokValue = addressValue || '';
   const handlePurokChange = (e) => {
@@ -124,8 +109,17 @@ export default function AddressCascade({
           {selectedProvince && renderSelect('City / Municipality', 'Select City / Municipality', cities, municipalityValue,
               handleCityChange, loading.cities, 'name', 'name')}
 
-      {municipalityValue && renderSelect('Barangay', 'Select Barangay', barangays, barangayValue,
-        handleBarangayChange, loading.barangays, 'name', 'name')}
+      {municipalityValue && (
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium text-foreground">Barangay <span className="text-red-500 ml-0.5">*</span></Label>
+          <Input
+            value={barangayValue || ''}
+            onChange={e => onBarangayChange(e.target.value)}
+            placeholder="Type your barangay"
+            className="h-11"
+          />
+        </div>
+      )}
 
       <div className="space-y-1.5">
         <Label className="text-sm font-medium text-foreground">
