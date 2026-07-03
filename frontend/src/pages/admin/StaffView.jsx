@@ -87,6 +87,21 @@ export default function StaffView() {
     return sub.student_email?.split('@')[0] || 'Student';
   };
 
+  const getAnswerDisplay = (qId, data) => {
+    const val = data[qId];
+    if (!val) return 'N/A';
+    if (Array.isArray(val)) {
+      return val.map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; ');
+    }
+    if (typeof val === 'object') {
+      return JSON.stringify(val);
+    }
+    if (typeof val === 'string' && val.startsWith('[')) {
+      try { return JSON.parse(val).map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; '); } catch { return val; }
+    }
+    return toUpperDisplay(String(val));
+  };
+
   const getStudentProgram = (sub) => {
     return toUpperDisplay(getAnswerBySystemKey(sub, 'program')) || 'N/A';
   };
@@ -295,6 +310,19 @@ export default function StaffView() {
                 <div className="p-3 rounded-lg border border-amber-200 bg-amber-50">
                   <p className="text-xs font-medium text-amber-700">Admin Comment:</p>
                   <p className="text-sm text-amber-800 mt-1">{viewSub.admin_comment}</p>
+                </div>
+              )}
+              {viewSub.draft_data_json && (
+                <div className="border-t pt-3 space-y-2">
+                  {Object.entries(JSON.parse(viewSub.draft_data_json)).map(([qId, val]) => {
+                    const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
+                    return (
+                      <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
+                        <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q?.question_text || qId}</span>
+                        <span className="text-sm">{getAnswerDisplay(qId, JSON.parse(viewSub.draft_data_json))}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
