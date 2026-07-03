@@ -295,6 +295,7 @@ def list_all_submissions(
             submitted_at=sub.submitted_at,
             draft_data_json=sub.draft_data_json,
             created_date=sub.submitted_at,
+            assigned_staff_slot=sub.assigned_staff_slot,
         ))
     return result
 

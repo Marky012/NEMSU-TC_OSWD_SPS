@@ -361,6 +361,7 @@ class AdminSubmissionItem(BaseModel):
     submitted_at: Optional[datetime] = None
     draft_data_json: Optional[str] = None
     created_date: Optional[datetime] = None
+    assigned_staff_slot: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 

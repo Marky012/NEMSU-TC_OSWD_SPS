@@ -419,6 +419,7 @@ export default function StudentList() {
                   <th className="p-3 text-left font-medium text-xs">Category</th>
                   <th className="p-3 text-left font-medium text-xs">Program</th>
                   <th className="p-3 text-left font-medium text-xs">Code</th>
+                  <th className="p-3 text-left font-medium text-xs">Assigned</th>
                   <th className="p-3 text-left font-medium text-xs">Status</th>
                   <th className="p-3 text-left font-medium text-xs">Submitted</th>
                   <th className="p-3 w-10"></th>
@@ -439,6 +440,13 @@ export default function StudentList() {
                     <td className="p-3">{toUpperDisplay(sub.student_category)}</td>
                     <td className="p-3 text-xs">{getStudentProgram(sub)}</td>
                     <td className="p-3 font-mono text-xs">{toUpperDisplay(sub.verification_code)}</td>
+                    <td className="p-3">
+                      {sub.assigned_staff_slot ? (
+                        <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">Staff {sub.assigned_staff_slot}</span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/50">—</span>
+                      )}
+                    </td>
                     <td className="p-3">
                       {sub.status === 'verified' ? (
                         <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full flex items-center gap-1 w-fit">
@@ -493,7 +501,7 @@ export default function StudentList() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="p-12 text-center text-muted-foreground">
+                    <td colSpan={9} className="p-12 text-center text-muted-foreground">
                       <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       No submissions found
                     </td>
