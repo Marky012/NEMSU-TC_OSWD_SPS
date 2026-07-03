@@ -715,9 +715,11 @@ def list_staff_submissions(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get submissions assigned to a specific staff slot."""
+    """Get submissions assigned to a specific staff slot (active semester only)."""
+    active_sem = db.query(models.Semester).filter(models.Semester.is_active == True).first()
     subs = db.query(models.Submission).filter(
-        models.Submission.assigned_staff_slot == slot
+        models.Submission.assigned_staff_slot == slot,
+        models.Submission.semester_id == (active_sem.id if active_sem else None)
     ).order_by(models.Submission.submitted_at.desc().nullslast()).all()
 
     result = []

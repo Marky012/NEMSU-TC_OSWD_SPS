@@ -105,6 +105,7 @@ export default function StaffView() {
     });
   }, [submissions, search, filterStatus]);
 
+  const pendingCount = useMemo(() => submissions.filter(s => s.status === 'pending').length, [submissions]);
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   const safePage = Math.min(page, totalPages);
   const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
@@ -154,7 +155,7 @@ export default function StaffView() {
         <div>
           <h1 className="font-heading text-2xl font-bold">Staff View — Slot {mySlot?.slot_number}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {mySlot?.full_name} ({mySlot?.email}) &mdash; {submissions.length} submissions assigned
+            {mySlot?.full_name} ({mySlot?.email}) &mdash; {pendingCount} pending of {submissions.length} total assigned
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={refresh} className="rounded-lg">
