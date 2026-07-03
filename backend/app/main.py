@@ -9,6 +9,7 @@ from app.config import settings
 from app.database import engine, Base, SessionLocal
 from app.seeders.seed_questions import seed_database
 from app.routers import auth, forms, students, admin, reports, address
+import json
 import secrets
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -228,6 +229,42 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_database(db)
+
+        # --- Migrate old program/course names in existing answers ---
+        OLD_TO_NEW = {
+            "Bachelor of Science in Accountancy": "Bachelor of Science in Agriculture",
+            "Bachelor of Arts in Tourism": "Bachelor of Agriculture Technology",
+        }
+        prog_question = db.query(models.Question).filter(models.Question.system_key == "program").first()
+        if prog_question:
+            for old_val, new_val in OLD_TO_NEW.items():
+                rows = db.query(models.Answer).filter(
+                    models.Answer.question_id == prog_question.id,
+                    models.Answer.answer_text == old_val,
+                ).update({"answer_text": new_val}, synchronize_session="fetch")
+                if rows:
+                    print(f"[Migration] Updated {rows} answer(s): '{old_val}' -> '{new_val}'")
+            all_subs = db.query(models.Submission).all()
+            json_migrated = 0
+            for sub in all_subs:
+                if not sub.draft_data_json:
+                    continue
+                try:
+                    data = json.loads(sub.draft_data_json)
+                except Exception:
+                    continue
+                changed = False
+                for qid, val in data.items():
+                    if isinstance(val, str) and val in OLD_TO_NEW:
+                        data[qid] = OLD_TO_NEW[val]
+                        changed = True
+                if changed:
+                    sub.draft_data_json = json.dumps(data)
+                    json_migrated += 1
+            if json_migrated:
+                print(f"[Migration] Updated draft_data_json for {json_migrated} submission(s).")
+        db.commit()
+        # --- End program name migration ---
 
         # Ensure admin user is always properly configured after seeding
         admin_user = db.query(models.User).filter(
