@@ -174,7 +174,12 @@ export default function CHEDReports() {
       if (getAnswerByKey(sub, 'indigenous_peoples_none') === 'Yes') {
         p.ipTotal++;
         const group = getAnswerByKey(sub, 'indigenous_peoples_group');
-        if (group) p.ipGroups.add(group);
+        if (group === 'Others') {
+          const customIp = getAnswerByKey(sub, 'indigenous_peoples_other_specify');
+          p.ipGroups.add(customIp ? customIp.toUpperCase() : 'Others (unspecified)');
+        } else if (group) {
+          p.ipGroups.add(group);
+        }
       }
 
       if (getAnswerByKey(sub, 'is_solo_parent_currently_studying') === 'Yes') p.soloParent++;

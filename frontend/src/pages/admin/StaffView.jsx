@@ -312,19 +312,28 @@ export default function StaffView() {
                   <p className="text-sm text-amber-800 mt-1">{viewSub.admin_comment}</p>
                 </div>
               )}
-              {viewSub.draft_data_json && (
-                <div className="border-t pt-3 space-y-2">
-                  {Object.entries(JSON.parse(viewSub.draft_data_json)).map(([qId, val]) => {
-                    const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-                    return (
-                      <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
-                        <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q?.question_text || qId}</span>
-                        <span className="text-sm">{getAnswerDisplay(qId, JSON.parse(viewSub.draft_data_json))}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {viewSub.draft_data_json && (() => {
+                const parsed = JSON.parse(viewSub.draft_data_json);
+                return (
+                  <div className="border-t pt-3 space-y-2">
+                    {Object.entries(parsed).map(([qId, val]) => {
+                      const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
+                      let displayVal = getAnswerDisplay(qId, parsed);
+                      if (q?.system_key === 'indigenous_peoples_group' && val === 'Others') {
+                        const specifyQ = questions.find(qq => qq.system_key === 'indigenous_peoples_other_specify');
+                        const specifyVal = specifyQ ? (parsed[specifyQ.id] ?? parsed[String(specifyQ.id)]) : null;
+                        if (specifyVal) displayVal = toUpperDisplay(String(specifyVal));
+                      }
+                      return (
+                        <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
+                          <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q?.question_text || qId}</span>
+                          <span className="text-sm">{displayVal}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </DialogContent>

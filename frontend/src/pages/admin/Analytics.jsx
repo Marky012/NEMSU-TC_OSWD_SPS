@@ -81,6 +81,7 @@ export default function Analytics() {
   const getIpGroupData = () => {
     const noneQ = questions.find(q => q.question_text?.includes('Do you belong to an Indigenous Peoples'));
     const groupQ = questions.find(q => q.question_text?.includes('Select your IP group'));
+    const specifyQ = questions.find(q => q.system_key === 'indigenous_peoples_other_specify');
     if (!noneQ && !groupQ) return [];
     const counts = {};
     filteredSubs.forEach(sub => {
@@ -92,7 +93,11 @@ export default function Analytics() {
           counts['Non-IP'] = (counts['Non-IP'] || 0) + 1;
         } else if (groupQ) {
           const group = data[groupQ.id] || data[String(groupQ.id)];
-          if (group) {
+          if (group === 'Others' && specifyQ) {
+            const customIp = data[specifyQ.id] || data[String(specifyQ.id)];
+            const label = customIp ? toUpperDisplay(String(customIp)) : 'Others (unspecified)';
+            counts[label] = (counts[label] || 0) + 1;
+          } else if (group) {
             counts[group] = (counts[group] || 0) + 1;
           } else {
             counts['Not Specified'] = (counts['Not Specified'] || 0) + 1;
@@ -153,7 +158,7 @@ export default function Analytics() {
   };
 
   const GROUPS = [
-    { id: 'all_ip', title: 'All IP Students', description: 'Belong to any Indigenous Peoples group', tab: 'ip', check: (sub) => { const g = getAnswer(sub, 'indigenous_peoples_group'); return !!g && g !== 'Others'; } },
+    { id: 'all_ip', title: 'All IP Students', description: 'Belong to any Indigenous Peoples group', tab: 'ip', check: (sub) => { const g = getAnswer(sub, 'indigenous_peoples_group'); return !!g; } },
     { id: 'blaan', title: 'Blaan', description: 'IP Group: Blaan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'BLAAN' },
     { id: 'mandaya', title: 'Mandaya', description: 'IP Group: Mandaya', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MANDAYA' },
     { id: 'manobo', title: 'Manobo', description: 'IP Group: Manobo', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MANOBO' },
@@ -162,6 +167,7 @@ export default function Analytics() {
     { id: 'tboli', title: "T'boli", description: "IP Group: T'boli", tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === "T'BOLI" },
     { id: 'mamanwa', title: 'Mamanwa', description: 'IP Group: Mamanwa', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MAMANWA' },
     { id: 'mangyan', title: 'Mangyan', description: 'IP Group: Mangyan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MANGYAN' },
+    { id: 'others_ip', title: 'Other IP Groups', description: 'Specified via "Others" IP entry', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'Others' },
     { id: 'low_income', title: 'Low Income', description: 'Household income below ₱5,000/month', tab: 'socio', check: (sub) => { const i = parseFloat(getAnswer(sub, 'estimated_household_income')); return !isNaN(i) && i < 5000; } },
     { id: 'mid_income', title: 'Mid Income', description: 'Household income ₱5,000–₱15,000/month', tab: 'socio', check: (sub) => { const i = parseFloat(getAnswer(sub, 'estimated_household_income')); return !isNaN(i) && i >= 5000 && i <= 15000; } },
     { id: 'pwd', title: 'Person with Disability (PWD)', description: 'Declared as PWD', tab: 'special', check: (sub) => getAnswer(sub, 'is_pwd') === 'Yes' },
@@ -499,21 +505,29 @@ export default function Analytics() {
                   <p className="text-sm text-amber-800 mt-1">{viewSub.admin_comment}</p>
                 </div>
               )}
-              {viewSub.draft_data_json && (
-                <div className="border-t pt-3 space-y-2">
-                  {Object.entries(JSON.parse(viewSub.draft_data_json)).map(([qId, val]) => {
-                    const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-                    const rawVal = !val ? 'N/A' : Array.isArray(val) ? val.map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; ') : typeof val === 'object' ? JSON.stringify(val) : (typeof val === 'string' && val.startsWith('[') ? (() => { try { return JSON.parse(val).map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; '); } catch { return val; } })() : val);
-                    const displayVal = toUpperDisplay(rawVal);
-                    return (
-                      <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
-                        <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q?.question_text || qId}</span>
-                        <span className="text-sm">{displayVal}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {viewSub.draft_data_json && (() => {
+                const parsed = JSON.parse(viewSub.draft_data_json);
+                return (
+                  <div className="border-t pt-3 space-y-2">
+                    {Object.entries(parsed).map(([qId, val]) => {
+                      const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
+                      let rawVal = !val ? 'N/A' : Array.isArray(val) ? val.map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; ') : typeof val === 'object' ? JSON.stringify(val) : (typeof val === 'string' && val.startsWith('[') ? (() => { try { return JSON.parse(val).map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; '); } catch { return val; } })() : val);
+                      if (q?.system_key === 'indigenous_peoples_group' && val === 'Others') {
+                        const specifyQ = questions.find(qq => qq.system_key === 'indigenous_peoples_other_specify');
+                        const specifyVal = specifyQ ? (parsed[specifyQ.id] ?? parsed[String(specifyQ.id)]) : null;
+                        if (specifyVal) rawVal = String(specifyVal);
+                      }
+                      const displayVal = toUpperDisplay(rawVal);
+                      return (
+                        <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
+                          <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q?.question_text || qId}</span>
+                          <span className="text-sm">{displayVal}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </DialogContent>

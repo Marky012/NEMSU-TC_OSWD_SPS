@@ -286,10 +286,11 @@ def generate_ched_dataset(db: Session, report_num: int) -> Dict[str, Any]:
         
     elif report_num == 3:
         # REPORT 3: IP Summary (counts per IP group)
-        ip_groups = ["BLAAN", "MAMANWA", "MANGYAN", "SUBANEN", "BUKIDNON", "MANDAYA", "MANOBO", "T’BOLI"]
+        ip_groups = ["BLAAN", "MAMANWA", "MANGYAN", "SUBANEN", "BUKIDNON", "MANDAYA", "MANOBO", "T'BOLI"]
         counts = {ip: 0 for ip in ip_groups}
-        counts["Specifialized/Others IP"] = 0
+        counts["Specialized/Others IP"] = 0
         counts["Non-IP Students"] = 0
+        others_custom = {}
         
         for r in records:
             is_ip = r["answers"].get("indigenous_peoples_none", "")
@@ -299,7 +300,15 @@ def generate_ched_dataset(db: Session, report_num: int) -> Dict[str, Any]:
                 
             ip_ans = r["answers"].get("indigenous_peoples_group", "")
             if not ip_ans or ip_ans == "Others":
-                counts["Specifialized/Others IP"] += 1
+                custom = r["answers"].get("indigenous_peoples_other_specify", "").strip()
+                if custom:
+                    label = custom.upper()
+                    if label in ip_groups:
+                        counts[label] += 1
+                    else:
+                        others_custom[label] = others_custom.get(label, 0) + 1
+                else:
+                    counts["Specialized/Others IP"] += 1
                 continue
                 
             matched = False
@@ -308,9 +317,11 @@ def generate_ched_dataset(db: Session, report_num: int) -> Dict[str, Any]:
                     counts[ip] += 1
                     matched = True
             if not matched:
-                counts["Specifialized/Others IP"] += 1
+                counts["Specialized/Others IP"] += 1
                 
         rows = [{"Indigenous Group (IP)": k, "Student Count": v} for k, v in counts.items()]
+        for custom_label, custom_count in sorted(others_custom.items()):
+            rows.insert(-1, {"Indigenous Group (IP)": custom_label, "Student Count": custom_count})
         
         return {
             "title": "CHED Report 3: Indigenous Peoples (IP) Student Counts",
@@ -636,7 +647,10 @@ def export_ched_program_csv(
         if r["answers"].get("indigenous_peoples_none") == "Yes":
             p["ip_total"] += 1
             group = r["answers"].get("indigenous_peoples_group", "")
-            if group:
+            if group == "Others":
+                custom = r["answers"].get("indigenous_peoples_other_specify", "").strip()
+                p["ip_groups"].add(custom.upper() if custom else "Others (unspecified)")
+            elif group:
                 p["ip_groups"].add(group)
         if r["answers"].get("is_solo_parent_currently_studying") == "Yes":
             p["solo_parent"] += 1
