@@ -26,6 +26,7 @@ export default function Analytics() {
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [groupSearch, setGroupSearch] = useState('');
   const [viewSub, setViewSub] = useState(null);
+  const [othersIpFilter, setOthersIpFilter] = useState('');
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -158,6 +159,11 @@ export default function Analytics() {
     return sub.student_email?.split('@')[0] || 'Student';
   };
 
+  const getCustomIp = (sub) => {
+    const val = getAnswer(sub, 'indigenous_peoples_other_specify');
+    return val ? toUpperDisplay(String(val)) : '';
+  };
+
   const GROUPS = [
     { id: 'all_ip', title: 'All IP Students', description: 'Belong to any Indigenous Peoples group', tab: 'ip', check: (sub) => { const g = getAnswer(sub, 'indigenous_peoples_group'); return !!g; } },
     { id: 'blaan', title: 'Blaan', description: 'IP Group: Blaan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'BLAAN' },
@@ -201,26 +207,47 @@ export default function Analytics() {
 
   const visibleGroups = GROUPS.filter(g => groupTab === 'all' || g.tab === groupTab);
 
+  const customIpOptions = useMemo(() => {
+    const others = groupSubs['others_ip'] || [];
+    const unique = [...new Set(others.map(getCustomIp))].filter(Boolean).sort();
+    return unique;
+  }, [groupSubs]);
+
   const expandedData = useMemo(() => {
     if (!expandedGroup) return [];
-    const subs = groupSubs[expandedGroup] || [];
+    let subs = groupSubs[expandedGroup] || [];
+    if (expandedGroup === 'others_ip' && othersIpFilter) {
+      subs = subs.filter(sub => getCustomIp(sub) === othersIpFilter);
+    }
     if (!groupSearch) return subs;
     const q = groupSearch.toLowerCase();
     return subs.filter(sub => getStudentName(sub).toLowerCase().includes(q));
-  }, [expandedGroup, groupSubs, groupSearch, questions]);
+  }, [expandedGroup, groupSubs, groupSearch, othersIpFilter, questions]);
 
   const exportGroupCsv = () => {
     if (!expandedGroup) return;
-    const subs = groupSubs[expandedGroup] || [];
-    const headers = ['Name', 'Email', 'Program', 'Year', 'Category', 'Status'];
-    const rows = subs.map(sub => [
-      getStudentName(sub),
-      sub.student_email || '',
-      getAnswer(sub, 'program') || '',
-      getAnswer(sub, 'year_level') || '',
-      sub.student_category || '',
-      sub.status || 'Pending',
-    ]);
+    let subs = groupSubs[expandedGroup] || [];
+    if (expandedGroup === 'others_ip' && othersIpFilter) {
+      subs = subs.filter(sub => getCustomIp(sub) === othersIpFilter);
+    }
+    const headers = expandedGroup === 'others_ip'
+      ? ['Name', 'Email', 'IP Group', 'Program', 'Year', 'Category', 'Status']
+      : ['Name', 'Email', 'Program', 'Year', 'Category', 'Status'];
+    const rows = subs.map(sub => {
+      const base = [
+        getStudentName(sub),
+        sub.student_email || '',
+      ];
+      const ipCol = expandedGroup === 'others_ip' ? [getCustomIp(sub)] : [];
+      return [
+        ...base,
+        ...ipCol,
+        getAnswer(sub, 'program') || '',
+        getAnswer(sub, 'year_level') || '',
+        sub.student_category || '',
+        sub.status || 'Pending',
+      ];
+    });
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(',')).join('\n');
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -356,7 +383,7 @@ export default function Analytics() {
           {TAB_KEYS.map(key => (
             <button
               key={key}
-              onClick={() => { setGroupTab(key); setExpandedGroup(null); setGroupSearch(''); }}
+                onClick={() => { setGroupTab(key); setExpandedGroup(null); setGroupSearch(''); setOthersIpFilter(''); }}
               className={`px-3 py-1 text-xs font-medium rounded-full transition-colors whitespace-nowrap border ${groupTab === key ? 'bg-sidebar-primary border-sidebar-primary text-sidebar-primary-foreground' : 'bg-transparent border-gray-300 text-foreground hover:bg-gray-100'}`}
             >
               {TAB_LABELS[key]}
@@ -372,7 +399,7 @@ export default function Analytics() {
             return (
               <button
                 key={g.id}
-                onClick={() => setExpandedGroup(isExpanded ? null : g.id)}
+                onClick={() => { setExpandedGroup(isExpanded ? null : g.id); if (g.id !== 'others_ip') setOthersIpFilter(''); }}
                 className={`text-left border rounded-xl p-4 transition-all cursor-pointer hover:shadow-md ${isExpanded ? 'bg-blue-50 border-2 border-sidebar-primary shadow-sm' : 'bg-white border border-border shadow-sm'}`}
               >
                 <div className="min-w-0">
@@ -401,7 +428,16 @@ export default function Analytics() {
                     <h3 className="font-heading font-bold text-lg">{g.title}</h3>
                     <p className="text-sm text-muted-foreground">{g.description} &mdash; <span className="font-semibold text-foreground">{subs.length} students</span></p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {expandedGroup === 'others_ip' && customIpOptions.length > 0 && (
+                      <Select value={othersIpFilter} onValueChange={setOthersIpFilter}>
+                        <SelectTrigger className="h-9 w-full sm:w-48 text-sm"><SelectValue placeholder="All Other IP Groups" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Other IP Groups</SelectItem>
+                          {customIpOptions.map(ip => <SelectItem key={ip} value={ip}>{ip}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    )}
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input placeholder="Search name..." value={groupSearch} onChange={e => setGroupSearch(e.target.value)} className="pl-9 h-9 w-full sm:w-56 text-sm" />
@@ -409,7 +445,7 @@ export default function Analytics() {
                     <Button variant="outline" size="sm" className="gap-1.5 whitespace-nowrap rounded-lg" onClick={exportGroupCsv}>
                       <Download className="w-3.5 h-3.5" /> Export CSV
                     </Button>
-                    <button onClick={() => { setExpandedGroup(null); setGroupSearch(''); }} className="p-1.5 rounded-full hover:bg-gray-100 text-muted-foreground hover:text-foreground transition-colors" title="Close">
+                    <button onClick={() => { setExpandedGroup(null); setGroupSearch(''); setOthersIpFilter(''); }} className="p-1.5 rounded-full hover:bg-gray-100 text-muted-foreground hover:text-foreground transition-colors" title="Close">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -421,6 +457,7 @@ export default function Analytics() {
                     <tr className="bg-[#F1F5F9] border-b border-border">
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground w-10">#</th>
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground">Name</th>
+                      {expandedGroup === 'others_ip' && <th className="p-3 text-left font-medium text-xs text-muted-foreground">IP Group</th>}
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground">Program / Course</th>
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground">Year</th>
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground">Category</th>
@@ -431,7 +468,7 @@ export default function Analytics() {
                   <tbody>
                     {displayData.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                        <td colSpan={expandedGroup === 'others_ip' ? 8 : 7} className="p-8 text-center text-muted-foreground">
                           <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                           No students found
                         </td>
@@ -440,6 +477,7 @@ export default function Analytics() {
                       <tr key={sub.id} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-[#F8FAFC]' : 'bg-white'}`}>
                         <td className="p-3 text-muted-foreground text-xs">{i + 1}</td>
                         <td className="p-3 font-medium text-sm">{getStudentName(sub)}</td>
+                        {expandedGroup === 'others_ip' && <td className="p-3 text-sm">{getCustomIp(sub) || 'N/A'}</td>}
                         <td className="p-3 text-sm">{toUpperDisplay(getAnswer(sub, 'program')) || 'N/A'}</td>
                         <td className="p-3 text-sm">{toUpperDisplay(getAnswer(sub, 'year_level')) || 'N/A'}</td>
                         <td className="p-3 text-sm">{toUpperDisplay(sub.student_category) || 'N/A'}</td>
