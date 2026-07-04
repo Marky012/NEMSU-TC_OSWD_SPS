@@ -364,9 +364,9 @@ export default function StudentList() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="desc">DESC</SelectItem>
-              <SelectItem value="asc">ASC</SelectItem>
+              <SelectItem value="newest">Sort from newest</SelectItem>
+              <SelectItem value="asc">Sort A–Z</SelectItem>
+              <SelectItem value="desc">Sort Z–A</SelectItem>
             </SelectContent>
           </Select>
         </div>
