@@ -241,86 +241,53 @@ const SkillsField = ({ value, onChange, error, minRows = 0 }) => {
   const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
 
   useEffect(() => {
-    if (minRows > 0 && (!value || parsed.length === 0)) {
-      const rows = [];
-      for (let i = 0; i < minRows; i++) {
-        const emptyRow = {};
-        COLUMNS_SKILLS.forEach(col => { emptyRow[col] = ''; });
-        rows.push(emptyRow);
-      }
+    if (!value || parsed.length === 0) {
+      const rows = [{ "Skill/Hobby/Talent": "" }, { "Skill/Hobby/Talent": "" }, { "Skill/Hobby/Talent": "" }, { "Skill/Hobby/Talent": "" }];
       onChange(JSON.stringify(rows));
     }
   }, []);
 
   const rows = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
+  if (rows.length < 4) {
+    while (rows.length < 4) rows.push({ "Skill/Hobby/Talent": "" });
+  }
 
-  const addRow = () => {
-    const emptyRow = {};
-    COLUMNS_SKILLS.forEach(col => { emptyRow[col] = ''; });
-    const newRows = [...rows, emptyRow];
-    onChange(JSON.stringify(newRows));
-  };
-
-  const updateRow = (index, col, val) => {
+  const updateRow = (index, val) => {
     const updated = [...rows];
-    updated[index] = { ...updated[index], [col]: val };
+    updated[index] = { "Skill/Hobby/Talent": val };
     onChange(JSON.stringify(updated));
   };
 
-  const removeRow = (index) => {
-    const updated = rows.filter((_, i) => i !== index);
-    onChange(JSON.stringify(updated));
-  };
-
-  const canRemove = rows.length > minRows;
+  const cellOrder = [1, 2, 3, 4];
 
   return (
     <div className="space-y-3">
-      {rows.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-[#D4DDE8]/40">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-accent border-b border-[#D4DDE8]/40">
-                {COLUMNS_SKILLS.map(col => (
-                  <th key={col} className="px-3 py-2.5 text-left font-semibold text-xs text-gray-900 whitespace-nowrap">{col}</th>
-                ))}
-                <th className="w-12 px-2 py-2.5"></th>
+      <p className="text-xs text-muted-foreground">List your skills/hobbies/talents below</p>
+      <div className="overflow-x-auto rounded-lg border border-[#D4DDE8]/40">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-accent border-b border-[#D4DDE8]/40">
+              <th className="w-10 px-2 py-2.5 text-center font-semibold text-xs text-gray-500">#</th>
+              <th className="px-3 py-2.5 text-left font-semibold text-xs text-gray-900">Skill/Hobby/Talent</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.slice(0, 4).map((row, i) => (
+              <tr key={i} className="border-t border-[#D4DDE8]/40">
+                <td className="px-2 py-1.5 text-center text-xs font-bold text-gray-400">{cellOrder[i]}</td>
+                <td className="px-1.5 sm:px-2 py-1.5 sm:py-1">
+                  <input
+                    value={row["Skill/Hobby/Talent"] || ''}
+                    onChange={(e) => updateRow(i, e.target.value.toUpperCase())}
+                    placeholder={`Skill/Hobby/Talent ${cellOrder[i]}`}
+                    className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted border border-[#D4DDE8] rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B]"
+                  />
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, i) => (
-                <tr key={i} className="border-t border-[#D4DDE8]/40">
-                  {COLUMNS_SKILLS.map(col => (
-                    <td key={col} className="px-1.5 sm:px-2 py-1.5 sm:py-1">
-                      <input
-                        value={typeof row === 'string' ? row : (row[col] || '')}
-                        onChange={(e) => updateRow(i, col, e.target.value.toUpperCase())}
-                        className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted border border-[#D4DDE8] rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B]"
-                      />
-                    </td>
-                  ))}
-                  <td className="px-1.5 py-1 text-center">
-                    <TooltipBox label={canRemove ? 'Remove row' : 'At least one row required'}>
-                      <button
-                        type="button"
-                        onClick={() => removeRow(i)}
-                        disabled={!canRemove}
-                        className={`rounded-md p-1.5 transition-colors ${canRemove ? 'text-red-500 hover:bg-blue-100' : 'text-gray-300 cursor-not-allowed'}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </TooltipBox>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      <button type="button" onClick={addRow} className="flex items-center gap-1 text-sm font-medium text-gray-900 hover:text-[#143A7B] hover:bg-accent px-3 py-1.5 rounded-lg border border-solid border-[#D4DDE8]/40 transition-colors">
-        <span className="text-lg leading-none">+</span> Add Row
-      </button>
-      {minRows > 0 && <p className="text-xs text-muted-foreground">Add at least {minRows} row(s)</p>}
+            ))}
+          </tbody>
+        </table>
+      </div>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
@@ -759,8 +726,8 @@ export default function ProfileForm() {
                 {q.system_key === 'participation_in_sports_arts' && q.min_rows > 0 && (
                   <p className="text-xs text-muted-foreground">Add at least {q.min_rows} row(s) for each event you have participated in</p>
                 )}
-                {q.system_key === 'other_skills_hobbies_talents' && q.min_rows > 0 && (
-                  <p className="text-xs text-muted-foreground">Add at least {q.min_rows} row(s)</p>
+                {q.system_key === 'other_skills_hobbies_talents' && (
+                  <p className="text-xs text-muted-foreground">Add at least 4 entries</p>
                 )}
                 {q.system_key === 'participation_in_sports_arts' ? (
                   <ParticipationField
