@@ -42,6 +42,27 @@ export default function DynamicField({ question, value, onChange, error }) {
   const renderField = () => {
     switch (question.field_type) {
       case 'text':
+        if (question.system_key === 'estimated_household_income') {
+          const formatIncome = (val) => {
+            const digits = (val || '').replace(/\D/g, '');
+            if (!digits) return '';
+            return Number(digits).toLocaleString();
+          };
+          return (
+            <div className="space-y-1">
+              <Input
+                value={value || ''}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '');
+                  onChange(digits ? Number(digits).toLocaleString() : '');
+                }}
+                placeholder="e.g. 500,000"
+                className="bg-background"
+              />
+              <p className="text-[11px] text-muted-foreground">Commas are added automatically — do not type them</p>
+            </div>
+          );
+        }
         return (
           <Input
             value={value || ''}
