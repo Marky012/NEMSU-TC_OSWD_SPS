@@ -236,6 +236,10 @@ async def lifespan(app: FastAPI):
         _db.execute(
             text("UPDATE questions SET required = TRUE WHERE system_key = 'religion' AND required = FALSE")
         )
+        # Deactivate redundant other_skills_hobbies (table already covers skills/hobbies)
+        _db.execute(
+            text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies'")
+        )
         _db.commit()
     except Exception as e:
         print(f"[Migration] Note: {e}")

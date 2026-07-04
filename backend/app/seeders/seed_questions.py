@@ -535,19 +535,6 @@ def seed_database(db: Session):
             "display_order":  38,
         },
 
-        # other_skills_hobbies — NTR only, free text after sports/arts
-        {
-            "temp_id":        "other_skills_hobbies",
-            "category_id":    6,
-            "system_key":     "other_skills_hobbies",
-            "question_text":  "Other skills/hobbies/talents related to sports, literary, dance, music, visual arts",
-            "field_type":     "textarea",
-            "options":        None,
-            "required":       False,
-            "applicable_cats": NTR,
-            "display_order":  39,
-        },
-
         # ===================================================================
         # CATEGORY 7: INTERNET & DIGITAL TECHNOLOGY
         # ===================================================================
