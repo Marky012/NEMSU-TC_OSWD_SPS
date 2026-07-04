@@ -231,14 +231,15 @@ export default function StudentList() {
   const getAnswerDisplay = (qId, data) => {
     const val = data[qId];
     if (!val) return 'N/A';
+    const formatRow = item => typeof item === 'object' ? Object.values(item).filter(v => v && String(v).trim()).join(' — ') : String(item);
     if (Array.isArray(val)) {
-      return val.map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; ');
+      return val.map(formatRow).filter(r => r).join('; ');
     }
     if (typeof val === 'object') {
       return JSON.stringify(val);
     }
     if (typeof val === 'string' && val.startsWith('[')) {
-      try { return JSON.parse(val).map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; '); } catch { return val; }
+      try { return JSON.parse(val).map(formatRow).filter(r => r).join('; '); } catch { return val; }
     }
     const cleaned = String(val).replace(/,/g, '');
     if (/^\d+(\.\d+)?$/.test(cleaned)) {

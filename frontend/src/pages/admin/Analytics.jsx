@@ -566,7 +566,8 @@ export default function Analytics() {
                   <div className="border-t pt-3 space-y-2">
                     {Object.entries(parsed).map(([qId, val]) => {
                       const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-                      let rawVal = !val ? 'N/A' : Array.isArray(val) ? val.map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; ') : typeof val === 'object' ? JSON.stringify(val) : (typeof val === 'string' && val.startsWith('[') ? (() => { try { return JSON.parse(val).map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; '); } catch { return val; } })() : val);
+                      const formatRow = item => typeof item === 'object' ? Object.values(item).filter(v => v && String(v).trim()).join(' — ') : String(item);
+                      let rawVal = !val ? 'N/A' : Array.isArray(val) ? val.map(formatRow).filter(r => r).join('; ') : typeof val === 'object' ? JSON.stringify(val) : (typeof val === 'string' && val.startsWith('[') ? (() => { try { return JSON.parse(val).map(formatRow).filter(r => r).join('; '); } catch { return val; } })() : val);
                       if (q?.system_key === 'indigenous_peoples_group' && val === 'Others') {
                         const specifyQ = questions.find(qq => qq.system_key === 'indigenous_peoples_other_specify');
                         const specifyVal = specifyQ ? (parsed[specifyQ.id] ?? parsed[String(specifyQ.id)]) : null;
