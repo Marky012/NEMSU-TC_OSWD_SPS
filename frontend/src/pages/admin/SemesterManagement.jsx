@@ -126,9 +126,11 @@ export default function SemesterManagement() {
           <h1 className="font-heading text-2xl font-bold">Semester Management</h1>
           <p className="text-muted-foreground text-sm mt-1">Manage academic semesters and profiling periods</p>
         </div>
-        <Button onClick={() => setEditSem({ label: '', is_active: false, opens_at: '', closes_at: '' })}>
-          <Plus className="w-4 h-4 mr-1" /> New Semester
-        </Button>
+        <TooltipBox label="Create a new semester">
+          <Button onClick={() => setEditSem({ label: '', is_active: false, opens_at: '', closes_at: '' })}>
+            <Plus className="w-4 h-4 mr-1" /> New Semester
+          </Button>
+        </TooltipBox>
       </motion.div>
 
       <motion.div variants={fadeIn} className="space-y-3">
@@ -154,9 +156,11 @@ export default function SemesterManagement() {
                 </div>
                 <div className="flex items-center gap-1">
                   {!sem.is_active && !sem.is_archived && (
-                    <Button variant="outline" size="sm" onClick={() => handleActivate(sem.id)} className="text-xs">
-                      Activate
-                    </Button>
+                    <TooltipBox label="Activate this semester">
+                      <Button variant="outline" size="sm" onClick={() => handleActivate(sem.id)} className="text-xs">
+                        Activate
+                      </Button>
+                    </TooltipBox>
                   )}
                   {!sem.is_archived && (
                     <>
@@ -165,9 +169,11 @@ export default function SemesterManagement() {
                           <Copy className="w-3 h-3 mr-1" /> Seed Default
                         </Button>
                       </TooltipBox>
-                      <Button variant="ghost" size="sm" onClick={() => setArchiveTarget(sem.id)} className="text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50">
-                        <Archive className="w-3 h-3 mr-1" /> Archive
-                      </Button>
+                      <TooltipBox label="Archive this semester">
+                        <Button variant="ghost" size="sm" onClick={() => setArchiveTarget(sem.id)} className="text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50">
+                          <Archive className="w-3 h-3 mr-1" /> Archive
+                        </Button>
+                      </TooltipBox>
                     </>
                   )}
                   <TooltipBox label="Edit semester">
@@ -227,10 +233,14 @@ export default function SemesterManagement() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditSem(null)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />} Save
-            </Button>
+            <TooltipBox label="Cancel">
+              <Button variant="outline" onClick={() => setEditSem(null)}>Cancel</Button>
+            </TooltipBox>
+            <TooltipBox label="Save semester settings">
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />} Save
+              </Button>
+            </TooltipBox>
           </DialogFooter>
         </DialogContent>
       </Dialog>

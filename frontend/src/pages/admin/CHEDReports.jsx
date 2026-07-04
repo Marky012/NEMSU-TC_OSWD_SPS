@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Download, ArrowDown, FileText, BookOpen, BarChart3, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { TooltipBox } from '@/components/ui/tooltip';
 
 export default function CHEDReports() {
   const { user } = useAuth();
@@ -389,9 +390,10 @@ export default function CHEDReports() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {downloadButtons.map(btn => {
               const isLoading = downloading === btn.id;
+              const tooltipLabel = btn.id === 'consolidated' ? 'Download CHEDRO consolidated report' : btn.id === 'program' ? 'Download SEGs by program report' : 'Download SEGs by sex and year level report';
               return (
+              <TooltipBox key={btn.id} label={tooltipLabel}>
               <button
-                key={btn.id}
                 onClick={() => { if (!isLoading) setDownloadTarget(btn.id); }}
                 disabled={isLoading}
                 className={`h-auto py-5 px-4 flex flex-col items-start gap-1 bg-white border border-[#D4DDE8] rounded-lg hover:bg-[#D7E2F4]/50 active:bg-[#D7E2F4]/50 hover:shadow-sm ring-1 ring-[#D4DDE8] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed`}
@@ -409,6 +411,7 @@ export default function CHEDReports() {
                   )}
                 </span>
               </button>
+              </TooltipBox>
               );
             })}
           </div>
@@ -418,9 +421,11 @@ export default function CHEDReports() {
       {/* Layer 4: Preview Tabs */}
       <div className="flex justify-center">
         <div className="inline-flex bg-[#F1F5F9] p-1 rounded-lg">
-          {tabs.map(tab => (
+          {tabs.map(tab => {
+            const tooltipLabel = tab.id === 'consolidated' ? 'View CHEDRO consolidated report' : tab.id === 'program' ? 'View SEGs by program' : 'View SEGs by sex and year level';
+            return (
+            <TooltipBox key={tab.id} label={tooltipLabel}>
             <button
-              key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                 activeTab === tab.id
@@ -430,7 +435,9 @@ export default function CHEDReports() {
             >
               {tab.label}
             </button>
-          ))}
+            </TooltipBox>
+            );
+          })}
         </div>
       </div>
 

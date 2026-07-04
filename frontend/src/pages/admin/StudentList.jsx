@@ -290,13 +290,17 @@ export default function StudentList() {
         </div>
         <div className="flex items-center gap-2">
           {selectedIds.length > 0 && (
-            <Button onClick={() => setShowVerifyDialog(true)} size="sm" disabled={verifying}>
-              <Shield className="w-3 h-3 mr-1" /> Verify ({selectedIds.length})
-            </Button>
+            <TooltipBox label="Verify selected submissions">
+              <Button onClick={() => setShowVerifyDialog(true)} size="sm" disabled={verifying}>
+                <Shield className="w-3 h-3 mr-1" /> Verify ({selectedIds.length})
+              </Button>
+            </TooltipBox>
           )}
-          <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)} className="rounded-lg">
-            <Download className="w-3 h-3 mr-1" /> Export CSV
-          </Button>
+          <TooltipBox label="Export to CSV file">
+            <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)} className="rounded-lg">
+              <Download className="w-3 h-3 mr-1" /> Export CSV
+            </Button>
+          </TooltipBox>
           <TooltipBox label="Refresh data">
             <Button variant="outline" size="sm" onClick={loadData} className="rounded-lg">
               <RefreshCw className="w-3 h-3 mr-1" /> Refresh
@@ -524,18 +528,28 @@ export default function StudentList() {
             <div className="flex items-center justify-between px-4 py-3 border-t border-border">
               <span className="text-xs text-muted-foreground">Page {safePage} of {totalPages}</span>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={safePage <= 1}>First</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>Prev</Button>
+                <TooltipBox label="Go to first page">
+                  <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={safePage <= 1}>First</Button>
+                </TooltipBox>
+                <TooltipBox label="Go to previous page">
+                  <Button variant="outline" size="sm" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>Prev</Button>
+                </TooltipBox>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const start = Math.max(1, Math.min(safePage - 2, totalPages - 4));
                   const p = start + i;
                   if (p > totalPages) return null;
                   return (
-                    <Button key={p} variant={p === safePage ? 'default' : 'outline'} size="sm" className="min-w-[32px]" onClick={() => setPage(p)}>{p}</Button>
+                    <TooltipBox key={p} label={`Go to page ${p}`}>
+                      <Button variant={p === safePage ? 'default' : 'outline'} size="sm" className="min-w-[32px]" onClick={() => setPage(p)}>{p}</Button>
+                    </TooltipBox>
                   );
                 })}
-                <Button variant="outline" size="sm" onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={safePage >= totalPages}>Last</Button>
+                <TooltipBox label="Go to next page">
+                  <Button variant="outline" size="sm" onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next</Button>
+                </TooltipBox>
+                <TooltipBox label="Go to last page">
+                  <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={safePage >= totalPages}>Last</Button>
+                </TooltipBox>
               </div>
             </div>
           )}
@@ -663,17 +677,21 @@ export default function StudentList() {
                 />
               </div>
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => { setReviewSub(null); setReviewAction(''); setReviewComment(''); }}>
-                  Cancel
-                </Button>
-                <Button
-                  variant={reviewAction === 'returned' ? 'default' : 'destructive'}
-                  onClick={() => setShowReviewConfirm(true)}
-                  disabled={reviewing || !reviewComment.trim()}
-                >
-                  {reviewing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  {reviewAction === 'returned' ? 'Return' : 'Decline'}
-                </Button>
+                <TooltipBox label="Cancel review">
+                  <Button variant="outline" onClick={() => { setReviewSub(null); setReviewAction(''); setReviewComment(''); }}>
+                    Cancel
+                  </Button>
+                </TooltipBox>
+                <TooltipBox label={reviewAction === 'returned' ? 'Confirm return to student' : 'Confirm decline'}>
+                  <Button
+                    variant={reviewAction === 'returned' ? 'default' : 'destructive'}
+                    onClick={() => setShowReviewConfirm(true)}
+                    disabled={reviewing || !reviewComment.trim()}
+                  >
+                    {reviewing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    {reviewAction === 'returned' ? 'Return' : 'Decline'}
+                  </Button>
+                </TooltipBox>
               </DialogFooter>
             </div>
           )}

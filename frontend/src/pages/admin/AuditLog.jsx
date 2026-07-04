@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Shield, Clock } from 'lucide-react';
+import { TooltipBox } from '@/components/ui/tooltip';
 
 export default function AuditLog() {
   const [logs, setLogs] = useState([]);
@@ -96,16 +97,16 @@ export default function AuditLog() {
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">Page {safePage} of {totalPages}</span>
           <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={safePage <= 1}>First</Button>
-            <Button variant="outline" size="sm" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>Prev</Button>
+            <TooltipBox label="Go to first page"><Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={safePage <= 1}>First</Button></TooltipBox>
+            <TooltipBox label="Go to previous page"><Button variant="outline" size="sm" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>Prev</Button></TooltipBox>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const start = Math.max(1, Math.min(safePage - 2, totalPages - 4));
               const p = start + i;
               if (p > totalPages) return null;
-              return <Button key={p} variant={p === safePage ? 'default' : 'outline'} size="sm" className="min-w-[32px]" onClick={() => setPage(p)}>{p}</Button>;
+              return <TooltipBox key={p} label={`Go to page ${p}`}><Button variant={p === safePage ? 'default' : 'outline'} size="sm" className="min-w-[32px]" onClick={() => setPage(p)}>{p}</Button></TooltipBox>;
             })}
-            <Button variant="outline" size="sm" onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next</Button>
-            <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={safePage >= totalPages}>Last</Button>
+            <TooltipBox label="Go to next page"><Button variant="outline" size="sm" onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next</Button></TooltipBox>
+            <TooltipBox label="Go to last page"><Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={safePage >= totalPages}>Last</Button></TooltipBox>
           </div>
         </div>
       )}

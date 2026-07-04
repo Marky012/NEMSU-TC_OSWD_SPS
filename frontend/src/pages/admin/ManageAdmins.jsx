@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import apiClient from '@/api/apiClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TooltipBox } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -121,9 +122,11 @@ export default function ManageAdmins() {
           </p>
         </div>
         {mySlot && (
-          <Button variant="outline" size="sm" onClick={() => setShowRelease(true)} className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-lg">
-            <LogOut className="w-4 h-4" /> Release Slot
-          </Button>
+          <TooltipBox label="Release this staff slot">
+            <Button variant="outline" size="sm" onClick={() => setShowRelease(true)} className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-lg">
+              <LogOut className="w-4 h-4" /> Release Slot
+            </Button>
+          </TooltipBox>
         )}
       </motion.div>
 
@@ -168,9 +171,11 @@ export default function ManageAdmins() {
                 {/* Availability */}
                 <div className="mt-auto">
                   {!isClaimed && !mySlot && (
-                    <Button size="sm" className="w-full gap-1.5 rounded-lg" onClick={() => { setClaimSlot(slot.slot_number); setForm({ email: '', full_name: '' }); }}>
-                      <Eye className="w-3.5 h-3.5" /> Claim Slot
-                    </Button>
+                    <TooltipBox label="Claim this staff slot for yourself">
+                      <Button size="sm" className="w-full gap-1.5 rounded-lg" onClick={() => { setClaimSlot(slot.slot_number); setForm({ email: '', full_name: '' }); }}>
+                        <Eye className="w-3.5 h-3.5" /> Claim Slot
+                      </Button>
+                    </TooltipBox>
                   )}
                   {!isClaimed && mySlot && (
                     <p className="text-xs text-muted-foreground text-center py-1">Claim another slot first</p>
@@ -181,9 +186,11 @@ export default function ManageAdmins() {
                     </p>
                   )}
                   {isMine && (
-                    <Button size="sm" className="w-full gap-1.5 rounded-lg" onClick={() => window.location.href = '/admin/staff-view'}>
-                      <Eye className="w-3.5 h-3.5" /> Open Staff View
-                    </Button>
+                    <TooltipBox label="Open staff dashboard for this slot">
+                      <Button size="sm" className="w-full gap-1.5 rounded-lg" onClick={() => window.location.href = '/admin/staff-view'}>
+                        <Eye className="w-3.5 h-3.5" /> Open Staff View
+                      </Button>
+                    </TooltipBox>
                   )}
                 </div>
               </CardContent>
@@ -226,13 +233,17 @@ export default function ManageAdmins() {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setClaimSlot(null); setForm({ email: '', full_name: '' }); }}>
-              Cancel
-            </Button>
-            <Button onClick={handleClaim} disabled={saving}>
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Claim Slot
-            </Button>
+            <TooltipBox label="Cancel">
+              <Button variant="outline" onClick={() => { setClaimSlot(null); setForm({ email: '', full_name: '' }); }}>
+                Cancel
+              </Button>
+            </TooltipBox>
+            <TooltipBox label="Confirm slot claim">
+              <Button onClick={handleClaim} disabled={saving}>
+                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Claim Slot
+              </Button>
+            </TooltipBox>
           </DialogFooter>
         </DialogContent>
       </Dialog>

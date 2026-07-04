@@ -6,6 +6,7 @@ import apiClient from '@/api/apiClient';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TooltipBox } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -178,9 +179,9 @@ export default function StaffView() {
             {mySlot?.full_name} ({mySlot?.email}) &mdash; {pendingCount} pending of {submissions.length} total assigned
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={refresh} className="rounded-lg">
+        <TooltipBox label="Refresh data"><Button variant="outline" size="sm" onClick={refresh} className="rounded-lg">
           <RefreshCw className="w-4 h-4 mr-1" /> Refresh
-        </Button>
+        </Button></TooltipBox>
       </motion.div>
 
       <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-3">
@@ -240,22 +241,22 @@ export default function StaffView() {
                       <div className="flex items-center gap-1">
                         {sub.status !== 'verified' && (
                           <>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => setVerifyConfirmSub(sub)} disabled={verifyOneId === sub.id}>
+                            <TooltipBox label="Verify this submission"><Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => setVerifyConfirmSub(sub)} disabled={verifyOneId === sub.id}>
                               {verifyOneId === sub.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Shield className="w-3 h-3" />}
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                            </Button></TooltipBox>
+                            <TooltipBox label="Return to student for revision"><Button variant="ghost" size="icon" className="h-7 w-7 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
                               onClick={() => { setReviewSub(sub); setReviewAction('returned'); setReviewComment(''); }}>
                               <ArrowLeftFromLine className="w-3 h-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            </Button></TooltipBox>
+                            <TooltipBox label="Decline this submission"><Button variant="ghost" size="icon" className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
                               onClick={() => { setReviewSub(sub); setReviewAction('declined'); setReviewComment(''); }}>
                               <XCircle className="w-3 h-3" />
-                            </Button>
+                            </Button></TooltipBox>
                           </>
                         )}
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewSub(sub)}>
+                        <TooltipBox label="View submission details"><Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewSub(sub)}>
                           <Eye className="w-3 h-3" />
-                        </Button>
+                        </Button></TooltipBox>
                       </div>
                     </td>
                   </tr>
@@ -275,10 +276,10 @@ export default function StaffView() {
             <div className="flex items-center justify-between px-4 py-3 border-t border-border">
               <span className="text-xs text-muted-foreground">Page {safePage} of {totalPages}</span>
               <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={safePage <= 1}>First</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>Prev</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={safePage >= totalPages}>Last</Button>
+                <TooltipBox label="Go to first page"><Button variant="outline" size="sm" onClick={() => setPage(1)} disabled={safePage <= 1}>First</Button></TooltipBox>
+                <TooltipBox label="Go to previous page"><Button variant="outline" size="sm" onClick={() => setPage(safePage - 1)} disabled={safePage <= 1}>Prev</Button></TooltipBox>
+                <TooltipBox label="Go to next page"><Button variant="outline" size="sm" onClick={() => setPage(safePage + 1)} disabled={safePage >= totalPages}>Next</Button></TooltipBox>
+                <TooltipBox label="Go to last page"><Button variant="outline" size="sm" onClick={() => setPage(totalPages)} disabled={safePage >= totalPages}>Last</Button></TooltipBox>
               </div>
             </div>
           )}
@@ -377,15 +378,15 @@ export default function StaffView() {
                 />
               </div>
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => { setReviewSub(null); setReviewAction(''); setReviewComment(''); }}>Cancel</Button>
-                <Button
+                <TooltipBox label="Cancel review"><Button variant="outline" onClick={() => { setReviewSub(null); setReviewAction(''); setReviewComment(''); }}>Cancel</Button></TooltipBox>
+                <TooltipBox label={reviewAction === 'returned' ? 'Confirm return' : 'Confirm decline'}><Button
                   variant={reviewAction === 'returned' ? 'default' : 'destructive'}
                   onClick={() => setShowReviewConfirm(true)}
                   disabled={reviewing || !reviewComment.trim()}
                 >
                   {reviewing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   {reviewAction === 'returned' ? 'Return' : 'Decline'}
-                </Button>
+                </Button></TooltipBox>
               </DialogFooter>
             </div>
           )}

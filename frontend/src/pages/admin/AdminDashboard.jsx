@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import AnimatedPage, { staggerContainer, fadeIn } from '@/components/AnimatedPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { TooltipBox } from '@/components/ui/tooltip';
 import { FileText, AlertTriangle, CheckCircle2, Clock, GraduationCap, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { toast } from 'sonner';
@@ -133,18 +134,21 @@ export default function AdminDashboard() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setToggleConfirmOpen(true)}
-            className={`h-9 px-3 text-sm rounded-lg border font-medium flex items-center gap-1.5 transition-colors ${accepting ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100' : 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100'}`}
-            title={accepting ? 'Submissions are open — click to close' : 'Submissions are closed — click to open'}
-          >
-            {accepting ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-            {accepting ? 'Submissions Open' : 'Submissions Closed'}
-          </button>
-          <Button variant="outline" size="sm" onClick={() => loadStats()} disabled={refreshing} className="gap-1.5 rounded-full">
-            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
+          <TooltipBox label={accepting ? 'Submissions are open — click to close' : 'Submissions are closed — click to open'}>
+            <button
+              onClick={() => setToggleConfirmOpen(true)}
+              className={`h-9 px-3 text-sm rounded-lg border font-medium flex items-center gap-1.5 transition-colors ${accepting ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100' : 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100'}`}
+            >
+              {accepting ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
+              {accepting ? 'Submissions Open' : 'Submissions Closed'}
+            </button>
+          </TooltipBox>
+          <TooltipBox label="Refresh dashboard data">
+            <Button variant="outline" size="sm" onClick={() => loadStats()} disabled={refreshing} className="gap-1.5 rounded-full">
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </TooltipBox>
         </div>
       </motion.div>
 

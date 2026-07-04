@@ -394,13 +394,14 @@ export default function Analytics() {
         {/* Filter Tabs */}
         <div className="flex flex-wrap gap-2 mb-6">
           {TAB_KEYS.map(key => (
-            <button
-              key={key}
+            <TooltipBox key={key} label={`View ${TAB_LABELS[key]} analytics`}>
+              <button
                 onClick={() => { setGroupTab(key); setExpandedGroup(null); setGroupSearch(''); setIpSort(''); }}
-              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors whitespace-nowrap border ${groupTab === key ? 'bg-sidebar-primary border-sidebar-primary text-sidebar-primary-foreground' : 'bg-transparent border-gray-300 text-foreground hover:bg-gray-100'}`}
-            >
-              {TAB_LABELS[key]}
-            </button>
+                className={`px-3 py-1 text-xs font-medium rounded-full transition-colors whitespace-nowrap border ${groupTab === key ? 'bg-sidebar-primary border-sidebar-primary text-sidebar-primary-foreground' : 'bg-transparent border-gray-300 text-foreground hover:bg-gray-100'}`}
+              >
+                {TAB_LABELS[key]}
+              </button>
+            </TooltipBox>
           ))}
         </div>
 
@@ -410,19 +411,20 @@ export default function Analytics() {
             const count = (groupSubs[g.id] || []).length;
             const isExpanded = expandedGroup === g.id;
             return (
-              <button
-                key={g.id}
-                onClick={() => { setExpandedGroup(isExpanded ? null : g.id); }}
-                className={`text-left border rounded-xl p-4 transition-all cursor-pointer hover:shadow-md ${isExpanded ? 'bg-blue-50 border-2 border-sidebar-primary shadow-sm' : 'bg-white border border-border shadow-sm'}`}
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{g.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{g.description}</p>
-                  <div className="mt-2">
-                    <span className={`text-xl font-bold ${isExpanded ? 'text-sidebar-primary' : 'text-foreground'}`}>{count}</span>
+              <TooltipBox key={g.id} label={`View ${g.title} details`}>
+                <button
+                  onClick={() => { setExpandedGroup(isExpanded ? null : g.id); }}
+                  className={`text-left border rounded-xl p-4 transition-all cursor-pointer hover:shadow-md ${isExpanded ? 'bg-blue-50 border-2 border-sidebar-primary shadow-sm' : 'bg-white border border-border shadow-sm'}`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{g.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{g.description}</p>
+                    <div className="mt-2">
+                      <span className={`text-xl font-bold ${isExpanded ? 'text-sidebar-primary' : 'text-foreground'}`}>{count}</span>
+                    </div>
                   </div>
-                </div>
-              </button>
+                </button>
+              </TooltipBox>
             );
           })}
         </div>
@@ -458,9 +460,11 @@ export default function Analytics() {
                       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input placeholder="Search name..." value={groupSearch} onChange={e => setGroupSearch(e.target.value)} className="pl-9 h-9 w-full sm:w-56 text-sm" />
                     </div>
-                    <Button variant="outline" size="sm" className="gap-1.5 whitespace-nowrap rounded-lg" onClick={exportGroupCsv}>
-                      <Download className="w-3.5 h-3.5" /> Export CSV
-                    </Button>
+                    <TooltipBox label="Export to CSV file">
+                      <Button variant="outline" size="sm" className="gap-1.5 whitespace-nowrap rounded-lg" onClick={exportGroupCsv}>
+                        <Download className="w-3.5 h-3.5" /> Export CSV
+                      </Button>
+                    </TooltipBox>
                     <button onClick={() => { setExpandedGroup(null); setGroupSearch(''); setIpSort(''); }} className="p-1.5 rounded-full hover:bg-gray-100 text-muted-foreground hover:text-foreground transition-colors" title="Close">
                       <X className="w-4 h-4" />
                     </button>
