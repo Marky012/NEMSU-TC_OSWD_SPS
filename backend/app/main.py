@@ -248,7 +248,7 @@ async def lifespan(app: FastAPI):
             text("UPDATE questions SET required = TRUE WHERE system_key = 'religion' AND required = FALSE")
         )
         # Ensure other_skills_hobbies_talents exists and is active (table with 4 rows)
-        osh_opts = '["Event Participated", "Skills Competed (specify)", "Year", "Award (if any)"]'
+        osh_opts = '["Skill/Hobby/Talent"]'
         osh_exists = _db.execute(
             text("SELECT id FROM questions WHERE system_key = 'other_skills_hobbies_talents'")
         ).fetchone()
