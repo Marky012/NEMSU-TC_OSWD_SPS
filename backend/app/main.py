@@ -263,7 +263,7 @@ async def lifespan(app: FastAPI):
             next_order = (ref_q.display_order + 1) if ref_q else 1
             _db.execute(
                 text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order)
-                        VALUES (6, 'other_skills_hobbies_talents', 'Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts', 'textarea', FALSE, TRUE, '["new","transferee","returnee"]', :ord)"""),
+                        VALUES (6, 'other_skills_hobbies_talents', 'List Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts', 'textarea', FALSE, TRUE, '["new","transferee","returnee"]', :ord)"""),
                 {"ord": next_order}
             )
         # Also reactivate old key for backwards compatibility
