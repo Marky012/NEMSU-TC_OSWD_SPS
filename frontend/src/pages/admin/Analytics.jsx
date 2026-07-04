@@ -26,8 +26,7 @@ export default function Analytics() {
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [groupSearch, setGroupSearch] = useState('');
   const [viewSub, setViewSub] = useState(null);
-  const [othersIpFilter, setOthersIpFilter] = useState('');
-  const [ipSortDir, setIpSortDir] = useState('asc');
+  const [ipSort, setIpSort] = useState(''); // ''=all, 'asc', 'desc'
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -218,33 +217,23 @@ export default function Analytics() {
 
   const visibleGroups = GROUPS.filter(g => groupTab === 'all' || g.tab === groupTab);
 
-  const customIpOptions = useMemo(() => {
-    const others = groupSubs['others_ip'] || [];
-    const unique = [...new Set(others.map(getCustomIp))].filter(Boolean).sort();
-    return unique;
-  }, [groupSubs]);
-
   const expandedData = useMemo(() => {
     if (!expandedGroup) return [];
     let subs = groupSubs[expandedGroup] || [];
-    if (expandedGroup === 'others_ip') {
-      if (othersIpFilter) subs = subs.filter(sub => getCustomIp(sub) === othersIpFilter);
+    if (expandedGroup === 'others_ip' && ipSort) {
       subs = [...subs].sort((a, b) => {
         const cmp = getCustomIp(a).localeCompare(getCustomIp(b));
-        return ipSortDir === 'asc' ? cmp : -cmp;
+        return ipSort === 'asc' ? cmp : -cmp;
       });
     }
     if (!groupSearch) return subs;
     const q = groupSearch.toLowerCase();
     return subs.filter(sub => getStudentName(sub).toLowerCase().includes(q));
-  }, [expandedGroup, groupSubs, groupSearch, othersIpFilter, ipSortDir, questions]);
+  }, [expandedGroup, groupSubs, groupSearch, ipSort, questions]);
 
   const exportGroupCsv = () => {
     if (!expandedGroup) return;
     let subs = groupSubs[expandedGroup] || [];
-    if (expandedGroup === 'others_ip' && othersIpFilter) {
-      subs = subs.filter(sub => getCustomIp(sub) === othersIpFilter);
-    }
     const headers = hasIpCol
       ? ['Name', 'Email', 'IP Group', 'Program', 'Year', 'Category', 'Status']
       : ['Name', 'Email', 'Program', 'Year', 'Category', 'Status'];
@@ -400,7 +389,7 @@ export default function Analytics() {
           {TAB_KEYS.map(key => (
             <button
               key={key}
-                onClick={() => { setGroupTab(key); setExpandedGroup(null); setGroupSearch(''); setOthersIpFilter(''); setIpSortDir('asc'); }}
+                onClick={() => { setGroupTab(key); setExpandedGroup(null); setGroupSearch(''); setIpSort(''); }}
               className={`px-3 py-1 text-xs font-medium rounded-full transition-colors whitespace-nowrap border ${groupTab === key ? 'bg-sidebar-primary border-sidebar-primary text-sidebar-primary-foreground' : 'bg-transparent border-gray-300 text-foreground hover:bg-gray-100'}`}
             >
               {TAB_LABELS[key]}
@@ -416,7 +405,7 @@ export default function Analytics() {
             return (
               <button
                 key={g.id}
-                onClick={() => { setExpandedGroup(isExpanded ? null : g.id); if (g.id !== 'others_ip') { setOthersIpFilter(''); setIpSortDir('asc'); } }}
+                onClick={() => { setExpandedGroup(isExpanded ? null : g.id); }}
                 className={`text-left border rounded-xl p-4 transition-all cursor-pointer hover:shadow-md ${isExpanded ? 'bg-blue-50 border-2 border-sidebar-primary shadow-sm' : 'bg-white border border-border shadow-sm'}`}
               >
                 <div className="min-w-0">
@@ -446,36 +435,15 @@ export default function Analytics() {
                     <p className="text-sm text-muted-foreground">{g.description} &mdash; <span className="font-semibold text-foreground">{subs.length} students</span></p>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    {expandedGroup === 'others_ip' && customIpOptions.length > 0 && (
-                      <>
-                        <Select value={othersIpFilter} onValueChange={setOthersIpFilter}>
-                          <SelectTrigger className="h-9 w-full sm:w-48 text-sm"><SelectValue placeholder="All Other IP Groups" /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="">All Other IP Groups</SelectItem>
-                            {customIpOptions.map(ip => <SelectItem key={ip} value={ip}>{ip}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                        <button
-                          onClick={() => setIpSortDir(d => d === 'asc' ? 'desc' : 'asc')}
-                          className="h-9 px-2.5 text-sm border border-border rounded-md flex items-center gap-1 hover:bg-gray-50 transition-colors"
-                          title={`Sort ${ipSortDir === 'asc' ? 'Z–A' : 'A–Z'}`}
-                        >
-                          <svg className={`w-3.5 h-3.5 ${ipSortDir === 'desc' ? '' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            {ipSortDir === 'asc' ? (
-                              <>
-                                <line x1="12" y1="5" x2="12" y2="19" />
-                                <polyline points="19 12 12 19 5 12" />
-                              </>
-                            ) : (
-                              <>
-                                <line x1="12" y1="5" x2="12" y2="19" />
-                                <polyline points="19 12 12 5 5 12" />
-                              </>
-                            )}
-                          </svg>
-                          IP
-                        </button>
-                      </>
+                    {expandedGroup === 'others_ip' && (
+                      <Select value={ipSort} onValueChange={setIpSort}>
+                        <SelectTrigger className="h-9 w-full sm:w-44 text-sm"><SelectValue placeholder="All Other IP Groups" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">All Other IP Groups</SelectItem>
+                          <SelectItem value="asc">Sort A–Z</SelectItem>
+                          <SelectItem value="desc">Sort Z–A</SelectItem>
+                        </SelectContent>
+                      </Select>
                     )}
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -484,7 +452,7 @@ export default function Analytics() {
                     <Button variant="outline" size="sm" className="gap-1.5 whitespace-nowrap rounded-lg" onClick={exportGroupCsv}>
                       <Download className="w-3.5 h-3.5" /> Export CSV
                     </Button>
-                    <button onClick={() => { setExpandedGroup(null); setGroupSearch(''); setOthersIpFilter(''); setIpSortDir('asc'); }} className="p-1.5 rounded-full hover:bg-gray-100 text-muted-foreground hover:text-foreground transition-colors" title="Close">
+                    <button onClick={() => { setExpandedGroup(null); setGroupSearch(''); setIpSort(''); }} className="p-1.5 rounded-full hover:bg-gray-100 text-muted-foreground hover:text-foreground transition-colors" title="Close">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
