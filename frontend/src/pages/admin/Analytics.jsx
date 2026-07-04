@@ -165,6 +165,16 @@ export default function Analytics() {
     return val ? toUpperDisplay(String(val)) : '';
   };
 
+  const getStudentIpGroup = (sub) => {
+    const group = getAnswer(sub, 'indigenous_peoples_group');
+    if (!group) return '';
+    if (group === 'Others') {
+      const custom = getCustomIp(sub);
+      return custom || 'Others (unspecified)';
+    }
+    return toUpperDisplay(group);
+  };
+
   const GROUPS = [
     { id: 'all_ip', title: 'All IP Students', description: 'Belong to any Indigenous Peoples group', tab: 'ip', check: (sub) => { const g = getAnswer(sub, 'indigenous_peoples_group'); return !!g; } },
     { id: 'blaan', title: 'Blaan', description: 'IP Group: Blaan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'BLAAN' },
@@ -235,7 +245,7 @@ export default function Analytics() {
     if (expandedGroup === 'others_ip' && othersIpFilter) {
       subs = subs.filter(sub => getCustomIp(sub) === othersIpFilter);
     }
-    const headers = expandedGroup === 'others_ip'
+    const headers = hasIpCol
       ? ['Name', 'Email', 'IP Group', 'Program', 'Year', 'Category', 'Status']
       : ['Name', 'Email', 'Program', 'Year', 'Category', 'Status'];
     const rows = subs.map(sub => {
@@ -243,7 +253,9 @@ export default function Analytics() {
         getStudentName(sub),
         sub.student_email || '',
       ];
-      const ipCol = expandedGroup === 'others_ip' ? [getCustomIp(sub)] : [];
+      const ipCol = hasIpCol
+        ? [expandedGroup === 'others_ip' ? getCustomIp(sub) : getStudentIpGroup(sub)]
+        : [];
       return [
         ...base,
         ...ipCol,
@@ -484,7 +496,7 @@ export default function Analytics() {
                     <tr className="bg-[#F1F5F9] border-b border-border">
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground w-10">#</th>
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground">Name</th>
-                      {expandedGroup === 'others_ip' && <th className="p-3 text-left font-medium text-xs text-muted-foreground">IP Group</th>}
+                      {(expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && <th className="p-3 text-left font-medium text-xs text-muted-foreground">IP Group</th>}
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground">Program / Course</th>
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground">Year</th>
                       <th className="p-3 text-left font-medium text-xs text-muted-foreground">Category</th>
@@ -495,7 +507,7 @@ export default function Analytics() {
                   <tbody>
                     {displayData.length === 0 ? (
                       <tr>
-                        <td colSpan={expandedGroup === 'others_ip' ? 8 : 7} className="p-8 text-center text-muted-foreground">
+                        <td colSpan={(expandedGroup === 'others_ip' || expandedGroup === 'all_ip') ? 8 : 7} className="p-8 text-center text-muted-foreground">
                           <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                           No students found
                         </td>
@@ -504,7 +516,7 @@ export default function Analytics() {
                       <tr key={sub.id} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-[#F8FAFC]' : 'bg-white'}`}>
                         <td className="p-3 text-muted-foreground text-xs">{i + 1}</td>
                         <td className="p-3 font-medium text-sm">{getStudentName(sub)}</td>
-                        {expandedGroup === 'others_ip' && <td className="p-3 text-sm">{getCustomIp(sub) || 'N/A'}</td>}
+                        {(expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && <td className="p-3 text-sm">{expandedGroup === 'others_ip' ? (getCustomIp(sub) || 'N/A') : (getStudentIpGroup(sub) || 'N/A')}</td>}
                         <td className="p-3 text-sm">{toUpperDisplay(getAnswer(sub, 'program')) || 'N/A'}</td>
                         <td className="p-3 text-sm">{toUpperDisplay(getAnswer(sub, 'year_level')) || 'N/A'}</td>
                         <td className="p-3 text-sm">{toUpperDisplay(sub.student_category) || 'N/A'}</td>
