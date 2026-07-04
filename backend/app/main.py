@@ -219,6 +219,15 @@ async def lifespan(app: FastAPI):
             {"opts": prog_opts}
         )
         print(f"[Migration] Program/Course options force-updated (rows affected: {result.rowcount}).")
+        # Ensure province question exists
+        prov_exists = _db.execute(text("SELECT id FROM questions WHERE system_key = 'province'")).fetchone()
+        if not prov_exists:
+            _db.execute(
+                text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, applicable_categories_json, display_order)
+                        VALUES (2, 'province', 'Province', 'text', True, '["all"]', 14)""")
+            )
+            print("[Migration] Added 'province' question.")
+            _db.commit()
         _db.commit()
     except Exception as e:
         print(f"[Migration] Note: {e}")

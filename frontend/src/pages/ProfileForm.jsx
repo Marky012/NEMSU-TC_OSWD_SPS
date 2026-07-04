@@ -567,28 +567,33 @@ export default function ProfileForm() {
         </CardHeader>
         <CardContent className="space-y-5 px-4 sm:px-7 pb-7 pt-5">
           {currentSectionData?.questions.map(q => {
-            const addressKeys = ['region', 'municipality', 'barangay_name', 'present_home_address'];
+            const addressKeys = ['region', 'province', 'municipality', 'barangay_name', 'present_home_address'];
             if (addressKeys.includes(q.system_key)) {
               if (q.system_key === 'region') {
+                const provQ = currentSectionData.questions.find(qq => qq.system_key === 'province');
                 const munQ = currentSectionData.questions.find(qq => qq.system_key === 'municipality');
                 const brgyQ = currentSectionData.questions.find(qq => qq.system_key === 'barangay_name');
                 const addrQ = currentSectionData.questions.find(qq => qq.system_key === 'present_home_address');
                 return (
                   <div key="address-cascade" className="space-y-1.5">
                     <Label className="text-sm font-semibold text-foreground">
-                      Address <span className="text-red-500 ml-0.5">*</span>
+                      Primary Address <span className="text-red-500 ml-0.5">*</span>
                     </Label>
-                    <p className="text-xs text-muted-foreground mb-1">Select your complete Philippine address</p>
+                    <p className="text-xs text-muted-foreground mb-1">
+                      Please indicate your primary/home address (not boarding house or temporary address).
+                    </p>
                     <AddressCascade
                       regionValue={answers[q.id]}
+                      provinceValue={answers[provQ?.id]}
                       municipalityValue={answers[munQ?.id]}
                       barangayValue={answers[brgyQ?.id]}
                       addressValue={answers[addrQ?.id]}
                       onRegionChange={val => setAnswers(prev => ({ ...prev, [q.id]: val }))}
+                      onProvinceChange={val => setAnswers(prev => ({ ...prev, [provQ?.id]: val }))}
                       onMunicipalityChange={val => setAnswers(prev => ({ ...prev, [munQ?.id]: val }))}
                       onBarangayChange={val => setAnswers(prev => ({ ...prev, [brgyQ?.id]: val }))}
                       onAddressChange={val => setAnswers(prev => ({ ...prev, [addrQ?.id]: val }))}
-                      error={errors[q.id] || errors[munQ?.id] || errors[brgyQ?.id] || errors[addrQ?.id]}
+                      error={errors[q.id] || errors[provQ?.id] || errors[munQ?.id] || errors[brgyQ?.id] || errors[addrQ?.id]}
                     />
                   </div>
                 );
