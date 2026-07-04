@@ -44,6 +44,7 @@ export default function Home() {
   const [changeStep, setChangeStep] = useState('confirm');
   const [changing, setChanging] = useState(false);
   const [changeError, setChangeError] = useState('');
+  const [submissionsClosed, setSubmissionsClosed] = useState(false);
 
   useEffect(() => {
     if (user) loadData();
@@ -69,6 +70,10 @@ export default function Home() {
       setSubmissions(subRes.data || []);
       setProfile(profRes.data);
       setActiveSubmission(activeSubRes?.data || null);
+      try {
+        const statusRes = await apiClient.get('/admin/submissions-status');
+        setSubmissionsClosed(!statusRes.data.accepting_submissions);
+      } catch { /* ok */ }
     } catch (e) {
       console.error('Failed to load data:', e);
     }
@@ -201,6 +206,15 @@ export default function Home() {
           </span>
         </p>
       </motion.div>
+
+      {submissionsClosed && (
+        <motion.div variants={fadeIn} className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm font-medium text-red-700 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse" />
+            Submissions are currently disabled. The profiling form will be available again during regular office hours or when the system is ready to accept entries.
+          </p>
+        </motion.div>
+      )}
 
       {profile?.category && (
         <div className="flex items-center justify-between gap-3 bg-muted/40 border border-border rounded-xl px-4 py-3">

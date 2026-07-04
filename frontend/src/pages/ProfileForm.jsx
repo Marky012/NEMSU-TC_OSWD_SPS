@@ -533,6 +533,29 @@ export default function ProfileForm() {
   const sections = getSections();
   const currentSectionData = sections[currentSection];
 
+  if (submissionsClosed) {
+    return (
+      <AnimatedPage>
+      <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-lg mx-auto p-4 sm:p-6">
+        <Card className="shadow-sm">
+          <CardContent className="p-6 sm:p-8 text-center space-y-4">
+            <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto">
+              <Clock className="w-7 h-7 text-red-500" />
+            </div>
+            <h2 className="font-heading text-xl font-bold">Submissions Currently Disabled</h2>
+            <p className="text-muted-foreground text-sm">
+              The profiling form is not available at this time. Submission will be enabled during regular office hours or when the system is ready to accept entries. Please check back later.
+            </p>
+            <Button variant="outline" onClick={() => navigate('/')} className="mt-2">
+              Back to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+      </AnimatedPage>
+    );
+  }
+
   return (
     <AnimatedPage>
     <motion.div variants={staggerContainer} initial="hidden" animate="visible" className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6">
@@ -544,15 +567,6 @@ export default function ProfileForm() {
           {selectedCategory.replace('_', ' ')} Student
         </p>
       </motion.div>
-
-      {submissionsClosed && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm font-medium text-red-700 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse" />
-            Submissions are currently closed. You can fill in your details but will not be able to submit until the office reopens.
-          </p>
-        </div>
-      )}
 
       {submission?.status === 'returned' && submission?.admin_comment && (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
