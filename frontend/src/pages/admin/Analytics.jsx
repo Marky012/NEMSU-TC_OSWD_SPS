@@ -26,7 +26,7 @@ export default function Analytics() {
   const [expandedGroup, setExpandedGroup] = useState(null);
   const [groupSearch, setGroupSearch] = useState('');
   const [viewSub, setViewSub] = useState(null);
-  const [ipSort, setIpSort] = useState(''); // ''=all, 'asc', 'desc'
+  const [ipSort, setIpSort] = useState(''); // ''=all, 'name_asc', 'name_desc', 'ip_asc', 'ip_desc'
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -222,8 +222,13 @@ export default function Analytics() {
     let subs = groupSubs[expandedGroup] || [];
     if (expandedGroup === 'others_ip' && ipSort) {
       subs = [...subs].sort((a, b) => {
-        const cmp = getCustomIp(a).localeCompare(getCustomIp(b));
-        return ipSort === 'asc' ? cmp : -cmp;
+        if (ipSort === 'ip_asc' || ipSort === 'ip_desc') {
+          const cmp = getCustomIp(a).localeCompare(getCustomIp(b));
+          return ipSort === 'ip_asc' ? cmp : -cmp;
+        }
+        const nameA = getStudentName(a).toLowerCase();
+        const nameB = getStudentName(b).toLowerCase();
+        return ipSort === 'name_asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
       });
     }
     if (!groupSearch) return subs;
@@ -437,11 +442,13 @@ export default function Analytics() {
                   <div className="flex items-center gap-2 flex-wrap">
                     {expandedGroup === 'others_ip' && (
                       <Select value={ipSort} onValueChange={setIpSort}>
-                        <SelectTrigger className="h-9 w-full sm:w-44 text-sm"><SelectValue placeholder="All Other IP Groups" /></SelectTrigger>
+                        <SelectTrigger className="h-9 w-full sm:w-56 text-sm"><SelectValue placeholder="All Other IP Groups" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">All Other IP Groups</SelectItem>
-                          <SelectItem value="asc">Sort A–Z</SelectItem>
-                          <SelectItem value="desc">Sort Z–A</SelectItem>
+                          <SelectItem value="name_asc">Sort A–Z (by Last Name)</SelectItem>
+                          <SelectItem value="name_desc">Sort Z–A (by Last Name)</SelectItem>
+                          <SelectItem value="ip_asc">Sort A–Z (by IP Group)</SelectItem>
+                          <SelectItem value="ip_desc">Sort Z–A (by IP Group)</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
