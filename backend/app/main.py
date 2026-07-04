@@ -107,6 +107,15 @@ async def lifespan(app: FastAPI):
     from app.database import SessionLocal as _SessionLocal
     
     _db = _SessionLocal()
+    # Always deactivate old other_skills_hobbies to prevent duplication (runs before main migrations)
+    try:
+        _db.execute(
+            text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies'")
+        )
+        _db.commit()
+        print("[Migration] Deactivated old other_skills_hobbies question.")
+    except Exception:
+        _db.rollback()
     try:
         inspector = inspect(engine)
         # Add is_archived to semesters if missing
@@ -255,10 +264,12 @@ async def lifespan(app: FastAPI):
         if osh_exists:
             _db.execute(
                 text("""UPDATE questions SET active = TRUE, field_type = 'text', options_json = :opts, min_rows = 4,
+                        question_text = 'List Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts',
                         applicable_categories_json = '["New","Transferee","Returnee"]'
                         WHERE system_key = 'other_skills_hobbies_talents'"""),
                 {"opts": osh_opts}
             )
+            print("[Migration] Updated other_skills_hobbies_talents question_text.")
         else:
             ref_q = _db.execute(
                 text("SELECT display_order FROM questions WHERE system_key = 'participation_in_sports_arts'")
