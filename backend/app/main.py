@@ -116,6 +116,7 @@ async def lifespan(app: FastAPI):
             print("[Migration] Added is_archived column to semesters table.")
         if 'accepting_submissions' not in sem_columns:
             _db.execute(text("ALTER TABLE semesters ADD COLUMN accepting_submissions BOOLEAN NOT NULL DEFAULT TRUE"))
+            _db.commit()
             print("[Migration] Added accepting_submissions column to semesters table.")
         # Add status to submissions if missing
         sub_columns = [c['name'] for c in inspector.get_columns('submissions')]
@@ -226,8 +227,8 @@ async def lifespan(app: FastAPI):
         prov_exists = _db.execute(text("SELECT id FROM questions WHERE system_key = 'province'")).fetchone()
         if not prov_exists:
             _db.execute(
-                text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, applicable_categories_json, display_order)
-                        VALUES (2, 'province', 'Province', 'text', True, '["all"]', 14)""")
+                    text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order)
+                            VALUES (2, 'province', 'Province', 'text', True, TRUE, '["all"]', 14)""")
             )
             print("[Migration] Added 'province' question.")
             _db.commit()
