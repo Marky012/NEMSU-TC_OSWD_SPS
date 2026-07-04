@@ -604,6 +604,9 @@ export default function StudentList() {
                   <div className="border-t pt-3 space-y-2">
                     {Object.entries(parsed).map(([qId, val]) => {
                       const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
+                      const ipGroupQ = questions.find(qq => qq.system_key === 'indigenous_peoples_group');
+                      const ipGroupVal = ipGroupQ ? (parsed[ipGroupQ.id] ?? parsed[String(ipGroupQ.id)]) : null;
+                      if (q?.system_key === 'indigenous_peoples_other_specify' && ipGroupVal === 'Others') return null;
                       let displayVal = getAnswerDisplay(qId, parsed);
                       if (q?.system_key === 'indigenous_peoples_group' && val === 'Others') {
                         const specifyQ = questions.find(qq => qq.system_key === 'indigenous_peoples_other_specify');
