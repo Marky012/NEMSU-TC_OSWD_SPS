@@ -253,30 +253,16 @@ const SkillsField = ({ value, onChange, error }) => {
   };
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-[#D4DDE8]/40">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="bg-accent border-b border-[#D4DDE8]/40">
-            <th className="w-10 px-2 py-2.5 text-center font-semibold text-xs text-gray-500">#</th>
-            <th className="px-3 py-2.5 text-left font-semibold text-xs text-gray-900">Skill/Hobby/Talent</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.slice(0, 4).map((row, i) => (
-            <tr key={i} className="border-t border-[#D4DDE8]/40">
-              <td className="px-2 py-1.5 text-center text-xs font-bold text-gray-400">{i + 1}</td>
-              <td className="px-1.5 sm:px-2 py-1.5 sm:py-1">
-                <input
-                  value={typeof row === 'string' ? row : ''}
-                  onChange={(e) => updateRow(i, e.target.value.toUpperCase())}
-                  className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted border border-[#D4DDE8] rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B]"
-                />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {error && <p className="text-xs text-destructive mt-2">{error}</p>}
+    <div className="rounded-lg border border-[#D4DDE8]/40 divide-y divide-[#D4DDE8]/40">
+      {[0, 1, 2, 3].map(i => (
+        <input
+          key={i}
+          value={typeof rows[i] === 'string' ? rows[i] : ''}
+          onChange={(e) => updateRow(i, e.target.value.toUpperCase())}
+          className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted px-3 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B] border-0"
+        />
+      ))}
+      {error && <p className="text-xs text-destructive px-3 py-2">{error}</p>}
     </div>
   );
 };
