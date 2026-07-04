@@ -52,6 +52,7 @@ export default function StudentList() {
   useEffect(() => { setPage(1); }, [search, filterCat, filterSem, filterVerified, sortMode]);
 
   const loadData = async () => {
+    setLoading(true);
     try {
       const [subs, sems, qs] = await Promise.all([
         apiClient.get('/admin/submissions'),
@@ -63,7 +64,11 @@ export default function StudentList() {
       setQuestions(qs.data || []);
       const activeSem = (sems.data || []).find(s => s.is_active);
       if (activeSem) setFilterSem(activeSem.id);
-    } catch (e) { console.error(e); }
+      toast.success('Data refreshed');
+    } catch (e) {
+      const msg = e.response?.data?.detail || 'Failed to load data';
+      toast.error(msg);
+    }
     setLoading(false);
   };
 
