@@ -232,6 +232,10 @@ async def lifespan(app: FastAPI):
         _db.execute(
             text("UPDATE questions SET field_type = 'text' WHERE system_key = 'estimated_household_income' AND field_type = 'number'")
         )
+        # Make religion required
+        _db.execute(
+            text("UPDATE questions SET required = TRUE WHERE system_key = 'religion' AND required = FALSE")
+        )
         _db.commit()
     except Exception as e:
         print(f"[Migration] Note: {e}")

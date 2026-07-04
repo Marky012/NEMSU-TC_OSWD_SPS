@@ -225,7 +225,7 @@ def seed_database(db: Session):
             "question_text":  "Religion",
             "field_type":     "text",
             "options":        None,
-            "required":       False,
+            "required":       True,
             "applicable_cats": ALL,
             "display_order":  8,
         },
