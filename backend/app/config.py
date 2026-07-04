@@ -17,12 +17,8 @@ class Settings(BaseSettings):
     @property
     def ALLOWED_ORIGINS(self) -> list[str]:
         if self.ALLOWED_ORIGINS_STR == "*":
-            if self.FRONTEND_URL and self.FRONTEND_URL != "http://localhost:5173":
-                return [self.FRONTEND_URL]
             return ["*"]
         origins = [o.strip() for o in self.ALLOWED_ORIGINS_STR.split(",") if o.strip()]
-        if self.FRONTEND_URL and self.FRONTEND_URL not in origins:
-            origins.append(self.FRONTEND_URL)
         return origins
     
     SMTP_HOST: str = ""
