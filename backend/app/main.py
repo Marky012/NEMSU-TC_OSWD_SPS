@@ -114,6 +114,9 @@ async def lifespan(app: FastAPI):
         if 'is_archived' not in sem_columns:
             _db.execute(text("ALTER TABLE semesters ADD COLUMN is_archived BOOLEAN NOT NULL DEFAULT FALSE"))
             print("[Migration] Added is_archived column to semesters table.")
+        if 'accepting_submissions' not in sem_columns:
+            _db.execute(text("ALTER TABLE semesters ADD COLUMN accepting_submissions BOOLEAN NOT NULL DEFAULT TRUE"))
+            print("[Migration] Added accepting_submissions column to semesters table.")
         # Add status to submissions if missing
         sub_columns = [c['name'] for c in inspector.get_columns('submissions')]
         if 'status' not in sub_columns:

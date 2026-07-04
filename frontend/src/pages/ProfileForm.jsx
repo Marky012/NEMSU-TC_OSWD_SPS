@@ -249,6 +249,7 @@ export default function ProfileForm() {
   const [errors, setErrors] = useState({});
   const [currentSection, setCurrentSection] = useState(0);
   const [submission, setSubmission] = useState(null);
+  const [submissionsClosed, setSubmissionsClosed] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -276,6 +277,11 @@ export default function ProfileForm() {
       if (profRes.data?.category) {
         setSelectedCategory(profRes.data.category);
       }
+
+      try {
+        const statusRes = await apiClient.get('/admin/submissions-status');
+        setSubmissionsClosed(!statusRes.data.accepting_submissions);
+      } catch { /* non-admin users may not have access */ }
     } catch (e) {
       console.error('Failed to load data:', e);
     }
@@ -538,6 +544,15 @@ export default function ProfileForm() {
           {selectedCategory.replace('_', ' ')} Student
         </p>
       </motion.div>
+
+      {submissionsClosed && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm font-medium text-red-700 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse" />
+            Submissions are currently closed. You can fill in your details but will not be able to submit until the office reopens.
+          </p>
+        </div>
+      )}
 
       {submission?.status === 'returned' && submission?.admin_comment && (
         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">

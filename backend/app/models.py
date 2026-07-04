@@ -40,6 +40,7 @@ class Semester(Base):
     is_archived = Column(Boolean, default=False, nullable=False)
     opens_at = Column(DateTime(timezone=True), nullable=False)
     closes_at = Column(DateTime(timezone=True), nullable=False)
+    accepting_submissions = Column(Boolean, default=True, nullable=False)
     
     # Relationships
     submissions = relationship("Submission", back_populates="semester", cascade="all, delete-orphan")

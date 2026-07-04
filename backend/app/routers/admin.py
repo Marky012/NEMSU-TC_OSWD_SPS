@@ -801,3 +801,42 @@ def staff_review_submission(
     )
 
     return {"detail": f"Submission {data.status}"}
+
+# --- SUBMISSION TOGGLE ---
+@router.get("/submissions-status")
+def get_submissions_status(
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin", "verification_officer", "analytics_viewer"])),
+    db: Session = Depends(get_db)
+):
+    """Returns whether the active semester is currently accepting submissions."""
+    active = db.query(models.Semester).filter(models.Semester.is_active == True).first()
+    if not active:
+        return {"accepting_submissions": False, "reason": "No active semester"}
+    return {
+        "accepting_submissions": active.accepting_submissions,
+        "semester_id": active.id,
+        "semester_label": active.label,
+    }
+
+@router.post("/toggle-submissions")
+def toggle_submissions(
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """Toggles whether the active semester accepts new submissions."""
+    active = db.query(models.Semester).filter(models.Semester.is_active == True).first()
+    if not active:
+        raise HTTPException(status_code=400, detail="No active semester to toggle.")
+    active.accepting_submissions = not active.accepting_submissions
+    db.commit()
+    status = "open" if active.accepting_submissions else "closed"
+    log_admin_action(
+        db, current_user.id,
+        "Toggle Submissions",
+        f"Set submissions to {status} for semester '{active.label}'"
+    )
+    return {
+        "accepting_submissions": active.accepting_submissions,
+        "semester_id": active.id,
+        "semester_label": active.label,
+    }

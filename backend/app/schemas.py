@@ -123,6 +123,7 @@ class SemesterResponse(BaseModel):
     is_archived: bool
     opens_at: datetime
     closes_at: datetime
+    accepting_submissions: bool = True
 
     model_config = ConfigDict(from_attributes=True)
 

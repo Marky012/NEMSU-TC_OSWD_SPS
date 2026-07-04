@@ -208,6 +208,12 @@ def finalize_submission(
     """
     active_sem = get_active_semester(db)
 
+    if not active_sem.accepting_submissions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Submissions are currently closed. Please try again during office hours.",
+        )
+
     if current_user.category is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -741,6 +747,12 @@ def reuse_confirm(
         )
 
     active_sem = get_active_semester(db)
+
+    if not active_sem.accepting_submissions:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Submissions are currently closed. Please try again during office hours.",
+        )
 
     # Verify the student hasn't already finalised this semester
     existing_sub = db.query(models.Submission).filter(
