@@ -235,20 +235,32 @@ const ParticipationField = ({ value, onChange, error, minRows = 0 }) => {
   );
 };
 
-const SkillsField = ({ value, onChange, error, minRows = 0 }) => {
+const SKILLS_COLUMNS = ["Event Participated", "Skills Competed (specify)", "Year", "Award (if any)"];
+
+const SkillsField = ({ value, onChange, error }) => {
   useEffect(() => {
     const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
     if (!value || parsed.length === 0) {
-      onChange(JSON.stringify(["", "", "", ""]));
+      const rows = [];
+      for (let i = 0; i < 4; i++) {
+        const empty = {};
+        SKILLS_COLUMNS.forEach(c => { empty[c] = ''; });
+        rows.push(empty);
+      }
+      onChange(JSON.stringify(rows));
     }
   }, []);
 
   const rows = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
-  if (rows.length < 4) while (rows.length < 4) rows.push("");
+  while (rows.length < 4) {
+    const empty = {};
+    SKILLS_COLUMNS.forEach(c => { empty[c] = ''; });
+    rows.push(empty);
+  }
 
-  const updateRow = (index, val) => {
+  const updateRow = (index, col, val) => {
     const updated = [...rows];
-    updated[index] = val;
+    updated[index] = { ...updated[index], [col]: val };
     onChange(JSON.stringify(updated));
   };
 
@@ -258,20 +270,24 @@ const SkillsField = ({ value, onChange, error, minRows = 0 }) => {
         <thead>
           <tr className="bg-accent border-b border-[#D4DDE8]/40">
             <th className="w-10 px-2 py-2.5 text-center font-semibold text-xs text-gray-500">#</th>
-            <th className="px-3 py-2.5 text-left font-semibold text-xs text-gray-900">Skill/Hobby/Talent</th>
+            {SKILLS_COLUMNS.map(col => (
+              <th key={col} className="px-3 py-2.5 text-left font-semibold text-xs text-gray-900 whitespace-nowrap">{col}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {rows.slice(0, 4).map((row, i) => (
             <tr key={i} className="border-t border-[#D4DDE8]/40">
               <td className="px-2 py-1.5 text-center text-xs font-bold text-gray-400">{i + 1}</td>
-              <td className="px-1.5 sm:px-2 py-1.5 sm:py-1">
-                <input
-                  value={typeof row === 'string' ? row : ''}
-                  onChange={(e) => updateRow(i, e.target.value.toUpperCase())}
-                  className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted border border-[#D4DDE8] rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B]"
-                />
-              </td>
+              {SKILLS_COLUMNS.map(col => (
+                <td key={col} className="px-1.5 sm:px-2 py-1.5 sm:py-1">
+                  <input
+                    value={typeof row === 'object' ? (row[col] || '') : ''}
+                    onChange={(e) => updateRow(i, col, e.target.value.toUpperCase())}
+                    className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted border border-[#D4DDE8] rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B]"
+                  />
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
