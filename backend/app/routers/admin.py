@@ -805,8 +805,8 @@ def staff_review_submission(
 # --- SUBMISSION TOGGLE ---
 @router.get("/submissions-status")
 def get_submissions_status(
-    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin", "verification_officer", "analytics_viewer"])),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
 ):
     """Returns whether the active semester is currently accepting submissions."""
     from sqlalchemy import text, inspect

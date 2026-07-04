@@ -50,6 +50,18 @@ export default function Home() {
     if (user) loadData();
   }, [user]);
 
+  // Poll submissions status every 30s so students see toggle changes in real-time
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(async () => {
+      try {
+        const statusRes = await apiClient.get('/admin/submissions-status');
+        setSubmissionsClosed(!statusRes.data.accepting_submissions);
+      } catch { /* ok */ }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const getSemesterLabel = (id) => {
     const sem = semesters.find(s => s.id === id);
     if (sem) return formatSemesterLabel(sem.label);

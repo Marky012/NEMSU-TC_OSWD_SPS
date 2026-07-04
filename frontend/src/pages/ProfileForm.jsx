@@ -255,6 +255,17 @@ export default function ProfileForm() {
     loadData();
   }, []);
 
+  // Poll submissions status every 30s so the blocked card appears/disappears in real-time
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const statusRes = await apiClient.get('/admin/submissions-status');
+        setSubmissionsClosed(!statusRes.data.accepting_submissions);
+      } catch { /* ok */ }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const loadData = async () => {
     try {
       const semRes = await apiClient.get('/forms/semesters/active');
