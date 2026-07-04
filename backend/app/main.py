@@ -332,6 +332,7 @@ app = FastAPI(
 # In development, support all origins. In production, set ALLOWED_ORIGINS env to specific domains.
 # Always allow credentials so that Authorizarion header requests pass CORS.
 # Starlette's CORSMiddleware will echo back the request Origin instead of * when credentials=True.
+# max_age=0 to prevent browsers caching a stale preflight result.
 print(f"[CORS] allow_origins={settings.ALLOWED_ORIGINS}")
 app.add_middleware(
     CORSMiddleware,
@@ -340,6 +341,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],
+    max_age=0,
 )
 
 app.add_middleware(CSRFMiddleware)
