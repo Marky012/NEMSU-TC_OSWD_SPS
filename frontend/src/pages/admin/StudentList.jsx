@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -601,20 +600,26 @@ export default function StudentList() {
               )}
               <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Admin-Only SEG Flags (CHED Report)</p>
-                <div className="flex flex-wrap gap-4">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Switch checked={viewSub.is_senior_citizen || false} onCheckedChange={() => toggleSEG('is_senior_citizen')} disabled={savingSeg} />
-                    Senior Citizen
-                  </label>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Switch checked={viewSub.is_magna_carta_poor || false} onCheckedChange={() => toggleSEG('is_magna_carta_poor')} disabled={savingSeg} />
-                    Magna Carta Poor
-                  </label>
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <Switch checked={viewSub.is_underprivileged || false} onCheckedChange={() => toggleSEG('is_underprivileged')} disabled={savingSeg} />
-                    Underprivileged
-                  </label>
-                  {savingSeg && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                <div className="flex flex-wrap gap-2">
+                  <TooltipBox label={viewSub.is_senior_citizen ? 'Click to remove SEG flag' : 'Mark as Senior Citizen'}>
+                    <button type="button" disabled={savingSeg} onClick={() => toggleSEG('is_senior_citizen')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${viewSub.is_senior_citizen ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'}`}>
+                      Senior Citizen
+                    </button>
+                  </TooltipBox>
+                  <TooltipBox label={viewSub.is_magna_carta_poor ? 'Click to remove SEG flag' : 'Mark as Magna Carta Poor'}>
+                    <button type="button" disabled={savingSeg} onClick={() => toggleSEG('is_magna_carta_poor')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${viewSub.is_magna_carta_poor ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'}`}>
+                      Magna Carta Poor
+                    </button>
+                  </TooltipBox>
+                  <TooltipBox label={viewSub.is_underprivileged ? 'Click to remove SEG flag' : 'Mark as Underprivileged'}>
+                    <button type="button" disabled={savingSeg} onClick={() => toggleSEG('is_underprivileged')}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${viewSub.is_underprivileged ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'}`}>
+                      Underprivileged
+                    </button>
+                  </TooltipBox>
+                  {savingSeg && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground self-center" />}
                 </div>
               </div>
               {viewSub.draft_data_json && (() => {
