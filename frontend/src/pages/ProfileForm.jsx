@@ -235,60 +235,48 @@ const ParticipationField = ({ value, onChange, error, minRows = 0 }) => {
   );
 };
 
-const COLUMNS_SKILLS = ["Skill/Hobby/Talent", "Year", "Award (if any)"];
-
 const SkillsField = ({ value, onChange, error, minRows = 0 }) => {
-  const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
-
   useEffect(() => {
+    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
     if (!value || parsed.length === 0) {
-      const rows = [{ "Skill/Hobby/Talent": "" }, { "Skill/Hobby/Talent": "" }, { "Skill/Hobby/Talent": "" }, { "Skill/Hobby/Talent": "" }];
-      onChange(JSON.stringify(rows));
+      onChange(JSON.stringify(["", "", "", ""]));
     }
   }, []);
 
   const rows = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
-  if (rows.length < 4) {
-    while (rows.length < 4) rows.push({ "Skill/Hobby/Talent": "" });
-  }
+  if (rows.length < 4) while (rows.length < 4) rows.push("");
 
   const updateRow = (index, val) => {
     const updated = [...rows];
-    updated[index] = { "Skill/Hobby/Talent": val };
+    updated[index] = val;
     onChange(JSON.stringify(updated));
   };
 
-  const cellOrder = [1, 2, 3, 4];
-
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">List your skills/hobbies/talents below</p>
-      <div className="overflow-x-auto rounded-lg border border-[#D4DDE8]/40">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-accent border-b border-[#D4DDE8]/40">
-              <th className="w-10 px-2 py-2.5 text-center font-semibold text-xs text-gray-500">#</th>
-              <th className="px-3 py-2.5 text-left font-semibold text-xs text-gray-900">Skill/Hobby/Talent</th>
+    <div className="overflow-x-auto rounded-lg border border-[#D4DDE8]/40">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="bg-accent border-b border-[#D4DDE8]/40">
+            <th className="w-10 px-2 py-2.5 text-center font-semibold text-xs text-gray-500">#</th>
+            <th className="px-3 py-2.5 text-left font-semibold text-xs text-gray-900">Skill/Hobby/Talent</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.slice(0, 4).map((row, i) => (
+            <tr key={i} className="border-t border-[#D4DDE8]/40">
+              <td className="px-2 py-1.5 text-center text-xs font-bold text-gray-400">{i + 1}</td>
+              <td className="px-1.5 sm:px-2 py-1.5 sm:py-1">
+                <input
+                  value={typeof row === 'string' ? row : ''}
+                  onChange={(e) => updateRow(i, e.target.value.toUpperCase())}
+                  className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted border border-[#D4DDE8] rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B]"
+                />
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {rows.slice(0, 4).map((row, i) => (
-              <tr key={i} className="border-t border-[#D4DDE8]/40">
-                <td className="px-2 py-1.5 text-center text-xs font-bold text-gray-400">{cellOrder[i]}</td>
-                <td className="px-1.5 sm:px-2 py-1.5 sm:py-1">
-                  <input
-                    value={row["Skill/Hobby/Talent"] || ''}
-                    onChange={(e) => updateRow(i, e.target.value.toUpperCase())}
-                    placeholder={`Skill/Hobby/Talent ${cellOrder[i]}`}
-                    className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted border border-[#D4DDE8] rounded-md px-2 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B]"
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+          ))}
+        </tbody>
+      </table>
+      {error && <p className="text-xs text-destructive mt-2">{error}</p>}
     </div>
   );
 };
@@ -725,9 +713,6 @@ export default function ProfileForm() {
                 </Label>
                 {q.system_key === 'participation_in_sports_arts' && q.min_rows > 0 && (
                   <p className="text-xs text-muted-foreground">Add at least {q.min_rows} row(s) for each event you have participated in</p>
-                )}
-                {q.system_key === 'other_skills_hobbies_talents' && (
-                  <p className="text-xs text-muted-foreground">Add at least 4 entries</p>
                 )}
                 {q.system_key === 'participation_in_sports_arts' ? (
                   <ParticipationField
