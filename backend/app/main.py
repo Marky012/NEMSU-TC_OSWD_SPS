@@ -269,9 +269,9 @@ async def lifespan(app: FastAPI):
                 {"ord": next_order, "opts": osh_opts}
             )
         print("[Migration] other_skills_hobbies_talents is active (table, 4 rows).")
-        # Also reactivate old key for backwards compatibility
+        # Deactivate old other_skills_hobbies to avoid duplication
         _db.execute(
-            text("UPDATE questions SET active = TRUE WHERE system_key = 'other_skills_hobbies' AND active = FALSE")
+            text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies'")
         )
         # Deactivate other_computer_skills (not in the reference form)
         _db.execute(
