@@ -247,25 +247,28 @@ async def lifespan(app: FastAPI):
         _db.execute(
             text("UPDATE questions SET required = TRUE WHERE system_key = 'religion' AND required = FALSE")
         )
-        # Ensure other_skills_hobbies_talents exists and is active
+        # Ensure other_skills_hobbies_talents exists and is active (table with 4 rows)
+        osh_opts = '["Skill/Hobby/Talent", "Year", "Award (if any)"]'
         osh_exists = _db.execute(
             text("SELECT id FROM questions WHERE system_key = 'other_skills_hobbies_talents'")
         ).fetchone()
         if osh_exists:
             _db.execute(
-                text("UPDATE questions SET active = TRUE WHERE system_key = 'other_skills_hobbies_talents'")
+                text("""UPDATE questions SET active = TRUE, field_type = 'text', options_json = :opts, min_rows = 4
+                        WHERE system_key = 'other_skills_hobbies_talents'"""),
+                {"opts": osh_opts}
             )
         else:
-            # Find display_order after participation_in_sports_arts
             ref_q = _db.execute(
                 text("SELECT display_order FROM questions WHERE system_key = 'participation_in_sports_arts'")
             ).fetchone()
             next_order = (ref_q.display_order + 1) if ref_q else 1
             _db.execute(
-                text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order)
-                        VALUES (6, 'other_skills_hobbies_talents', 'List Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts', 'textarea', FALSE, TRUE, '["new","transferee","returnee"]', :ord)"""),
-                {"ord": next_order}
+                text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order, options_json, min_rows)
+                        VALUES (6, 'other_skills_hobbies_talents', 'List Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts', 'text', FALSE, TRUE, '["new","transferee","returnee"]', :ord, :opts, 4)"""),
+                {"ord": next_order, "opts": osh_opts}
             )
+        print("[Migration] other_skills_hobbies_talents is active (table, 4 rows).")
         # Also reactivate old key for backwards compatibility
         _db.execute(
             text("UPDATE questions SET active = TRUE WHERE system_key = 'other_skills_hobbies' AND active = FALSE")
