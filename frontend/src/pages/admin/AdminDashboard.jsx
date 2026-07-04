@@ -7,6 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { FileText, AlertTriangle, CheckCircle2, Clock, GraduationCap, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { toast } from 'sonner';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const COLORS = ['hsl(224, 76%, 48%)', 'hsl(42,87%,52%)', 'hsl(200,60%,45%)', 'hsl(280,50%,55%)', 'hsl(20,80%,55%)', 'hsl(340,60%,50%)'];
 const CATEGORY_COLORS = {
@@ -31,6 +33,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [accepting, setAccepting] = useState(true);
+  const [toggleConfirmOpen, setToggleConfirmOpen] = useState(false);
 
   const loadStats = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -71,11 +74,14 @@ export default function AdminDashboard() {
   }, []);
 
   const toggleSubmissions = async () => {
+    setToggleConfirmOpen(false);
     try {
       const res = await apiClient.post('/admin/toggle-submissions');
       setAccepting(res.data.accepting_submissions);
+      toast.success(res.data.accepting_submissions ? 'Submissions are now open' : 'Submissions are now closed');
     } catch (e) {
-      console.error(e);
+      const msg = e.response?.data?.detail || 'Failed to toggle submissions';
+      toast.error(msg);
     }
   };
 
@@ -128,7 +134,7 @@ export default function AdminDashboard() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={toggleSubmissions}
+            onClick={() => setToggleConfirmOpen(true)}
             className={`h-9 px-3 text-sm rounded-lg border font-medium flex items-center gap-1.5 transition-colors ${accepting ? 'bg-emerald-50 border-emerald-300 text-emerald-700 hover:bg-emerald-100' : 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100'}`}
             title={accepting ? 'Submissions are open — click to close' : 'Submissions are closed — click to open'}
           >
@@ -219,6 +225,15 @@ export default function AdminDashboard() {
         )}
       </motion.div>
     </motion.div>
+      <ConfirmDialog
+        open={toggleConfirmOpen}
+        onOpenChange={setToggleConfirmOpen}
+        onConfirm={toggleSubmissions}
+        title={accepting ? 'Close Submissions?' : 'Open Submissions?'}
+        description={accepting ? 'Students will not be able to submit their profiling forms until you re-open submissions.' : 'Students will be able to submit their profiling forms.'}
+        confirmLabel={accepting ? 'Close Submissions' : 'Open Submissions'}
+        variant={accepting ? 'destructive' : 'default'}
+      />
     </AnimatedPage>
   );
 }
