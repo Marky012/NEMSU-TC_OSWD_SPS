@@ -110,11 +110,13 @@ async def lifespan(app: FastAPI):
     # Always deactivate old other_skills_hobbies to prevent duplication (runs before main migrations)
     try:
         _db.execute(
-            text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies'")
+            text("UPDATE questions SET active = FALSE, applicable_categories_json = '[]' WHERE system_key = 'other_skills_hobbies'")
         )
         _db.commit()
-        print("[Migration] Deactivated old other_skills_hobbies question.")
-    except Exception:
+        n = _db.execute(text("SELECT COUNT(*) FROM questions WHERE system_key = 'other_skills_hobbies'")).scalar()
+        print(f"[Migration] Deactivated other_skills_hobbies (found {n} row(s)).")
+    except Exception as e:
+        print(f"[Migration] Note (other_skills_hobbies deactivation): {e}")
         _db.rollback()
     try:
         inspector = inspect(engine)
