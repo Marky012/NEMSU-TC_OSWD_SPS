@@ -675,6 +675,28 @@ export default function ProfileForm() {
                     error={errors[q.id]}
                     minRows={q.min_rows}
                   />
+                ) : q.system_key === 'other_skills_hobbies_talents' ? (
+                  (() => {
+                    const init4 = () => {
+                      const p = answers[q.id] ? (typeof answers[q.id] === 'string' ? JSON.parse(answers[q.id]) : answers[q.id]) : [];
+                      return p.length < 4 ? ["","","",""] : p;
+                    };
+                    const rows4 = init4();
+                    const upd4 = (idx, v) => {
+                      const u = [...rows4]; u[idx] = v;
+                      setAnswers(prev => ({ ...prev, [q.id]: JSON.stringify(u) }));
+                    };
+                    return (
+                      <div className="rounded-lg border border-[#D4DDE8]/40 divide-y divide-[#D4DDE8]/40">
+                        {[0,1,2,3].map(i => (
+                          <input key={i} value={typeof rows4[i] === 'string' ? rows4[i] : ''}
+                            onChange={e => upd4(i, e.target.value.toUpperCase())}
+                            className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted px-3 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B] border-0"
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()
                 ) : (
                   <DynamicField
                     question={q}

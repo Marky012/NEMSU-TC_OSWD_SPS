@@ -107,17 +107,6 @@ async def lifespan(app: FastAPI):
     from app.database import SessionLocal as _SessionLocal
     
     _db = _SessionLocal()
-    # Always deactivate old other_skills_hobbies to prevent duplication (runs before main migrations)
-    try:
-        _db.execute(
-            text("UPDATE questions SET active = FALSE, applicable_categories_json = '[]' WHERE system_key = 'other_skills_hobbies'")
-        )
-        _db.commit()
-        n = _db.execute(text("SELECT COUNT(*) FROM questions WHERE system_key = 'other_skills_hobbies'")).scalar()
-        print(f"[Migration] Deactivated other_skills_hobbies (found {n} row(s)).")
-    except Exception as e:
-        print(f"[Migration] Note (other_skills_hobbies deactivation): {e}")
-        _db.rollback()
     try:
         inspector = inspect(engine)
         # Add is_archived to semesters if missing
@@ -258,13 +247,34 @@ async def lifespan(app: FastAPI):
         _db.execute(
             text("UPDATE questions SET required = TRUE WHERE system_key = 'religion' AND required = FALSE")
         )
-        # Deactivate other_skills_hobbies_talents (no longer needed as separate field)
-        try:
+        # Ensure other_skills_hobbies_talents is active (important field)
+        osh_opts = '["Skill/Hobby/Talent"]'
+        osh_exists = _db.execute(
+            text("SELECT id FROM questions WHERE system_key = 'other_skills_hobbies_talents'")
+        ).fetchone()
+        if osh_exists:
             _db.execute(
-                text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies_talents'")
+                text("""UPDATE questions SET active = TRUE, field_type = 'text', options_json = :opts, min_rows = 4,
+                        question_text = 'List Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts',
+                        applicable_categories_json = '["New","Transferee","Returnee"]'
+                        WHERE system_key = 'other_skills_hobbies_talents'"""),
+                {"opts": osh_opts}
             )
-        except Exception:
-            pass
+        else:
+            ref_q = _db.execute(
+                text("SELECT display_order FROM questions WHERE system_key = 'participation_in_sports_arts'")
+            ).fetchone()
+            next_order = (ref_q.display_order + 1) if ref_q else 1
+            _db.execute(
+                text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order, options_json, min_rows)
+                        VALUES (6, 'other_skills_hobbies_talents', 'List Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts', 'text', FALSE, TRUE, '["New","Transferee","Returnee"]', :ord, :opts, 4)"""),
+                {"ord": next_order, "opts": osh_opts}
+            )
+        print("[Migration] other_skills_hobbies_talents is active.")
+        # Deactivate old other_skills_hobbies to remove duplicate
+        _db.execute(
+            text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies'")
+        )
         # Deactivate old other_skills_hobbies to avoid duplication
         _db.execute(
             text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies'")
