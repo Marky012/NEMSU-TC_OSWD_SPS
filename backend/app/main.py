@@ -254,7 +254,8 @@ async def lifespan(app: FastAPI):
         ).fetchone()
         if osh_exists:
             _db.execute(
-                text("""UPDATE questions SET active = TRUE, field_type = 'text', options_json = :opts, min_rows = 4
+                text("""UPDATE questions SET active = TRUE, field_type = 'text', options_json = :opts, min_rows = 4,
+                        applicable_categories_json = '["New","Transferee","Returnee"]'
                         WHERE system_key = 'other_skills_hobbies_talents'"""),
                 {"opts": osh_opts}
             )
@@ -265,7 +266,7 @@ async def lifespan(app: FastAPI):
             next_order = (ref_q.display_order + 1) if ref_q else 1
             _db.execute(
                 text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order, options_json, min_rows)
-                        VALUES (6, 'other_skills_hobbies_talents', 'List Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts', 'text', FALSE, TRUE, '["new","transferee","returnee"]', :ord, :opts, 4)"""),
+                        VALUES (6, 'other_skills_hobbies_talents', 'List Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts', 'text', FALSE, TRUE, '["New","Transferee","Returnee"]', :ord, :opts, 4)"""),
                 {"ord": next_order, "opts": osh_opts}
             )
         print("[Migration] other_skills_hobbies_talents is active (table, 4 rows).")
