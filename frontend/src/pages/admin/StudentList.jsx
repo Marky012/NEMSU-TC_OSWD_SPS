@@ -621,7 +621,10 @@ export default function StudentList() {
                       return (
                         <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
                           <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q?.question_text || qId}</span>
-                          <span className="text-sm">{displayVal}</span>
+                          {q?.field_type === 'textarea'
+                            ? <span className="text-sm whitespace-pre-wrap">{val || 'N/A'}</span>
+                            : <span className="text-sm">{displayVal}</span>
+                          }
                         </div>
                       );
                     })}
