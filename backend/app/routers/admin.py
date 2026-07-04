@@ -814,7 +814,9 @@ def get_submissions_status(
     sem_columns = [c['name'] for c in inspector.get_columns('semesters')]
     if 'accepting_submissions' not in sem_columns:
         return {"accepting_submissions": False, "reason": "Column not migrated"}
-    active = db.query(models.Semester).filter(models.Semester.is_active == True).first()
+    active = db.execute(
+        text("SELECT id, label, accepting_submissions FROM semesters WHERE is_active = TRUE LIMIT 1")
+    ).fetchone()
     if not active:
         return {"accepting_submissions": False, "reason": "No active semester"}
     return {
@@ -830,26 +832,43 @@ def toggle_submissions(
 ):
     """Toggles whether the active semester accepts new submissions."""
     from sqlalchemy import text, inspect
-    # Ensure the column exists (fallback if migration never ran)
+    import traceback
+
+    # 1) Ensure the column exists (fallback if startup migration never ran)
     inspector = inspect(db.get_bind())
     sem_columns = [c['name'] for c in inspector.get_columns('semesters')]
     if 'accepting_submissions' not in sem_columns:
         db.execute(text("ALTER TABLE semesters ADD COLUMN accepting_submissions BOOLEAN NOT NULL DEFAULT TRUE"))
         db.commit()
+        # Re-read column list after ALTER
+        sem_columns = [c['name'] for c in inspector.get_columns('semesters')]
 
-    active = db.query(models.Semester).filter(models.Semester.is_active == True).first()
+    if 'accepting_submissions' not in sem_columns:
+        raise HTTPException(status_code=500, detail="Failed to add accepting_submissions column.")
+
+    # 2) Toggle using raw SQL to avoid any ORM column-mapping issues
+    active = db.execute(
+        text("SELECT id, label, accepting_submissions FROM semesters WHERE is_active = TRUE LIMIT 1")
+    ).fetchone()
+
     if not active:
         raise HTTPException(status_code=400, detail="No active semester to toggle.")
-    active.accepting_submissions = not active.accepting_submissions
+
+    new_value = not active.accepting_submissions
+    db.execute(
+        text("UPDATE semesters SET accepting_submissions = :val WHERE id = :id"),
+        {"val": new_value, "id": active.id}
+    )
     db.commit()
-    status = "open" if active.accepting_submissions else "closed"
+
+    status = "open" if new_value else "closed"
     log_admin_action(
-        db, current_user.id,
+        db, current_admin.id,
         "Toggle Submissions",
         f"Set submissions to {status} for semester '{active.label}'"
     )
     return {
-        "accepting_submissions": active.accepting_submissions,
+        "accepting_submissions": new_value,
         "semester_id": active.id,
         "semester_label": active.label,
     }

@@ -208,20 +208,27 @@ def finalize_submission(
     """
     active_sem = get_active_semester(db)
 
-    # Guard against missing column — treat as closed if not migrated
-    try:
-        _ = active_sem.accepting_submissions
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Submissions are currently closed. Please try again during office hours.",
-        )
+    from sqlalchemy import text, inspect
 
-    if not active_sem.accepting_submissions:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Submissions are currently closed. Please try again during office hours.",
-        )
+    # Check accepting_submissions via raw SQL to avoid missing-column crash
+    try:
+        ins = inspect(db.get_bind())
+        sem_cols = [c['name'] for c in ins.get_columns('semesters')]
+        if 'accepting_submissions' in sem_cols:
+            result = db.execute(
+                text("SELECT accepting_submissions FROM semesters WHERE id = :sid"),
+                {"sid": active_sem.id}
+            ).scalar()
+            if result is not None and not result:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Submissions are currently closed. Please try again during office hours.",
+                )
+        # else column missing — allow submissions (legacy fallback)
+    except HTTPException:
+        raise
+    except Exception:
+        pass  # If anything goes wrong, let the request proceed
 
     if current_user.category is None:
         raise HTTPException(
@@ -757,20 +764,25 @@ def reuse_confirm(
 
     active_sem = get_active_semester(db)
 
-    # Guard against missing column — treat as closed if not migrated
+    # Check accepting_submissions via raw SQL to avoid missing-column crash
+    from sqlalchemy import text, inspect
     try:
-        _ = active_sem.accepting_submissions
+        ins = inspect(db.get_bind())
+        sem_cols = [c['name'] for c in ins.get_columns('semesters')]
+        if 'accepting_submissions' in sem_cols:
+            result = db.execute(
+                text("SELECT accepting_submissions FROM semesters WHERE id = :sid"),
+                {"sid": active_sem.id}
+            ).scalar()
+            if result is not None and not result:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Submissions are currently closed. Please try again during office hours.",
+                )
+    except HTTPException:
+        raise
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Submissions are currently closed. Please try again during office hours.",
-        )
-
-    if not active_sem.accepting_submissions:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Submissions are currently closed. Please try again during office hours.",
-        )
+        pass
 
     # Verify the student hasn't already finalised this semester
     existing_sub = db.query(models.Submission).filter(
