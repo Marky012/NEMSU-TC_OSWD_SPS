@@ -321,6 +321,25 @@ def finalize_submission(
                 detail="Emergency number must differ from your contact number.",
             )
 
+    # --- 2c. Cross-field validation: indigenous_peoples_other_specify must not be meaningless ---
+    ip_group_q = next(
+        (q for q in applicable_questions if q.system_key == "indigenous_peoples_group"), None
+    )
+    ip_other_q = next(
+        (q for q in applicable_questions if q.system_key == "indigenous_peoples_other_specify"), None
+    )
+    if ip_group_q and ip_other_q:
+        ip_group_val = (answers_map.get(ip_group_q.id) or "").strip()
+        ip_other_val = (answers_map.get(ip_other_q.id) or "").strip()
+        if ip_group_val == "Others" and ip_other_val:
+            meaningless = {"n/a", "na", "n.a.", "not applicable", "not applicable.", "none", "no", "-", "--", "n/a/", "n / a"}
+            cleaned = ip_other_val.lower().replace(".", "").replace("/", "").replace("-", "").replace(" ", "")
+            if cleaned in {"na", "notapplicable", "none", "no"} or ip_other_val.lower().strip() in meaningless:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="If you do not belong to any Indigenous Peoples group, please select 'I do not belong to IP' instead of entering 'N/A' or similar in the Other IP field.",
+                )
+
     # --- 3. Get or create submission record ---
     if not existing_sub:
         existing_sub = models.Submission(

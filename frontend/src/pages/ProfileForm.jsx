@@ -375,12 +375,23 @@ export default function ProfileForm() {
     setSaving(false);
   };
 
+  const meaninglessIp = (val) => {
+    if (!val) return false;
+    const v = val.toLowerCase().replace(/[\s.\-/]/g, '');
+    return ['na', 'notapplicable', 'none', 'no'].includes(v);
+  };
+
   const validate = () => {
     const errs = {};
     const visible = getVisibleQuestions();
+    const ipGroupQ = questions.find(q => q.system_key === 'indigenous_peoples_group');
+    const ipOtherQ = questions.find(q => q.system_key === 'indigenous_peoples_other_specify');
     visible.forEach(q => {
       if (q.system_key === 'emergency_contact_name' && answers[q.id] && !/[a-zA-Z]/.test(answers[q.id])) {
         errs[q.id] = 'Must contain at least one letter';
+      }
+      if (q.system_key === 'indigenous_peoples_other_specify' && ipGroupQ && answers[ipGroupQ.id] === 'Others' && meaninglessIp(answers[q.id])) {
+        errs[q.id] = 'If you do not belong to any IP group, select "I do not belong to IP" instead';
       }
       if (q.required) {
         const val = answers[q.id];
