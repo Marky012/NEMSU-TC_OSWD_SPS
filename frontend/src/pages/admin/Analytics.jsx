@@ -118,7 +118,8 @@ export default function Analytics() {
       if (!sub.draft_data_json) return;
       try {
         const data = JSON.parse(sub.draft_data_json);
-        const val = parseFloat(data[q.id] || data[String(q.id)]);
+        const raw = (data[q.id] || data[String(q.id)] || '').replace(/,/g, '');
+        const val = parseFloat(raw);
         if (isNaN(val)) return;
         if (val < 5000) brackets['Below 5K']++;
         else if (val < 10000) brackets['5K-9,999']++;
@@ -168,8 +169,8 @@ export default function Analytics() {
     { id: 'mamanwa', title: 'Mamanwa', description: 'IP Group: Mamanwa', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MAMANWA' },
     { id: 'mangyan', title: 'Mangyan', description: 'IP Group: Mangyan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MANGYAN' },
     { id: 'others_ip', title: 'Other IP Groups', description: 'Specified via "Others" IP entry', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'Others' },
-    { id: 'low_income', title: 'Low Income', description: 'Household income below ₱5,000/month', tab: 'socio', check: (sub) => { const i = parseFloat(getAnswer(sub, 'estimated_household_income')); return !isNaN(i) && i < 5000; } },
-    { id: 'mid_income', title: 'Mid Income', description: 'Household income ₱5,000–₱15,000/month', tab: 'socio', check: (sub) => { const i = parseFloat(getAnswer(sub, 'estimated_household_income')); return !isNaN(i) && i >= 5000 && i <= 15000; } },
+    { id: 'low_income', title: 'Low Income', description: 'Household income below ₱5,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i < 5000; } },
+    { id: 'mid_income', title: 'Mid Income', description: 'Household income ₱5,000–₱15,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i >= 5000 && i <= 15000; } },
     { id: 'pwd', title: 'Person with Disability (PWD)', description: 'Declared as PWD', tab: 'special', check: (sub) => getAnswer(sub, 'is_pwd') === 'Yes' },
     { id: 'solo_parent', title: 'Solo Parent / Child of Solo Parent', description: 'Is a solo parent or child of a solo parent', tab: 'special', check: (sub) => getAnswer(sub, 'is_solo_parent_currently_studying') === 'Yes' || getAnswer(sub, 'is_child_of_solo_parent') === 'Yes' },
     { id: 'dormitory', title: 'Campus Dormitory Residents', description: 'Primary mode: campus dormitory', tab: 'residence', check: (sub) => getAnswer(sub, 'primary_mode_of_residence') === 'Campus Dormitory' },
@@ -516,6 +517,10 @@ export default function Analytics() {
                         const specifyQ = questions.find(qq => qq.system_key === 'indigenous_peoples_other_specify');
                         const specifyVal = specifyQ ? (parsed[specifyQ.id] ?? parsed[String(specifyQ.id)]) : null;
                         if (specifyVal) rawVal = String(specifyVal);
+                      }
+                      if (rawVal !== 'N/A') {
+                        const cleaned = String(rawVal).replace(/,/g, '');
+                        if (/^\d+(\.\d+)?$/.test(cleaned)) rawVal = Number(cleaned).toLocaleString();
                       }
                       const displayVal = toUpperDisplay(rawVal);
                       return (

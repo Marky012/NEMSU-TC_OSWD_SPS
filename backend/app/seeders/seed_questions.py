@@ -327,7 +327,7 @@ def seed_database(db: Session):
             "category_id":    2,
             "system_key":     "estimated_household_income",
             "question_text":  "Estimated Household Income per Month (PHP)",
-            "field_type":     "number",
+            "field_type":     "text",
             "options":        None,
             "required":       True,
             "applicable_cats": ALL,

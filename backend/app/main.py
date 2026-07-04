@@ -228,6 +228,10 @@ async def lifespan(app: FastAPI):
             )
             print("[Migration] Added 'province' question.")
             _db.commit()
+        # Force-update income field_type to text (accepts commas)
+        _db.execute(
+            text("UPDATE questions SET field_type = 'text' WHERE system_key = 'estimated_household_income' AND field_type = 'number'")
+        )
         _db.commit()
     except Exception as e:
         print(f"[Migration] Note: {e}")

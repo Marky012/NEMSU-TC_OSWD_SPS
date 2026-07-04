@@ -240,6 +240,10 @@ export default function StudentList() {
     if (typeof val === 'string' && val.startsWith('[')) {
       try { return JSON.parse(val).map(item => typeof item === 'object' ? Object.values(item).join(' — ') : String(item)).join('; '); } catch { return val; }
     }
+    const cleaned = String(val).replace(/,/g, '');
+    if (/^\d+(\.\d+)?$/.test(cleaned)) {
+      return Number(cleaned).toLocaleString();
+    }
     return toUpperDisplay(String(val));
   };
 

@@ -411,9 +411,11 @@ export default function ProfileForm() {
 
     setSubmitting(true);
     try {
+      const incomeQ = questions.find(q => q.system_key === 'estimated_household_income');
+      const incomeKey = incomeQ ? String(incomeQ.id) : null;
       const answerList = Object.entries(answers).map(([question_id, answer_text]) => ({
         question_id: parseInt(question_id),
-        answer_text: String(answer_text),
+        answer_text: question_id === incomeKey ? String(answer_text).replace(/,/g, '') : String(answer_text),
       }));
       const response = await apiClient.post('/students/submit', { answers: answerList });
 
