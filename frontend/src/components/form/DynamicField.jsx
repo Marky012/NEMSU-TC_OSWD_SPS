@@ -56,7 +56,11 @@ export default function DynamicField({ question, value, onChange, error }) {
           <Input
             type="number"
             value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v === '' || Number(v) >= 0) onChange(v);
+            }}
+            min="0"
             placeholder="0"
             className="bg-background"
           />

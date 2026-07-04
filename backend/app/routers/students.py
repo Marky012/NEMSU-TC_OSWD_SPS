@@ -343,6 +343,14 @@ def finalize_submission(
             continue
 
         ans_val = answers_map.get(q.id)
+        # Reject negative numbers for number-type fields
+        if ans_val and q.field_type == "number":
+            num_val = ans_val.replace(",", "").strip()
+            if num_val and num_val.lstrip("-").isdigit() and float(num_val) < 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"'{q.question_text}' cannot be a negative number."
+                )
         # Auto-uppercase free-text field types for consistent formatting
         if ans_val and q.field_type in ("text", "textarea", "table", "number"):
             ans_val = ans_val.upper()
