@@ -247,9 +247,28 @@ async def lifespan(app: FastAPI):
         _db.execute(
             text("UPDATE questions SET required = TRUE WHERE system_key = 'religion' AND required = FALSE")
         )
-        # Deactivate redundant other_skills_hobbies (table already covers skills/hobbies)
+        # Ensure other_skills_hobbies_talents exists and is active
+        osh_exists = _db.execute(
+            text("SELECT id FROM questions WHERE system_key = 'other_skills_hobbies_talents'")
+        ).fetchone()
+        if osh_exists:
+            _db.execute(
+                text("UPDATE questions SET active = TRUE WHERE system_key = 'other_skills_hobbies_talents'")
+            )
+        else:
+            # Find display_order after participation_in_sports_arts
+            ref_q = _db.execute(
+                text("SELECT display_order FROM questions WHERE system_key = 'participation_in_sports_arts'")
+            ).fetchone()
+            next_order = (ref_q.display_order + 1) if ref_q else 1
+            _db.execute(
+                text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order)
+                        VALUES (6, 'other_skills_hobbies_talents', 'Other skills/hobbies/talents in relation to sports, literary, dance, music, visual arts', 'textarea', FALSE, TRUE, '["new","transferee","returnee"]', :ord)"""),
+                {"ord": next_order}
+            )
+        # Also reactivate old key for backwards compatibility
         _db.execute(
-            text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies'")
+            text("UPDATE questions SET active = TRUE WHERE system_key = 'other_skills_hobbies' AND active = FALSE")
         )
         # Deactivate other_computer_skills (not in the reference form)
         _db.execute(
