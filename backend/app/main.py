@@ -331,6 +331,7 @@ app = FastAPI(
 # --- CONFIGURE CORS ---
 # In development, support all origins. In production, set ALLOWED_ORIGINS env to specific domains.
 allow_credentials = settings.ALLOWED_ORIGINS != ["*"]
+print(f"[CORS] allow_origins={settings.ALLOWED_ORIGINS} allow_credentials={allow_credentials}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.ALLOWED_ORIGINS,

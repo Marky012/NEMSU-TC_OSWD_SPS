@@ -17,8 +17,13 @@ class Settings(BaseSettings):
     @property
     def ALLOWED_ORIGINS(self) -> list[str]:
         if self.ALLOWED_ORIGINS_STR == "*":
+            if self.FRONTEND_URL and self.FRONTEND_URL != "http://localhost:5173":
+                return [self.FRONTEND_URL]
             return ["*"]
-        return [o.strip() for o in self.ALLOWED_ORIGINS_STR.split(",") if o.strip()]
+        origins = [o.strip() for o in self.ALLOWED_ORIGINS_STR.split(",") if o.strip()]
+        if self.FRONTEND_URL and self.FRONTEND_URL not in origins:
+            origins.append(self.FRONTEND_URL)
+        return origins
     
     SMTP_HOST: str = ""
     SMTP_PORT: int = 587
@@ -36,7 +41,7 @@ class Settings(BaseSettings):
     LOGIN_RATE_LIMIT: str = "5/minute"
     API_RATE_LIMIT: str = "100/minute"
     
-    CSRF_ENABLED: bool = True
+    CSRF_ENABLED: bool = False
     CSRF_SECRET_KEY: str = ""
     
     FRONTEND_URL: str = "http://localhost:5173"
