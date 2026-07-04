@@ -809,6 +809,11 @@ def get_submissions_status(
     db: Session = Depends(get_db)
 ):
     """Returns whether the active semester is currently accepting submissions."""
+    from sqlalchemy import text, inspect
+    inspector = inspect(db.get_bind())
+    sem_columns = [c['name'] for c in inspector.get_columns('semesters')]
+    if 'accepting_submissions' not in sem_columns:
+        return {"accepting_submissions": False, "reason": "Column not migrated"}
     active = db.query(models.Semester).filter(models.Semester.is_active == True).first()
     if not active:
         return {"accepting_submissions": False, "reason": "No active semester"}
@@ -824,6 +829,14 @@ def toggle_submissions(
     db: Session = Depends(get_db)
 ):
     """Toggles whether the active semester accepts new submissions."""
+    from sqlalchemy import text, inspect
+    # Ensure the column exists (fallback if migration never ran)
+    inspector = inspect(db.get_bind())
+    sem_columns = [c['name'] for c in inspector.get_columns('semesters')]
+    if 'accepting_submissions' not in sem_columns:
+        db.execute(text("ALTER TABLE semesters ADD COLUMN accepting_submissions BOOLEAN NOT NULL DEFAULT TRUE"))
+        db.commit()
+
     active = db.query(models.Semester).filter(models.Semester.is_active == True).first()
     if not active:
         raise HTTPException(status_code=400, detail="No active semester to toggle.")

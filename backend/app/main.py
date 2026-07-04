@@ -223,15 +223,22 @@ async def lifespan(app: FastAPI):
             {"opts": prog_opts}
         )
         print(f"[Migration] Program/Course options force-updated (rows affected: {result.rowcount}).")
+        # Commit all prior ALTER TABLEs before trying data migrations
+        _db.commit()
+
         # Ensure province question exists
         prov_exists = _db.execute(text("SELECT id FROM questions WHERE system_key = 'province'")).fetchone()
         if not prov_exists:
-            _db.execute(
-                    text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order)
-                            VALUES (2, 'province', 'Province', 'text', True, TRUE, '["all"]', 14)""")
-            )
-            print("[Migration] Added 'province' question.")
-            _db.commit()
+            try:
+                _db.execute(
+                        text("""INSERT INTO questions (category_id, system_key, question_text, field_type, required, active, applicable_categories_json, display_order)
+                                VALUES (2, 'province', 'Province', 'text', True, TRUE, '["all"]', 14)""")
+                )
+                _db.commit()
+                print("[Migration] Added 'province' question.")
+            except Exception as pe:
+                _db.rollback()
+                print(f"[Migration] Skipped province insert (may already exist): {pe}")
         # Force-update income field_type to text (accepts commas)
         _db.execute(
             text("UPDATE questions SET field_type = 'text' WHERE system_key = 'estimated_household_income' AND field_type = 'number'")
