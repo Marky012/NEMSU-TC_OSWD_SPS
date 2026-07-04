@@ -326,6 +326,8 @@ export default function StaffView() {
                       const ipGroupQ = questions.find(qq => qq.system_key === 'indigenous_peoples_group');
                       const ipGroupVal = ipGroupQ ? (parsed[ipGroupQ.id] ?? parsed[String(ipGroupQ.id)]) : null;
                       if (q?.system_key === 'indigenous_peoples_other_specify' && ipGroupVal === 'Others') return null;
+                      // Skip empty textarea rows to reduce visual noise
+                      if (q?.field_type === 'textarea' && !val) return null;
                       let displayVal = getAnswerDisplay(qId, parsed);
                       if (q?.system_key === 'indigenous_peoples_group' && val === 'Others') {
                         const specifyQ = questions.find(qq => qq.system_key === 'indigenous_peoples_other_specify');
