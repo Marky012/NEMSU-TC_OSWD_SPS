@@ -886,19 +886,6 @@ def seed_database(db: Session):
             "display_order":  59,
         },
 
-        # other_computer_skills — Q (Continuing) / N (NTR): List other computer related skills
-        {
-            "temp_id":        "other_computer_skills",
-            "category_id":    7,
-            "system_key":     "other_computer_skills",
-            "question_text":  "List other computer/smartphone related skills",
-            "field_type":     "textarea",
-            "options":        None,
-            "required":       False,
-            "applicable_cats": ALL,
-            "display_order":  60,
-        },
-
     ]
 
     # -----------------------------------------------------------------------

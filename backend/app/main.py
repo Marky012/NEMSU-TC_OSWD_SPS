@@ -240,6 +240,10 @@ async def lifespan(app: FastAPI):
         _db.execute(
             text("UPDATE questions SET active = FALSE WHERE system_key = 'other_skills_hobbies'")
         )
+        # Deactivate other_computer_skills (not in the reference form)
+        _db.execute(
+            text("UPDATE questions SET active = FALSE WHERE system_key = 'other_computer_skills'")
+        )
         _db.commit()
     except Exception as e:
         print(f"[Migration] Note: {e}")
