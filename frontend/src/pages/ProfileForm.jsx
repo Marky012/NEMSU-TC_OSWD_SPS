@@ -235,38 +235,6 @@ const ParticipationField = ({ value, onChange, error, minRows = 0 }) => {
   );
 };
 
-const SkillsField = ({ value, onChange, error }) => {
-  useEffect(() => {
-    const parsed = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
-    if (!value || parsed.length === 0) {
-      onChange(JSON.stringify(["", "", "", ""]));
-    }
-  }, []);
-
-  const rows = value ? (typeof value === 'string' ? JSON.parse(value) : value) : [];
-  while (rows.length < 4) rows.push("");
-
-  const updateRow = (index, val) => {
-    const updated = [...rows];
-    updated[index] = val;
-    onChange(JSON.stringify(updated));
-  };
-
-  return (
-    <div className="rounded-lg border border-[#D4DDE8]/40 divide-y divide-[#D4DDE8]/40">
-      {[0, 1, 2, 3].map(i => (
-        <input
-          key={i}
-          value={typeof rows[i] === 'string' ? rows[i] : ''}
-          onChange={(e) => updateRow(i, e.target.value.toUpperCase())}
-          className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted px-3 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B] border-0"
-        />
-      ))}
-      {error && <p className="text-xs text-destructive px-3 py-2">{error}</p>}
-    </div>
-  );
-};
-
 export default function ProfileForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -708,12 +676,27 @@ export default function ProfileForm() {
                     minRows={q.min_rows}
                   />
                 ) : q.system_key === 'other_skills_hobbies_talents' ? (
-                  <SkillsField
-                    value={answers[q.id]}
-                    onChange={val => setAnswers(prev => ({ ...prev, [q.id]: val }))}
-                    error={errors[q.id]}
-                    minRows={q.min_rows}
-                  />
+                  (() => {
+                    const init4 = () => {
+                      const p = answers[q.id] ? (typeof answers[q.id] === 'string' ? JSON.parse(answers[q.id]) : answers[q.id]) : [];
+                      return p.length < 4 ? ["","","",""] : p;
+                    };
+                    const rows4 = init4();
+                    const upd4 = (idx, v) => {
+                      const u = [...rows4]; u[idx] = v;
+                      setAnswers(prev => ({ ...prev, [q.id]: JSON.stringify(u) }));
+                    };
+                    return (
+                      <div className="rounded-lg border border-[#D4DDE8]/40 divide-y divide-[#D4DDE8]/40">
+                        {[0,1,2,3].map(i => (
+                          <input key={i} value={typeof rows4[i] === 'string' ? rows4[i] : ''}
+                            onChange={e => upd4(i, e.target.value.toUpperCase())}
+                            className="w-full h-10 sm:h-9 text-sm text-gray-900 bg-muted px-3 focus:outline-none focus:ring-1 focus:ring-[#143A7B] focus:border-[#143A7B] border-0"
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()
                 ) : (
                   <DynamicField
                     question={q}
