@@ -302,9 +302,9 @@ export default function StudentList() {
               <RefreshCw className="w-3 h-3 mr-1" /> Refresh
             </Button>
           </TooltipBox>
-          <TooltipBox label="Clear all student data for pilot testing">
+          <TooltipBox label="Delete all student records, submissions, and logs">
             <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10">
-              <Trash2 className="w-3 h-3 mr-1" /> Reset Pilot Data
+              <Trash2 className="w-3 h-3 mr-1" /> Delete Student Records
             </Button>
           </TooltipBox>
         </div>
@@ -715,9 +715,9 @@ export default function StudentList() {
         open={showResetConfirm}
         onOpenChange={setShowResetConfirm}
         onConfirm={handleResetPilotData}
-        title="Reset Pilot Data"
-        description="This will permanently delete ALL students, submissions, and answers. Questions, categories, semesters, and admin accounts are preserved. This cannot be undone."
-        confirmLabel="Reset All Data"
+        title="Delete Student Records"
+        description="This will permanently delete ALL students, submissions, answers, and logs. Questions, categories, semesters, and admin accounts are preserved. This cannot be undone."
+        confirmLabel="Delete All Records"
         variant="destructive"
         loading={resetting}
       />
