@@ -363,6 +363,21 @@ def finalize_submission(
                     detail="If you do not belong to any Indigenous Peoples group, please select 'I do not belong to IP' instead of entering 'N/A' or similar in the Other IP field.",
                 )
 
+    # --- 2d. Validate province against official list ---
+    prov_q = next(
+        (q for q in applicable_questions if q.system_key == "province"), None
+    )
+    if prov_q:
+        prov_val = (answers_map.get(prov_q.id) or "").strip()
+        if prov_val:
+            from app.provinces import validate_province
+            err = validate_province(prov_val)
+            if err:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=err,
+                )
+
     # --- 3. Get or create submission record ---
     if not existing_sub:
         existing_sub = models.Submission(
