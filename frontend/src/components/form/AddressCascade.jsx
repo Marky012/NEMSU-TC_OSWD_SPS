@@ -31,7 +31,7 @@ export default function AddressCascade({
         <Input
           value={provinceValue || ''}
           onChange={e => onProvinceChange(toUpper(e.target.value))}
-          placeholder="e.g. AGUSAN DEL SUR"
+          placeholder="e.g. SURIGAO DEL SUR"
           className="h-11"
         />
       </div>
@@ -41,7 +41,7 @@ export default function AddressCascade({
         <Input
           value={municipalityValue || ''}
           onChange={e => onMunicipalityChange(toUpper(e.target.value))}
-          placeholder="e.g. BAYUGAN CITY"
+          placeholder="e.g. TAGBINA"
           className="h-11"
         />
       </div>
@@ -51,7 +51,7 @@ export default function AddressCascade({
         <Input
           value={barangayValue || ''}
           onChange={e => onBarangayChange(toUpper(e.target.value))}
-          placeholder="Type your barangay"
+          placeholder="e.g. POBLACION"
           className="h-11"
         />
       </div>
@@ -63,7 +63,7 @@ export default function AddressCascade({
         <Input
           value={addressValue || ''}
           onChange={e => onAddressChange(toUpper(e.target.value))}
-          placeholder="e.g. PUROK 1, MAHARLIKA ST."
+          placeholder="e.g. PUROK 1"
           className="h-11"
         />
       </div>
