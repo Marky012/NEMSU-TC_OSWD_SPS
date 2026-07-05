@@ -599,13 +599,12 @@ export default function StudentList() {
                 </div>
               )}
               <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Admin-Only SEG Flags (CHED Report)</p>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Automated SEG Flags (CHED Report)</p>
                 <div className="flex flex-wrap gap-2">
-                  <TooltipBox label={viewSub.is_senior_citizen ? 'Click to remove SEG flag' : 'Mark as Senior Citizen'}>
-                    <button type="button" disabled={savingSeg} onClick={() => toggleSEG('is_senior_citizen')}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${viewSub.is_senior_citizen ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'}`}>
-                      Senior Citizen
-                    </button>
+                  <TooltipBox label={viewSub.is_senior_citizen ? 'Auto-assigned from birthdate (age >= 60)' : 'Auto-assigned from birthdate'}>
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-default ${viewSub.is_senior_citizen ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
+                      {viewSub.is_senior_citizen ? 'Senior Citizen' : 'Not Senior Citizen'}
+                    </span>
                   </TooltipBox>
                   <TooltipBox label={viewSub.is_magna_carta_poor ? 'Auto-assigned from sibling answer' : 'Auto-assigned from sibling answer'}>
                     <span className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-default ${viewSub.is_magna_carta_poor ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>

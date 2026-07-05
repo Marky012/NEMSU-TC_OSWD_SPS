@@ -425,6 +425,22 @@ def finalize_submission(
         only_one_ans = answers_map.get(only_one_q.id)
         existing_sub.is_magna_carta_poor = (only_one_ans == "Yes")
 
+    # --- 4b. Auto-set Senior Citizen flag (age >= 60) ---
+    birthdate_q = db.query(models.Question).filter(
+        models.Question.system_key == "birthdate",
+        models.Question.active == True,
+    ).first()
+    if birthdate_q:
+        bd_val = answers_map.get(birthdate_q.id)
+        if bd_val:
+            try:
+                bd = datetime.strptime(bd_val.strip(), "%Y-%m-%d")
+                today = datetime.now(timezone.utc)
+                age = today.year - bd.year - ((today.month, today.day) < (bd.month, bd.day))
+                existing_sub.is_senior_citizen = (age >= 60)
+            except (ValueError, TypeError):
+                pass
+
     # --- 5. Generate verification code ---
     year, sem_num = parse_semester_details(active_sem.label)
     if existing_sub.verification_code:
