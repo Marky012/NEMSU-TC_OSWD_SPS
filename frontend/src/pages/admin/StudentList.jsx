@@ -739,7 +739,7 @@ export default function StudentList() {
         onOpenChange={setShowResetConfirm}
         onConfirm={handleResetPilotData}
         title="Delete Student Records"
-        description="This will permanently delete ALL students, submissions, answers, and logs. Questions, categories, semesters, and admin accounts are preserved. This cannot be undone."
+        description="This will permanently delete ALL students, submissions, answers, logs, and rate-limit records. Office staff slot claims will be cleared and submissions will be turned off. Questions, categories, semesters, and admin accounts are preserved. The system will be reset to a fresh state ready for production use. This cannot be undone."
         confirmLabel="Delete All Records"
         variant="destructive"
         loading={resetting}

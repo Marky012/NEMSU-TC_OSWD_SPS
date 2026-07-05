@@ -512,9 +512,10 @@ def reset_pilot_data(
     current_user: models.User = Depends(RoleChecker(["admin"]))
 ):
     """
-    Clears all student data (non-admin users, submissions, answers)
-    while preserving questions, categories, semesters, and admin accounts.
-    Use this before pilot testing to remove sample/development entries.
+    Completely wipes all student data (registrations, submissions, answers, logs)
+    and resets the system to a factory-fresh state for real-world implementation.
+    Preserves questions, categories, semesters, and admin accounts.
+    Resets office staff slot claims and disables accepting_submissions.
     """
     from sqlalchemy import text as sa_text
     try:
@@ -524,21 +525,35 @@ def reset_pilot_data(
         deleted_qhist = db.execute(sa_text("DELETE FROM questions_history")).rowcount
         deleted_logs = db.execute(sa_text("DELETE FROM admin_logs")).rowcount
         deleted_users = db.execute(sa_text("DELETE FROM users WHERE role != 'admin'")).rowcount
+        deleted_ratelimit = db.execute(sa_text("DELETE FROM email_rate_limits")).rowcount
+        db.execute(sa_text(
+            "UPDATE office_staff_slots SET email = NULL, full_name = NULL, "
+            "is_active = FALSE, last_activity = NULL, claimed_at = NULL"
+        ))
+        db.execute(sa_text("UPDATE semesters SET accepting_submissions = FALSE"))
         db.commit()
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Reset failed: {str(e)}")
 
     log_admin_action(db, current_user.id, "reset_pilot_data",
-        f"Deleted {deleted_users} student(s), {deleted_subs} submission(s), {deleted_answers} answer(s), {deleted_pwd} PWD task(s), {deleted_logs} log(s).")
+        f"Deleted {deleted_users} student(s), {deleted_subs} submission(s), "
+        f"{deleted_answers} answer(s), {deleted_pwd} PWD task(s), "
+        f"{deleted_logs} log(s), {deleted_ratelimit} rate-limit record(s). "
+        f"Staff slots reset, submissions closed.")
 
     return {
-        "detail": f"Pilot data reset complete. Deleted {deleted_users} student(s), {deleted_subs} submission(s), {deleted_answers} answer(s).",
+        "detail": f"System reset complete. Deleted {deleted_users} student(s), "
+                  f"{deleted_subs} submission(s), {deleted_answers} answer(s). "
+                  f"Staff slot claims cleared, submissions turned off.",
         "deleted_users": deleted_users,
         "deleted_submissions": deleted_subs,
         "deleted_answers": deleted_answers,
         "deleted_pwd_tasks": deleted_pwd,
-        "deleted_logs": deleted_logs
+        "deleted_logs": deleted_logs,
+        "deleted_rate_limits": deleted_ratelimit,
+        "staff_slots_reset": True,
+        "submissions_closed": True
     }
 
 # --- ADMIN MANAGEMENT ---
