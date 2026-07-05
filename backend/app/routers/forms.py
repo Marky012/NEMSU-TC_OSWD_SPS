@@ -52,9 +52,10 @@ def get_questions(
         )
         
     # Get active questions
-    all_active = db.query(models.Question).filter(models.Question.active == True).order_by(models.Question.display_order).all()
+    all_active = db.query(models.Question).filter(models.Question.active == True).order_by(models.Question.display_order, models.Question.id.asc()).all()
     
-    # Filter questions applicable to student category
+    # Filter questions applicable to student category (dedup by system_key)
+    seen_keys: set[str] = set()
     filtered_questions = []
     for q in all_active:
         try:
@@ -63,6 +64,10 @@ def get_questions(
             cats = ["all"]
             
         if "all" in cats or current_user.category in cats:
+            if q.system_key and q.system_key in seen_keys:
+                continue
+            if q.system_key:
+                seen_keys.add(q.system_key)
             filtered_questions.append(schemas.QuestionResponse.model_validate(q))
             
     return filtered_questions

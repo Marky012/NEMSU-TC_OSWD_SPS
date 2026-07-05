@@ -288,7 +288,34 @@ async def lifespan(app: FastAPI):
         print(f"[Migration] Note: {e}")
     finally:
         _db.close()
-    
+
+    # 2b. Deduplicate questions with the same system_key (keep lowest ID)
+    try:
+        _db2 = SessionLocal()
+        dup_system_keys = _db2.execute(
+            text("SELECT system_key FROM questions WHERE system_key IS NOT NULL GROUP BY system_key HAVING COUNT(*) > 1")
+        ).fetchall()
+        for (sk,) in dup_system_keys:
+            rows = _db2.execute(
+                text("SELECT id FROM questions WHERE system_key = :sk ORDER BY id ASC"),
+                {"sk": sk}
+            ).fetchall()
+            keep_id = rows[0][0]
+            delete_ids = [r[0] for r in rows[1:]]
+            for did in delete_ids:
+                # Nullify FK references on answers before deleting
+                _db2.execute(text("UPDATE answers SET question_id = :keep WHERE question_id = :del"), {"keep": keep_id, "del": did})
+                _db2.execute(text("DELETE FROM questions_history WHERE question_id = :del"), {"del": did})
+                _db2.execute(text("DELETE FROM questions WHERE id = :del"), {"del": did})
+            print(f"[Migration] Deduplicated '{sk}': kept ID {keep_id}, deleted {delete_ids}")
+        _db2.commit()
+        _db2.close()
+    except Exception as e:
+        print(f"[Migration] Deduplication note: {e}")
+    finally:
+        try: _db2.close()
+        except: pass
+
     # 3. Run database seeders if database is empty
     db = SessionLocal()
     try:

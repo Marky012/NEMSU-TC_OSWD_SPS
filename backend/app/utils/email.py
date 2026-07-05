@@ -59,11 +59,14 @@ def send_registration_verification_email(email: str, code: str) -> bool:
     html_content = generate_registration_verification_email_html(email, code)
 
     if not settings.SMTP_HOST:
-        logger.info(f"=== [MOCK EMAIL] Registration Verification ===")
-        logger.info(f"To: {email}")
-        logger.info(f"Subject: Verify Your Email - NEMSU OSWD")
-        logger.info(f"Verification Code: {code}")
-        logger.info(f"=== [END OF MOCK EMAIL] ===")
+        print("\n" + "="*60, flush=True)
+        print("[MOCK EMAIL] Registration Verification Code", flush=True)
+        print("="*60, flush=True)
+        print(f"  To      : {email}", flush=True)
+        print(f"  Subject : Verify Your Email - NEMSU OSWD", flush=True)
+        print(f"  CODE    : {code}", flush=True)
+        print("="*60 + "\n", flush=True)
+        logger.info(f"[MOCK EMAIL] Registration verification code for {email}: {code}")
         return True
 
     max_retries = settings.EMAIL_MAX_RETRIES
@@ -141,11 +144,14 @@ def send_password_reset_email(email: str, reset_url: str) -> bool:
     html_content = generate_password_reset_email_html(email, reset_url)
 
     if not settings.SMTP_HOST:
-        logger.info(f"=== [MOCK EMAIL] Password Reset ===")
-        logger.info(f"To: {email}")
-        logger.info(f"Subject: Reset Your Password - NEMSU OSWD")
-        logger.info(f"Reset URL: {reset_url}")
-        logger.info(f"=== [END OF MOCK EMAIL] ===")
+        print("\n" + "="*60, flush=True)
+        print("[MOCK EMAIL] Password Reset", flush=True)
+        print("="*60, flush=True)
+        print(f"  To        : {email}", flush=True)
+        print(f"  Subject   : Reset Your Password - NEMSU OSWD", flush=True)
+        print(f"  Reset URL : {reset_url}", flush=True)
+        print("="*60 + "\n", flush=True)
+        logger.info(f"[MOCK EMAIL] Password reset URL for {email}: {reset_url}")
         return True
 
     max_retries = settings.EMAIL_MAX_RETRIES
@@ -293,12 +299,17 @@ def send_verification_email(email: str, category: str, verification_code: str, s
     # 2. Check if SMTP configuration is provided
     if not settings.SMTP_HOST:
         # Development Console Mock mode
-        logger.info(f"=== [MOCK EMAIL SEND] ===")
-        logger.info(f"To: {email}")
-        logger.info(f"Subject: NEMSU OSWD Profile Verification - Code: {verification_code}")
-        logger.info(f"Category: {category}")
-        logger.info(f"Content Summary (text snippet):\n" + "\n".join([f" - {item['question']}: {item['answer']}" for item in summary_data[:5]]))
-        logger.info(f"=== [END OF MOCK EMAIL] ===")
+        print("\n" + "="*60, flush=True)
+        print("[MOCK EMAIL] Profile Submission Verification", flush=True)
+        print("="*60, flush=True)
+        print(f"  To                : {email}", flush=True)
+        print(f"  Category          : {category}", flush=True)
+        print(f"  VERIFICATION CODE : {verification_code}", flush=True)
+        print("  --- Answer Summary (first 5) ---", flush=True)
+        for item in summary_data[:5]:
+            print(f"    {item['question']}: {item['answer']}", flush=True)
+        print("="*60 + "\n", flush=True)
+        logger.info(f"[MOCK EMAIL] Submission verification code for {email}: {verification_code}")
         return True
         
     

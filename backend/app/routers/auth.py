@@ -45,6 +45,7 @@ def register_student(user_data: schemas.UserRegister, db: Session = Depends(get_
     code = generate_verification_code()
     code_hash = hash_verification_code(code)
     expires_at = datetime.utcnow() + timedelta(minutes=15)
+    print(f"[VERIFICATION CODE] {code} for {user_data.email}")
 
     if not user_data.privacy_consent:
         raise HTTPException(
@@ -251,6 +252,7 @@ def resend_verification(data: schemas.ResendVerificationRequest, db: Session = D
     code = generate_verification_code()
     code_hash = hash_verification_code(code)
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+    print(f"[VERIFICATION CODE] {code} for {user.email}")
 
     user.email_verification_code_hash = code_hash
     user.email_verification_code_expires_at = expires_at

@@ -250,11 +250,16 @@ def finalize_submission(
         )
 
     # --- Get all active questions applicable to this student's category ---
-    all_questions = db.query(models.Question).filter(models.Question.active == True).all()
+    all_questions = db.query(models.Question).filter(models.Question.active == True).order_by(models.Question.id.asc()).all()
+    seen_keys: set[str] = set()
     applicable_questions: list[models.Question] = []
     for q in all_questions:
         cats = json.loads(q.applicable_categories_json) if q.applicable_categories_json else ["all"]
         if "all" in cats or current_user.category in cats:
+            if q.system_key and q.system_key in seen_keys:
+                continue
+            if q.system_key:
+                seen_keys.add(q.system_key)
             applicable_questions.append(q)
 
     # Index submitted answers by question_id

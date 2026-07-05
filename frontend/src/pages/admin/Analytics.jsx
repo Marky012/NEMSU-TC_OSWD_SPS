@@ -187,8 +187,13 @@ export default function Analytics() {
     { id: 'others_ip', title: 'Other IP Groups', description: 'Specified via "Others" IP entry', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'Others' },
     { id: 'low_income', title: 'Low Income', description: 'Household income below ₱5,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i < 5000; } },
     { id: 'mid_income', title: 'Mid Income', description: 'Household income ₱5,000–₱15,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i >= 5000 && i <= 15000; } },
+    { id: 'high_income', title: 'High Income', description: 'Household income above ₱15,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i > 15000; } },
+    { id: 'underprivileged', title: 'Underprivileged', description: 'Auto-flagged from income ≤₱12,319/month', tab: 'socio', check: (sub) => sub.is_underprivileged === true },
     { id: 'pwd', title: 'Person with Disability (PWD)', description: 'Declared as PWD', tab: 'special', check: (sub) => getAnswer(sub, 'is_pwd') === 'Yes' },
-    { id: 'solo_parent', title: 'Solo Parent / Child of Solo Parent', description: 'Is a solo parent or child of a solo parent', tab: 'special', check: (sub) => getAnswer(sub, 'is_solo_parent_currently_studying') === 'Yes' || getAnswer(sub, 'is_child_of_solo_parent') === 'Yes' },
+    { id: 'solo_parent', title: 'Solo Parent', description: 'Is a solo parent currently studying', tab: 'special', check: (sub) => getAnswer(sub, 'is_solo_parent_currently_studying') === 'Yes' },
+    { id: 'child_solo_parent', title: 'Child of Solo Parent', description: 'Is a child of a solo parent', tab: 'special', check: (sub) => getAnswer(sub, 'is_child_of_solo_parent') === 'Yes' },
+    { id: 'senior_citizen', title: 'Senior Citizen', description: 'Auto-flagged from age ≥60', tab: 'special', check: (sub) => sub.is_senior_citizen === true },
+    { id: 'magna_carta_poor', title: 'Magna Carta of the Poor', description: 'Auto-flagged from college-sibling answer', tab: 'special', check: (sub) => sub.is_magna_carta_poor === true },
     { id: 'dormitory', title: 'Campus Dormitory Residents', description: 'Primary mode: campus dormitory', tab: 'residence', check: (sub) => getAnswer(sub, 'primary_mode_of_residence') === 'Campus Dormitory' },
     { id: 'commuter', title: 'Commuters (with family)', description: 'Commuting with family', tab: 'residence', check: (sub) => getAnswer(sub, 'primary_mode_of_residence') === 'Commuter with family' },
     { id: 'off_campus', title: 'Off-Campus Apartment', description: 'Living off-campus in an apartment', tab: 'residence', check: (sub) => getAnswer(sub, 'primary_mode_of_residence') === 'Off-Campus Apartment' },
@@ -406,25 +411,24 @@ export default function Analytics() {
         </div>
 
         {/* Group Cards Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 items-stretch">
           {visibleGroups.map(g => {
             const count = (groupSubs[g.id] || []).length;
             const isExpanded = expandedGroup === g.id;
             return (
-              <TooltipBox key={g.id} label={`View ${g.title} details`}>
-                <button
-                  onClick={() => { setExpandedGroup(isExpanded ? null : g.id); }}
-                  className={`text-left border rounded-xl p-4 transition-all cursor-pointer hover:shadow-md ${isExpanded ? 'bg-blue-50 border-2 border-sidebar-primary shadow-sm' : 'bg-white border border-border shadow-sm'}`}
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">{g.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{g.description}</p>
-                    <div className="mt-2">
-                      <span className={`text-xl font-bold ${isExpanded ? 'text-sidebar-primary' : 'text-foreground'}`}>{count}</span>
-                    </div>
+              <button key={g.id}
+                title={`View ${g.title} details`}
+                onClick={() => { setExpandedGroup(isExpanded ? null : g.id); }}
+                className={`h-full w-full flex flex-col text-left border rounded-xl p-4 transition-all cursor-pointer hover:shadow-md ${isExpanded ? 'bg-blue-50 border-2 border-sidebar-primary shadow-sm' : 'bg-white border border-border shadow-sm'}`}
+              >
+                <div className="flex flex-col flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{g.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 flex-1">{g.description}</p>
+                  <div className="mt-auto pt-2">
+                    <span className={`text-xl font-bold ${isExpanded ? 'text-sidebar-primary' : 'text-foreground'}`}>{count}</span>
                   </div>
-                </button>
-              </TooltipBox>
+                </div>
+              </button>
             );
           })}
         </div>
