@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import threading
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
@@ -451,29 +452,26 @@ def finalize_submission(
             db.add(new_task)
             db.commit()
 
-    # --- 8. Send verification receipt email ---
+    # --- 8. Send verification receipt email (background thread, non-blocking) ---
+    threading.Thread(
+        target=send_verification_email,
+        args=(current_user.email, current_user.category, verification_code, summary_for_email),
+        daemon=True
+    ).start()
+
+    # --- 9. Generate verification PDF (synchronous, fast, no network) ---
     try:
-        send_verification_email(
+        pdf_path = generate_verification_pdf(
             email=current_user.email,
             category=current_user.category,
             verification_code=verification_code,
-            summary_data=summary_for_email,
+            summary_data=summary_for_email
         )
-    except Exception as e:
-        # Email sending failed after retries, fallback to PDF generation
-        print(f"[WARN] Failed to send verification email to {current_user.email}: {e}. Generating PDF fallback.")
-        try:
-            pdf_path = generate_verification_pdf(
-                email=current_user.email,
-                category=current_user.category,
-                verification_code=verification_code,
-                summary_data=summary_for_email
-            )
-            existing_sub.receipt_pdf_path = pdf_path
-            db.commit()
-            db.refresh(existing_sub)
-        except Exception as pdf_e:
-            print(f"[ERROR] PDF generation fallback also failed for {current_user.email}: {pdf_e}")
+        existing_sub.receipt_pdf_path = pdf_path
+        db.commit()
+        db.refresh(existing_sub)
+    except Exception as pdf_e:
+        print(f"[ERROR] PDF generation failed for {current_user.email}: {pdf_e}")
 
     # Audit log
     new_log = models.AdminLog(
