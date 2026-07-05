@@ -352,9 +352,9 @@ def seed_database(db: Session):
             "temp_id":        "birth_order",
             "category_id":    2,
             "system_key":     "birth_order",
-            "question_text":  "Your Birth Order (e.g., 1st, 2nd, 3rd)",
-            "field_type":     "text",
-            "options":        None,
+            "question_text":  "Your Birth Order",
+            "field_type":     "select",
+            "options":        ["Eldest / 1st", "2nd", "3rd", "4th", "5th", "6th or later / Youngest"],
             "required":       True,
             "applicable_cats": ALL,
             "display_order":  18,
@@ -1005,6 +1005,9 @@ def seed_database(db: Session):
                     updated = True
             if q_info.get("question_text") and existing_q.question_text != q_info["question_text"]:
                 existing_q.question_text = q_info["question_text"]
+                updated = True
+            if q_info.get("field_type") and existing_q.field_type != q_info["field_type"]:
+                existing_q.field_type = q_info["field_type"]
                 updated = True
             if q_info.get("required") is not None and existing_q.required != bool(q_info["required"]):
                 existing_q.required = bool(q_info["required"])
