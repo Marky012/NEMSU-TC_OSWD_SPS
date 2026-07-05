@@ -88,7 +88,7 @@ export default function StaffView() {
     return sub.student_email?.split('@')[0] || 'Student';
   };
 
-  const getAnswerDisplay = (qId, data) => {
+  const getAnswerDisplay = (qId, data, question) => {
     const val = data[qId];
     if (!val) return 'N/A';
     const formatRow = item => typeof item === 'object' ? Object.values(item).filter(v => v && String(v).trim()).join(' — ') : String(item);
@@ -101,9 +101,12 @@ export default function StaffView() {
     if (typeof val === 'string' && val.startsWith('[')) {
       try { return JSON.parse(val).map(formatRow).filter(r => r).join('; '); } catch { return val; }
     }
-    const cleaned = String(val).replace(/,/g, '');
-    if (/^\d+(\.\d+)?$/.test(cleaned)) {
-      return Number(cleaned).toLocaleString();
+    const CONTACT_KEYS = ['active_contact_number', 'emergency_contact_number'];
+    if (!CONTACT_KEYS.includes(question?.system_key)) {
+      const cleaned = String(val).replace(/,/g, '');
+      if (/^\d+(\.\d+)?$/.test(cleaned)) {
+        return Number(cleaned).toLocaleString();
+      }
     }
     return toUpperDisplay(String(val));
   };
@@ -320,25 +323,33 @@ export default function StaffView() {
               )}
               {viewSub.draft_data_json && (() => {
                 const parsed = JSON.parse(viewSub.draft_data_json);
+                const ipGroupQ = questions.find(qq => qq.system_key === 'indigenous_peoples_group');
+                const ipGroupVal = ipGroupQ ? (parsed[ipGroupQ.id] ?? parsed[String(ipGroupQ.id)]) : null;
+                const entries = Object.entries(parsed)
+                  .map(([qId, val]) => {
+                    const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
+                    return { qId, val, q, order: q?.display_order ?? 9999 };
+                  })
+                  .filter(({ q, val, qId }) => {
+                    if (!q) return false;
+                    if (q.system_key === 'indigenous_peoples_other_specify' && ipGroupVal === 'Others') return false;
+                    if (q.field_type === 'textarea' && !val) return false;
+                    return true;
+                  })
+                  .sort((a, b) => a.order - b.order);
                 return (
                   <div className="border-t pt-3 space-y-2">
-                    {Object.entries(parsed).map(([qId, val]) => {
-                      const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-                      const ipGroupQ = questions.find(qq => qq.system_key === 'indigenous_peoples_group');
-                      const ipGroupVal = ipGroupQ ? (parsed[ipGroupQ.id] ?? parsed[String(ipGroupQ.id)]) : null;
-                      if (q?.system_key === 'indigenous_peoples_other_specify' && ipGroupVal === 'Others') return null;
-                      // Skip empty textarea rows to reduce visual noise
-                      if (q?.field_type === 'textarea' && !val) return null;
-                      let displayVal = getAnswerDisplay(qId, parsed);
-                      if (q?.system_key === 'indigenous_peoples_group' && val === 'Others') {
+                    {entries.map(({ qId, val, q }) => {
+                      let displayVal = getAnswerDisplay(qId, parsed, q);
+                      if (q.system_key === 'indigenous_peoples_group' && val === 'Others') {
                         const specifyQ = questions.find(qq => qq.system_key === 'indigenous_peoples_other_specify');
                         const specifyVal = specifyQ ? (parsed[specifyQ.id] ?? parsed[String(specifyQ.id)]) : null;
                         if (specifyVal) displayVal = toUpperDisplay(String(specifyVal));
                       }
                       return (
                         <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
-                          <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q?.question_text || qId}</span>
-                          {q?.field_type === 'textarea'
+                          <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q.question_text}</span>
+                          {q.field_type === 'textarea'
                             ? <span className="text-sm whitespace-pre-wrap">{val || 'N/A'}</span>
                             : <span className="text-sm">{displayVal}</span>
                           }
