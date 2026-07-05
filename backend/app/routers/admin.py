@@ -357,7 +357,7 @@ def archive_semester(
 
     return target_sem
 
-# --- UPDATE SUBMISSION SEG VALUES ---
+# --- UPDATE SUBMISSION SEG VALUES (no-op — all SEG flags are now automated) ---
 @router.patch("/submissions/{id}/seg", response_model=schemas.AdminSubmissionItem)
 def update_submission_seg(
     id: int,
@@ -365,15 +365,14 @@ def update_submission_seg(
     current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
     db: Session = Depends(get_db)
 ):
-    """Updates admin-only SEG flags (Underprivileged only) for a submission.
-    Note: is_senior_citizen is auto-set from birthdate, is_magna_carta_poor
-    is auto-set from 'only_one_pursuing_college' answer."""
+    """All SEG flags are now auto-set:
+    - is_senior_citizen: from birthdate (age >= 60)
+    - is_magna_carta_poor: from 'only_one_pursuing_college' answer
+    - is_underprivileged: from estimated_household_income (<= 12,319)
+    This endpoint is preserved for backward compatibility but does nothing."""
     sub = db.query(models.Submission).filter(models.Submission.id == id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found.")
-    
-    if seg_data.is_underprivileged is not None:
-        sub.is_underprivileged = seg_data.is_underprivileged
     
     db.commit()
     db.refresh(sub)
@@ -382,7 +381,7 @@ def update_submission_seg(
     
     log_admin_action(
         db, current_admin.id, "update_submission_seg",
-        f"Updated SEG flags for submission #{sub.id} (senior={sub.is_senior_citizen}, magna={sub.is_magna_carta_poor}, underpriv={sub.is_underprivileged})"
+        f"SEG endpoint called for submission #{sub.id} (all flags now automated)"
     )
     
     return schemas.AdminSubmissionItem(

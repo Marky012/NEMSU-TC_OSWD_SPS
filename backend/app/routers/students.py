@@ -441,6 +441,20 @@ def finalize_submission(
             except (ValueError, TypeError):
                 pass
 
+    # --- 4c. Auto-set Underprivileged flag (income <= 12,319) ---
+    income_q = db.query(models.Question).filter(
+        models.Question.system_key == "estimated_household_income",
+        models.Question.active == True,
+    ).first()
+    if income_q:
+        inc_val = answers_map.get(income_q.id)
+        if inc_val:
+            try:
+                inc_num = float(inc_val.replace(",", "").strip())
+                existing_sub.is_underprivileged = (inc_num <= 12319)
+            except (ValueError, TypeError):
+                pass
+
     # --- 5. Generate verification code ---
     year, sem_num = parse_semester_details(active_sem.label)
     if existing_sub.verification_code:

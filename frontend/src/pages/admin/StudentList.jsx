@@ -33,7 +33,6 @@ export default function StudentList() {
   const [verifying, setVerifying] = useState(false);
   const [showVerifyDialog, setShowVerifyDialog] = useState(false);
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const [savingSeg, setSavingSeg] = useState(false);
   const [verifyOneId, setVerifyOneId] = useState(null);
   const [reviewSub, setReviewSub] = useState(null);
   const [reviewAction, setReviewAction] = useState(''); // 'returned' | 'declined'
@@ -192,20 +191,6 @@ export default function StudentList() {
     setReviewing(false);
   };
 
-  const toggleSEG = async (field) => {
-    if (!viewSub || savingSeg) return;
-    setSavingSeg(true);
-    const newVal = !viewSub[field];
-    try {
-      await apiClient.patch(`/admin/submissions/${viewSub.id}/seg`, { [field]: newVal });
-      setViewSub(prev => ({ ...prev, [field]: newVal }));
-      setSubmissions(prev => prev.map(s => s.id === viewSub.id ? { ...s, [field]: newVal } : s));
-      toast.success('SEG flag updated');
-    } catch (e) {
-      toast.error('Failed to update SEG flag');
-    }
-    setSavingSeg(false);
-  };
 
   const exportCSV = () => {
     const headers = ['Name', 'Email', 'Category', 'Program', 'Verification Code', 'Verified', 'Submitted At'];
@@ -611,13 +596,11 @@ export default function StudentList() {
                       {viewSub.is_magna_carta_poor ? 'Magna Carta Poor' : 'Not Magna Carta Poor'}
                     </span>
                   </TooltipBox>
-                  <TooltipBox label={viewSub.is_underprivileged ? 'Click to remove SEG flag' : 'Mark as Underprivileged'}>
-                    <button type="button" disabled={savingSeg} onClick={() => toggleSEG('is_underprivileged')}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${viewSub.is_underprivileged ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'}`}>
-                      Underprivileged
-                    </button>
+                  <TooltipBox label={viewSub.is_underprivileged ? 'Auto-assigned from household income (<= 12,319)' : 'Auto-assigned from household income'}>
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-default ${viewSub.is_underprivileged ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
+                      {viewSub.is_underprivileged ? 'Underprivileged' : 'Not Underprivileged'}
+                    </span>
                   </TooltipBox>
-                  {savingSeg && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground self-center" />}
                 </div>
               </div>
               {viewSub.draft_data_json && (() => {
