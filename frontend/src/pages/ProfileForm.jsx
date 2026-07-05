@@ -344,7 +344,16 @@ export default function ProfileForm() {
       return true;
     });
     const condVisible = resolveConditionalVisibility(categoryFiltered, answers);
-    return categoryFiltered.filter(q => condVisible.has(q.id));
+    const visible = categoryFiltered.filter(q => condVisible.has(q.id));
+    
+    // Deduplicate by system_key to prevent duplicate rendering if API returns duplicates
+    const seen = new Set();
+    return visible.filter(q => {
+      if (!q.system_key) return true;
+      if (seen.has(q.system_key)) return false;
+      seen.add(q.system_key);
+      return true;
+    });
   };
 
   const getSections = () => {
