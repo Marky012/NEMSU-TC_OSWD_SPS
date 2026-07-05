@@ -27,9 +27,18 @@ const normalizeCategory = (cat) => {
 const DynamicField = ({ question, value, onChange, error }) => {
   const options = question.options ? (Array.isArray(question.options) ? question.options : []) : [];
 
+  const ADDRESS_PLACEHOLDERS = {
+    province: 'Surigao del Sur',
+    municipality: 'Tagbina',
+    barangay_name: 'Poblacion',
+    present_home_address: 'PUROK 1',
+  };
+
   const handleSelectChange = (val) => {
     onChange(val);
   };
+
+  const ph = (question) => ADDRESS_PLACEHOLDERS[question.system_key] || `Enter ${(question.question_text || question.questionText || '').toLowerCase()}`;
 
   switch (question.field_type || question.fieldType) {
     case 'text':
@@ -37,7 +46,7 @@ const DynamicField = ({ question, value, onChange, error }) => {
         <Input
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={`Enter ${(question.question_text || question.questionText || '').toLowerCase()}`}
+          placeholder={ph(question)}
         />
       );
     case 'number':
@@ -59,7 +68,7 @@ const DynamicField = ({ question, value, onChange, error }) => {
         <Textarea
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
-          placeholder={`Enter ${(question.question_text || question.questionText || '').toLowerCase()}`}
+          placeholder={ph(question)}
         />
       );
     case 'date':
