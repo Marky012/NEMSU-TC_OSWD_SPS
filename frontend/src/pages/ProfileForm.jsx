@@ -677,12 +677,27 @@ export default function ProfileForm() {
                 {q.system_key === 'participation_in_sports_arts' && q.min_rows > 0 && (
                   <p className="text-xs text-muted-foreground">Add at least {q.min_rows} row(s) for each event you have participated in</p>
                 )}
+                {q.system_key === 'estimated_household_income' && (
+                  <p className="text-xs text-muted-foreground italic text-[#143A7B]">Please enter numbers only (e.g., 15000). Do not include commas or other characters.</p>
+                )}
                 {q.system_key === 'participation_in_sports_arts' ? (
                   <ParticipationField
                     value={answers[q.id]}
                     onChange={val => setAnswers(prev => ({ ...prev, [q.id]: val }))}
                     error={errors[q.id]}
                     minRows={q.min_rows}
+                  />
+                ) : q.system_key === 'estimated_household_income' ? (
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    value={answers[q.id] || ''}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setAnswers(prev => ({ ...prev, [q.id]: val }));
+                    }}
+                    placeholder="e.g. 15000"
+                    className="h-11"
                   />
                 ) : q.system_key === 'other_skills_hobbies_talents' ? (
                   (() => {
