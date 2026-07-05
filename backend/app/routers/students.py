@@ -416,6 +416,15 @@ def finalize_submission(
         ):
             pwd_wants_card = True
 
+    # --- 4a. Auto-set Magna Carta of the Poor flag ---
+    only_one_q = db.query(models.Question).filter(
+        models.Question.system_key == "only_one_pursuing_college",
+        models.Question.active == True,
+    ).first()
+    if only_one_q:
+        only_one_ans = answers_map.get(only_one_q.id)
+        existing_sub.is_magna_carta_poor = (only_one_ans == "Yes")
+
     # --- 5. Generate verification code ---
     year, sem_num = parse_semester_details(active_sem.label)
     if existing_sub.verification_code:

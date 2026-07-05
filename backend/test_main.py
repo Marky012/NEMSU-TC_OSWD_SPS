@@ -214,6 +214,9 @@ def test_student_draft_and_final_submit():
     answers_payload.append({"question_id": q_map["gadget_for_internet_access"], "answer_text": json.dumps(["Laptop"])})
     answers_payload.append({"question_id": q_map["comfortable_with_computer"], "answer_text": "Yes"})
 
+    # Fill in Magna Carta of the Poor / sibling question
+    answers_payload.append({"question_id": q_map["only_one_pursuing_college"], "answer_text": "No"})
+
     # Submit finalized profiling details
     submit_payload = {"answers": answers_payload}
     response = client.post("/api/students/submit", json=submit_payload, headers=headers)

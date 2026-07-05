@@ -516,6 +516,19 @@ def seed_database(db: Session):
             "conditional_val": "Yes",
         },
 
+        # only_one_pursuing_college — triggers Magna Carta of the Poor flag
+        {
+            "temp_id":        "only_one_pursuing_college",
+            "category_id":    5,
+            "system_key":     "only_one_pursuing_college",
+            "question_text":  "Are you the only one among your siblings who is able to pursue college?",
+            "field_type":     "radio",
+            "options":        ["Yes", "No"],
+            "required":       True,
+            "applicable_cats": ALL,
+            "display_order":  38,
+        },
+
         # ===================================================================
         # CATEGORY 6: SPORTS & ARTS (NEW / TRANSFEREE / RETURNEE ONLY)
         # ===================================================================
@@ -532,7 +545,7 @@ def seed_database(db: Session):
             "required":       False,
             "min_rows":       1,
             "applicable_cats": NTR,
-            "display_order":  38,
+            "display_order":  39,
         },
 
         # ===================================================================

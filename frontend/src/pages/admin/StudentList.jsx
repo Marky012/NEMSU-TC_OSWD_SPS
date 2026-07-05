@@ -607,11 +607,10 @@ export default function StudentList() {
                       Senior Citizen
                     </button>
                   </TooltipBox>
-                  <TooltipBox label={viewSub.is_magna_carta_poor ? 'Click to remove SEG flag' : 'Mark as Magna Carta Poor'}>
-                    <button type="button" disabled={savingSeg} onClick={() => toggleSEG('is_magna_carta_poor')}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all border ${viewSub.is_magna_carta_poor ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'}`}>
-                      Magna Carta Poor
-                    </button>
+                  <TooltipBox label={viewSub.is_magna_carta_poor ? 'Auto-assigned from sibling answer' : 'Auto-assigned from sibling answer'}>
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-default ${viewSub.is_magna_carta_poor ? 'bg-emerald-100 text-emerald-800 border-emerald-300 shadow-sm' : 'bg-gray-100 text-gray-400 border-gray-200'}`}>
+                      {viewSub.is_magna_carta_poor ? 'Magna Carta Poor' : 'Not Magna Carta Poor'}
+                    </span>
                   </TooltipBox>
                   <TooltipBox label={viewSub.is_underprivileged ? 'Click to remove SEG flag' : 'Mark as Underprivileged'}>
                     <button type="button" disabled={savingSeg} onClick={() => toggleSEG('is_underprivileged')}

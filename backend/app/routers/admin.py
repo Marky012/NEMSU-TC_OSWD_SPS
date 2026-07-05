@@ -365,15 +365,14 @@ def update_submission_seg(
     current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
     db: Session = Depends(get_db)
 ):
-    """Updates admin-only SEG flags (Senior Citizen, Magna Carta Poor, Underprivileged) for a submission."""
+    """Updates admin-only SEG flags (Senior Citizen, Underprivileged) for a submission.
+    Note: is_magna_carta_poor is auto-set from student's 'only_one_pursuing_college' answer."""
     sub = db.query(models.Submission).filter(models.Submission.id == id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found.")
     
     if seg_data.is_senior_citizen is not None:
         sub.is_senior_citizen = seg_data.is_senior_citizen
-    if seg_data.is_magna_carta_poor is not None:
-        sub.is_magna_carta_poor = seg_data.is_magna_carta_poor
     if seg_data.is_underprivileged is not None:
         sub.is_underprivileged = seg_data.is_underprivileged
     
