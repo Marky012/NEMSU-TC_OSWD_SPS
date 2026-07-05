@@ -339,7 +339,7 @@ def seed_database(db: Session):
             "temp_id":        "number_of_siblings",
             "category_id":    2,
             "system_key":     "number_of_siblings",
-            "question_text":  "Number of Siblings (including self)",
+            "question_text":  "Number of Siblings (including yourself)",
             "field_type":     "number",
             "options":        None,
             "required":       True,
