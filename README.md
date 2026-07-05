@@ -13,7 +13,6 @@
 ![React](https://img.shields.io/badge/React-19+-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Production-336791?style=flat-square&logo=postgresql&logoColor=white)
 ![Deployed on Render](https://img.shields.io/badge/Deployed_on-Render-46E3B7?style=flat-square&logo=render&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 <p>A fully deployed, production-ready full-stack web application for digitizing and managing student welfare profiling at NEMSU-TC. Built with FastAPI (backend), React + Vite (frontend), and PostgreSQL (production database) — replacing the university's manual paper-based OSWD forms.</p>
 
@@ -454,16 +453,6 @@ Add the following line to run a full backup daily at midnight:
 ```
 
 ---
-
-## <img src="./docs/icons/contributing.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/contributing-white.svg#gh-dark-mode-only" width="20" height="20" /> Contributing
-
-Contributions, bug reports, and feature suggestions are welcome. Please open an issue or submit a pull request through the [GitHub repository](https://github.com/Marky012/NEMSU-TC_OSWD_SPS).
-
----
-
-## <img src="./docs/icons/license.svg#gh-light-mode-only" width="20" height="20" /><img src="./docs/icons/license-white.svg#gh-dark-mode-only" width="20" height="20" /> License
-
-This project is licensed under the [MIT License](./LICENSE).
 
 ---
 
