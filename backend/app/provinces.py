@@ -20,6 +20,27 @@ VALID_PROVINCES = {
     "BASILAN", "LANAO DEL SUR", "MAGUINDANAO DEL NORTE", "MAGUINDANAO DEL SUR", "SULU", "TAWI-TAWI",
 }
 
+VALID_REGIONS = {
+    "REGION I", "ILOCOS REGION", "ILOCOS",
+    "REGION II", "CAGAYAN VALLEY", "CAGAYAN VALLEY REGION",
+    "REGION III", "CENTRAL LUZON",
+    "REGION IV-A", "REGION IVA", "CALABARZON",
+    "MIMAROPA", "MIMAROPA REGION",
+    "REGION V", "BICOL REGION", "BICOL",
+    "REGION VI", "WESTERN VISAYAS",
+    "REGION VII", "CENTRAL VISAYAS",
+    "REGION VIII", "EASTERN VISAYAS",
+    "REGION IX", "ZAMBOANGA PENINSULA",
+    "REGION X", "NORTHERN MINDANAO",
+    "REGION XI", "DAVAO REGION", "DAVAO",
+    "REGION XII", "SOCCSKSARGEN",
+    "REGION XIII", "REGION 13", "CARAGA", "CARAGA REGION",
+    "NCR", "NATIONAL CAPITAL REGION",
+    "CAR", "CORDILLERA ADMINISTRATIVE REGION",
+    "BARMM", "BANGSAMORO AUTONOMOUS REGION IN MUSLIM MINDANAO",
+    "NIR", "NEGROS ISLAND REGION",
+}
+
 
 def validate_province(province: str) -> str | None:
     """Returns None if valid, or an error message string if invalid."""
@@ -27,3 +48,11 @@ def validate_province(province: str) -> str | None:
     if cleaned in VALID_PROVINCES:
         return None
     return f"Province '{province.strip()}' is invalid or misspelled. Please check the spelling and try again."
+
+
+def validate_region(region: str) -> str | None:
+    """Returns None if valid, or an error message string if invalid."""
+    cleaned = region.strip().upper()
+    if cleaned in VALID_REGIONS:
+        return None
+    return f"Region '{region.strip()}' is invalid or misspelled. Please check the spelling and try again."

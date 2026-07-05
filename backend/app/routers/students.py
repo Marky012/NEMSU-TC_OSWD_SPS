@@ -378,6 +378,21 @@ def finalize_submission(
                     detail=err,
                 )
 
+    # --- 2e. Validate region against official list ---
+    region_q = next(
+        (q for q in applicable_questions if q.system_key == "region"), None
+    )
+    if region_q:
+        region_val = (answers_map.get(region_q.id) or "").strip()
+        if region_val:
+            from app.provinces import validate_region
+            err = validate_region(region_val)
+            if err:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=err,
+                )
+
     # --- 3. Get or create submission record ---
     if not existing_sub:
         existing_sub = models.Submission(

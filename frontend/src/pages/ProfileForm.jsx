@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import AnimatedPage, { staggerContainer, fadeIn } from '@/components/AnimatedPage';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { STUDENT_CATEGORIES, VALID_PROVINCES } from '@/lib/constants';
+import { STUDENT_CATEGORIES, VALID_PROVINCES, VALID_REGIONS } from '@/lib/constants';
 import apiClient from '@/api/apiClient';
 import { Button } from '@/components/ui/button';
 import { TooltipBox } from '@/components/ui/tooltip';
@@ -423,6 +423,12 @@ export default function ProfileForm() {
         const cleaned = String(answers[q.id]).trim().toUpperCase();
         if (!VALID_PROVINCES.has(cleaned)) {
           errs[q.id] = `Province '${String(answers[q.id]).trim()}' is invalid or misspelled`;
+        }
+      }
+      if (q.system_key === 'region' && answers[q.id]) {
+        const cleaned = String(answers[q.id]).trim().toUpperCase();
+        if (!VALID_REGIONS.has(cleaned)) {
+          errs[q.id] = `Region '${String(answers[q.id]).trim()}' is invalid or misspelled`;
         }
       }
       if (q.required) {
