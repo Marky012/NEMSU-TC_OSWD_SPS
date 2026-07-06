@@ -230,8 +230,7 @@ export default function StudentList() {
     if (typeof val === 'string' && val.startsWith('[')) {
       try { return JSON.parse(val).map(formatRow).filter(r => r).join('; '); } catch { return val; }
     }
-    const CONTACT_KEYS = ['active_contact_number', 'emergency_contact_number'];
-    if (!CONTACT_KEYS.includes(question?.system_key)) {
+    if (question?.system_key === 'estimated_household_income') {
       const cleaned = String(val).replace(/,/g, '');
       if (/^\d+(\.\d+)?$/.test(cleaned)) {
         return Number(cleaned).toLocaleString();

@@ -594,8 +594,7 @@ export default function Analytics() {
                         const specifyVal = specifyQ ? (parsed[specifyQ.id] ?? parsed[String(specifyQ.id)]) : null;
                         if (specifyVal) rawVal = String(specifyVal);
                       }
-                      const CONTACT_KEYS = ['active_contact_number', 'emergency_contact_number'];
-                      if (rawVal !== 'N/A' && !CONTACT_KEYS.includes(q.system_key)) {
+                      if (rawVal !== 'N/A' && q.system_key === 'estimated_household_income') {
                         const cleaned = String(rawVal).replace(/,/g, '');
                         if (/^\d+(\.\d+)?$/.test(cleaned)) rawVal = Number(cleaned).toLocaleString();
                       }
