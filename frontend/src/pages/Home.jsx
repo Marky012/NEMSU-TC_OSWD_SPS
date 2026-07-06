@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   FileText, Clock, AlertCircle, ArrowRight,
   GraduationCap, History, Shield, Key, ShieldCheck,
-  RefreshCw, Loader2
+  RefreshCw, Loader2, Megaphone, Pin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TooltipBox } from '@/components/ui/tooltip';
@@ -45,9 +45,11 @@ export default function Home() {
   const [changing, setChanging] = useState(false);
   const [changeError, setChangeError] = useState('');
   const [submissionsClosed, setSubmissionsClosed] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
     if (user) loadData();
+    apiClient.get('/students/announcements').then(({ data }) => setAnnouncements(data)).catch(() => {});
   }, [user]);
 
   // Poll submissions status every 30s so students see toggle changes in real-time
@@ -225,6 +227,20 @@ export default function Home() {
             <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse" />
             Submissions are currently disabled. The profiling form will be available again during regular office hours or when the system is ready to accept entries.
           </p>
+        </motion.div>
+      )}
+
+      {announcements.length > 0 && (
+        <motion.div variants={fadeIn} className="space-y-2">
+          {announcements.filter(a => a.is_pinned).concat(announcements.filter(a => !a.is_pinned)).slice(0, 3).map(a => (
+            <div key={a.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+              <Megaphone className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm text-amber-800">{a.is_pinned && <Pin className="w-3 h-3 inline mr-1" />}{a.message}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(a.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          ))}
         </motion.div>
       )}
 

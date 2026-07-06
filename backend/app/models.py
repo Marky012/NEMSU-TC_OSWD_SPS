@@ -190,3 +190,16 @@ class EmailRateLimit(Base):
     email = Column(String, index=True, nullable=False)
     sent_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    message = Column(Text, nullable=False)
+    admin_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    is_pinned = Column(Boolean, default=False, nullable=False)
+
+    # Relationship
+    admin = relationship("User")
+

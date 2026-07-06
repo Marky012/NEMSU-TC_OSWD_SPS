@@ -216,6 +216,21 @@ async def lifespan(app: FastAPI):
                 _db.commit()
         except Exception:
             pass  # table may not exist yet on first run, that's OK
+        # Ensure announcements table exists
+        try:
+            _db.execute(text("SELECT 1 FROM announcements LIMIT 1"))
+        except Exception:
+            _db.execute(text("""
+                CREATE TABLE announcements (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    message TEXT NOT NULL,
+                    admin_id INTEGER NOT NULL REFERENCES users(id),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    is_pinned BOOLEAN NOT NULL DEFAULT FALSE
+                )
+            """))
+            print("[Migration] Created announcements table.")
+            _db.commit()
         # Force-update Program/Course options to full degree names
         prog_opts = '["Bachelor of Secondary Education", "Bachelor of Science in Business Administration major in Human Resource Management", "Bachelor of Science in Agriculture", "Bachelor of Science in Business Administration major in Financial Management", "Bachelor of Elementary Education", "Bachelor of Science in Computer Science", "Bachelor of Agriculture Technology", "Bachelor of Science in Hospitality Management"]'
         result = _db.execute(

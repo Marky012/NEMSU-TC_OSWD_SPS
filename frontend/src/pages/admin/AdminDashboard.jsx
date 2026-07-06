@@ -6,9 +6,10 @@ import AnimatedPage, { staggerContainer, fadeIn } from '@/components/AnimatedPag
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { TooltipBox } from '@/components/ui/tooltip';
-import { FileText, AlertTriangle, CheckCircle2, Clock, GraduationCap, RefreshCw, ToggleLeft, ToggleRight } from 'lucide-react';
+import { FileText, AlertTriangle, CheckCircle2, Clock, GraduationCap, RefreshCw, ToggleLeft, ToggleRight, Megaphone, Plus, Trash2, Pin, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 const COLORS = ['hsl(224, 76%, 48%)', 'hsl(42,87%,52%)', 'hsl(200,60%,45%)', 'hsl(280,50%,55%)', 'hsl(20,80%,55%)', 'hsl(340,60%,50%)'];
@@ -35,6 +36,11 @@ export default function AdminDashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [accepting, setAccepting] = useState(true);
   const [toggleConfirmOpen, setToggleConfirmOpen] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
+  const [showAnnounceModal, setShowAnnounceModal] = useState(false);
+  const [newAnnounceMsg, setNewAnnounceMsg] = useState('');
+  const [newAnnouncePinned, setNewAnnouncePinned] = useState(false);
+  const [creatingAnnounce, setCreatingAnnounce] = useState(false);
 
   const loadStats = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -86,11 +92,44 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadAnnouncements = useCallback(async () => {
+    try {
+      const { data } = await apiClient.get('/admin/announcements');
+      setAnnouncements(data);
+    } catch {}
+  }, []);
+
+  const handleCreateAnnounce = async () => {
+    if (!newAnnounceMsg.trim()) return;
+    setCreatingAnnounce(true);
+    try {
+      await apiClient.post('/admin/announcements', { message: newAnnounceMsg.trim(), is_pinned: newAnnouncePinned });
+      setNewAnnounceMsg('');
+      setNewAnnouncePinned(false);
+      await loadAnnouncements();
+      toast.success('Announcement created');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to create announcement');
+    }
+    setCreatingAnnounce(false);
+  };
+
+  const handleDeleteAnnounce = async (id) => {
+    try {
+      await apiClient.delete(`/admin/announcements/${id}`);
+      await loadAnnouncements();
+      toast.success('Announcement deleted');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to delete');
+    }
+  };
+
   useEffect(() => {
     loadStats(true);
+    loadAnnouncements();
     const interval = setInterval(() => loadStats(true), 60000);
     return () => clearInterval(interval);
-  }, [loadStats]);
+  }, [loadStats, loadAnnouncements]);
 
   if (loading) {
     return (
@@ -238,6 +277,86 @@ export default function AdminDashboard() {
         confirmLabel={accepting ? 'Close Submissions' : 'Open Submissions'}
         variant={accepting ? 'destructive' : 'default'}
       />
+
+      {/* Announcements Card */}
+      <motion.div variants={fadeIn}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-base font-heading flex items-center gap-2">
+              <Megaphone className="w-4 h-4" /> Announcements
+            </CardTitle>
+            <Button size="sm" variant="outline" onClick={() => setShowAnnounceModal(true)} className="gap-1">
+              <Plus className="w-3.5 h-3.5" /> Manage
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {announcements.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No announcements yet.</p>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {announcements.slice(0, 3).map(a => (
+                  <div key={a.id} className="text-sm p-2 bg-muted/30 rounded-lg border border-border/50">
+                    {a.is_pinned && <Pin className="w-3 h-3 inline text-amber-500 mr-1" />}
+                    {a.message}
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {a.admin_name || 'Admin'} &middot; {new Date(a.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+                {announcements.length > 3 && (
+                  <p className="text-xs text-muted-foreground text-center">+{announcements.length - 3} more</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Announcements Modal */}
+      <Dialog open={showAnnounceModal} onOpenChange={setShowAnnounceModal}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Manage Announcements</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <textarea
+                value={newAnnounceMsg}
+                onChange={e => setNewAnnounceMsg(e.target.value)}
+                placeholder="Write your announcement..."
+                className="w-full h-24 p-3 text-sm border border-input rounded-lg bg-background resize-none focus:outline-none focus:ring-1 focus:ring-[#EFAF1A]"
+                maxLength={5000}
+              />
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={newAnnouncePinned} onChange={e => setNewAnnouncePinned(e.target.checked)} className="rounded" />
+                  Pin this announcement
+                </label>
+                <Button size="sm" onClick={handleCreateAnnounce} disabled={!newAnnounceMsg.trim() || creatingAnnounce}>
+                  {creatingAnnounce ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Plus className="w-3 h-3 mr-1" />}
+                  Post
+                </Button>
+              </div>
+            </div>
+            <div className="border-t pt-3 space-y-2">
+              {announcements.map(a => (
+                <div key={a.id} className="flex items-start justify-between gap-2 p-2 rounded-lg bg-muted/20 border border-border/50">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm">{a.is_pinned && <Pin className="w-3 h-3 inline text-amber-500 mr-1" />}{a.message}</p>
+                    <p className="text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleString()}</p>
+                  </div>
+                  <TooltipBox label="Delete announcement">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 shrink-0" onClick={() => handleDeleteAnnounce(a.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  </TooltipBox>
+                </div>
+              ))}
+              {announcements.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">No announcements yet</p>}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AnimatedPage>
   );
 }

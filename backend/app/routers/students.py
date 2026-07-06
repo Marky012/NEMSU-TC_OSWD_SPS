@@ -1017,4 +1017,26 @@ def reuse_previous_submission(
         return schemas.SubmissionResponse.model_validate(new_draft)
 
 
+@router.get("/announcements", response_model=List[schemas.AnnouncementResponse])
+def get_announcements(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all announcements (visible to any authenticated user)."""
+    anns = db.query(models.Announcement).order_by(
+        models.Announcement.is_pinned.desc(),
+        models.Announcement.created_at.desc()
+    ).all()
+    result = []
+    for a in anns:
+        admin = db.query(models.User).filter(models.User.id == a.admin_id).first()
+        result.append(schemas.AnnouncementResponse(
+            id=a.id,
+            message=a.message,
+            admin_id=a.admin_id,
+            admin_name=admin.first_name if admin else None,
+            created_at=a.created_at,
+            is_pinned=a.is_pinned,
+        ))
+    return result
 

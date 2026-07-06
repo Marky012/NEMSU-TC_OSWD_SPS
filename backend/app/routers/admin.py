@@ -911,3 +911,78 @@ def toggle_submissions(
         "semester_id": active.id,
         "semester_label": active.label,
     }
+
+
+# --- ANNOUNCEMENTS ---
+@router.get("/announcements", response_model=List[schemas.AnnouncementResponse])
+def list_announcements(
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """List all announcements."""
+    anns = db.query(models.Announcement).order_by(
+        models.Announcement.is_pinned.desc(),
+        models.Announcement.created_at.desc()
+    ).all()
+    result = []
+    for a in anns:
+        admin = db.query(models.User).filter(models.User.id == a.admin_id).first()
+        result.append(schemas.AnnouncementResponse(
+            id=a.id,
+            message=a.message,
+            admin_id=a.admin_id,
+            admin_name=admin.first_name if admin else None,
+            created_at=a.created_at,
+            is_pinned=a.is_pinned,
+        ))
+    return result
+
+
+@router.post("/announcements", response_model=schemas.AnnouncementResponse, status_code=status.HTTP_201_CREATED)
+def create_announcement(
+    data: schemas.AnnouncementCreate,
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """Create a new announcement."""
+    ann = models.Announcement(
+        message=data.message,
+        admin_id=current_admin.id,
+        is_pinned=data.is_pinned,
+    )
+    db.add(ann)
+    db.commit()
+    db.refresh(ann)
+    log_admin_action(
+        db, current_admin.id,
+        "Create Announcement",
+        f"Created announcement: {data.message[:80]}"
+    )
+    return schemas.AnnouncementResponse(
+        id=ann.id,
+        message=ann.message,
+        admin_id=ann.admin_id,
+        admin_name=current_admin.first_name,
+        created_at=ann.created_at,
+        is_pinned=ann.is_pinned,
+    )
+
+
+@router.delete("/announcements/{announcement_id}", status_code=status.HTTP_200_OK)
+def delete_announcement(
+    announcement_id: int,
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """Delete an announcement."""
+    ann = db.query(models.Announcement).filter(models.Announcement.id == announcement_id).first()
+    if not ann:
+        raise HTTPException(status_code=404, detail="Announcement not found")
+    db.delete(ann)
+    db.commit()
+    log_admin_action(
+        db, current_admin.id,
+        "Delete Announcement",
+        f"Deleted announcement: {ann.message[:80]}"
+    )
+    return {"detail": "Announcement deleted"}

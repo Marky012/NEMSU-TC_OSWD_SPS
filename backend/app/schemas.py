@@ -384,6 +384,21 @@ class SubmissionReview(BaseModel):
     status: str  # "returned" | "declined" | "verified"
     admin_comment: Optional[str] = None
 
+# --- ANNOUNCEMENTS ---
+class AnnouncementCreate(BaseModel):
+    message: str = Field(..., min_length=1, max_length=5000)
+    is_pinned: bool = False
+
+class AnnouncementResponse(BaseModel):
+    id: int
+    message: str
+    admin_id: int
+    admin_name: Optional[str] = None
+    created_at: datetime
+    is_pinned: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
 # --- ANALYTICS AND CHED REPORTS ---
 class SummaryReport(BaseModel):
     report_title: str
