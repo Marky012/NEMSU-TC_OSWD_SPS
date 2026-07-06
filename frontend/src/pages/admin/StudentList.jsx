@@ -42,6 +42,8 @@ export default function StudentList() {
   const [verifyConfirmSub, setVerifyConfirmSub] = useState(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [deleteSub, setDeleteSub] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [sortMode, setSortMode] = useState('newest');
   const [page, setPage] = useState(1);
   const pageSize = 25;
@@ -215,6 +217,20 @@ export default function StudentList() {
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 10000);
     setShowExportDialog(false);
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!deleteSub) return;
+    setDeleting(true);
+    try {
+      await apiClient.delete(`/admin/students/${deleteSub.user_id}`);
+      toast.success(`${getStudentName(deleteSub)} deleted successfully`);
+      setDeleteSub(null);
+      loadData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Delete failed');
+    }
+    setDeleting(false);
   };
 
   const getAnswerDisplay = (qId, data, question) => {
@@ -495,6 +511,12 @@ export default function StudentList() {
                             <Eye className="w-3 h-3" />
                           </Button>
                         </TooltipBox>
+                        <TooltipBox label="Delete student">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => setDeleteSub(sub)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </TooltipBox>
                       </div>
                     </td>
                   </tr>
@@ -766,6 +788,18 @@ export default function StudentList() {
         confirmLabel={reviewAction === 'returned' ? 'Return' : 'Decline'}
         variant={reviewAction === 'declined' ? 'destructive' : 'default'}
         loading={reviewing}
+      />
+
+      {/* Confirm delete student */}
+      <ConfirmDialog
+        open={!!deleteSub}
+        onOpenChange={() => setDeleteSub(null)}
+        onConfirm={handleDeleteStudent}
+        title="Delete Student"
+        description={deleteSub ? `Permanently delete ${getStudentName(deleteSub)} (${deleteSub.student_email}) and all their submissions? This cannot be undone.` : ''}
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={deleting}
       />
     </motion.div>
     </AnimatedPage>

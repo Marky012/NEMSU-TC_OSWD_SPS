@@ -626,6 +626,32 @@ def delete_admin(
     return {"detail": f"Admin {admin.email} deleted successfully"}
 
 
+@router.delete("/students/{user_id}", status_code=status.HTTP_200_OK)
+def delete_student(
+    user_id: int,
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """Permanently delete a student user and all associated submissions/answers."""
+    student = db.query(models.User).filter(
+        models.User.id == user_id,
+        models.User.role == "student"
+    ).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    db.delete(student)
+    db.commit()
+
+    log_admin_action(
+        db, current_admin.id,
+        "Delete Student",
+        f"Deleted student account {student.email} ({student.first_name})"
+    )
+
+    return {"detail": f"Student {student.email} deleted successfully"}
+
+
 # --- OFFICE STAFF SLOT SYSTEM ---
 
 @router.get("/staff-slots", status_code=status.HTTP_200_OK)
