@@ -162,14 +162,15 @@ export default function DynamicField({ question, value, onChange, error }) {
 
       case 'select':
       case 'dropdown':
+        const isLongOpts = options.some(o => o.length > 40);
         return (
           <Select value={value || ''} onValueChange={onChange}>
             <SelectTrigger className="bg-background">
               <SelectValue placeholder="Select an option" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={isLongOpts ? "min-w-[320px] w-auto" : ""}>
               {options.map((opt) => (
-                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                <SelectItem key={opt} value={opt} className={isLongOpts ? "whitespace-normal break-words py-1.5" : ""}>{opt}</SelectItem>
               ))}
             </SelectContent>
           </Select>
