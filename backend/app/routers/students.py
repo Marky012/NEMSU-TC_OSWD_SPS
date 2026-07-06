@@ -11,6 +11,7 @@ from app import models, schemas
 from app.dependencies import get_current_user
 from app.utils.email import send_verification_email
 from app.utils.pdf import generate_verification_pdf
+from app.utils.office_staff import distribute_unassigned_submissions
 from app.config import settings
 
 router = APIRouter(prefix="/api/students", tags=["Student Profiling"])
@@ -554,6 +555,10 @@ def finalize_submission(
     )
     db.add(new_log)
     db.commit()
+
+    # Distribute to active staff slot if not yet assigned
+    if not existing_sub.assigned_staff_slot:
+        distribute_unassigned_submissions(db)
 
     return schemas.SubmissionResponse.model_validate(existing_sub)
 
