@@ -731,7 +731,8 @@ def list_staff_submissions(
     active_sem = db.query(models.Semester).filter(models.Semester.is_active == True).first()
     subs = db.query(models.Submission).filter(
         models.Submission.assigned_staff_slot == slot,
-        models.Submission.semester_id == (active_sem.id if active_sem else None)
+        models.Submission.semester_id == (active_sem.id if active_sem else None),
+        models.Submission.is_final == True
     ).order_by(models.Submission.submitted_at.desc().nullslast()).all()
 
     result = []

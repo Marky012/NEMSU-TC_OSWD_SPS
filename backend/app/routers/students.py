@@ -307,19 +307,18 @@ def finalize_submission(
             continue
         if q.field_type == "table" and q.min_rows and q.min_rows > 0:
             ans_val = answers_map.get(q.id)
-            if ans_val:
-                try:
-                    rows = json.loads(ans_val) if isinstance(ans_val, str) else ans_val
-                    if isinstance(rows, list) and len(rows) < q.min_rows:
-                        raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"'{q.question_text}' requires at least {q.min_rows} row(s). Please add more entries.",
-                        )
-                except (json.JSONDecodeError, TypeError):
+            try:
+                rows = json.loads(ans_val) if isinstance(ans_val, str) else ans_val
+                if not isinstance(rows, list) or len(rows) < q.min_rows:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"'{q.question_text}' has an invalid format.",
+                        detail=f"'{q.question_text}' requires at least {q.min_rows} row(s). Please add more entries.",
                     )
+            except (json.JSONDecodeError, TypeError):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"'{q.question_text}' has an invalid format.",
+                )
 
     # --- 2a. Emergency contact name must contain at least one letter ---
     ec_name_q = next(

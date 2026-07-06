@@ -452,10 +452,10 @@ export default function ProfileForm() {
           }
         }
       }
-      if (q.field_type === 'table' && q.min_rows > 0 && answers[q.id]) {
+      if (q.field_type === 'table' && q.min_rows > 0) {
         let rows;
         try {
-          rows = typeof answers[q.id] === 'string' ? JSON.parse(answers[q.id]) : answers[q.id];
+          rows = answers[q.id] ? (typeof answers[q.id] === 'string' ? JSON.parse(answers[q.id]) : answers[q.id]) : [];
         } catch { rows = []; }
         if (!Array.isArray(rows) || rows.length < q.min_rows) {
           errs[q.id] = `At least ${q.min_rows} row(s) required`;

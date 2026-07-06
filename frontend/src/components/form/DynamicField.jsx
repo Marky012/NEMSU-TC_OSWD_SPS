@@ -63,10 +63,16 @@ export default function DynamicField({ question, value, onChange, error }) {
             </div>
           );
         }
+        const isNameField = question.system_key && question.system_key.endsWith('_name');
+        const handleTextChange = (e) => {
+          let v = e.target.value.toUpperCase();
+          if (isNameField) v = v.replace(/[0-9]/g, '');
+          onChange(v);
+        };
         return (
           <Input
             value={value || ''}
-            onChange={(e) => onChange(e.target.value.toUpperCase())}
+            onChange={handleTextChange}
             placeholder={`Enter ${question.question_text.toLowerCase()}`}
             className="bg-background uppercase"
           />
@@ -91,7 +97,11 @@ export default function DynamicField({ question, value, onChange, error }) {
         return (
           <Textarea
             value={value || ''}
-            onChange={(e) => onChange(e.target.value.toUpperCase())}
+            onChange={(e) => {
+              let v = e.target.value.toUpperCase();
+              if (question.system_key?.endsWith('_name')) v = v.replace(/[0-9]/g, '');
+              onChange(v);
+            }}
             placeholder={`Enter ${question.question_text.toLowerCase()}`}
             className="bg-background uppercase"
           />
