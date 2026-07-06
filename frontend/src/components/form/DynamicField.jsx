@@ -64,15 +64,18 @@ export default function DynamicField({ question, value, onChange, error }) {
           );
         }
         const isNameField = question.system_key && question.system_key.endsWith('_name');
+        const isPhoneField = question.system_key && question.system_key.endsWith('_number');
         const handleTextChange = (e) => {
           let v = e.target.value.toUpperCase();
           if (isNameField) v = v.replace(/[0-9]/g, '');
+          if (isPhoneField) v = v.replace(/\D/g, '');
           onChange(v);
         };
         return (
           <Input
             value={value || ''}
             onChange={handleTextChange}
+            inputMode={isPhoneField ? 'numeric' : undefined}
             placeholder={`Enter ${question.question_text.toLowerCase()}`}
             className="bg-background uppercase"
           />
