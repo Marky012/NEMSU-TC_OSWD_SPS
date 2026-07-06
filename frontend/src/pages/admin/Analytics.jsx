@@ -604,6 +604,22 @@ export default function Analytics() {
                           <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q.question_text}</span>
                           {q.field_type === 'textarea'
                             ? <span className="text-sm whitespace-pre-wrap">{val || 'N/A'}</span>
+                            : q.field_type === 'table'
+                            ? (() => {
+                                let rows;
+                                try { rows = typeof val === 'string' ? JSON.parse(val) : val; } catch { rows = null; }
+                                if (!Array.isArray(rows) || rows.length === 0) return <span className="text-sm text-muted-foreground italic">No entries</span>;
+                                return rows.map((row, ri) => (
+                                  <div key={ri} className="text-sm mb-1">
+                                    <span className="text-xs text-muted-foreground">Entry {ri + 1}:</span>
+                                    <ul className="list-disc list-inside ml-2">
+                                      {Object.entries(row).filter(([,v]) => v && String(v).trim()).map(([col, cv]) => (
+                                        <li key={col}><span className="font-medium">{col}:</span> {String(cv).toUpperCase()}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                ));
+                              })()
                             : <span className="text-sm">{displayVal}</span>
                           }
                         </div>
