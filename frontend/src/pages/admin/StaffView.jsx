@@ -122,7 +122,8 @@ export default function StaffView() {
         const name = getStudentName(sub).toLowerCase();
         const email = (sub.student_email || '').toLowerCase();
         const code = (sub.verification_code || '').toLowerCase();
-        if (!name.includes(q) && !email.includes(q) && !code.includes(q)) return false;
+        const cat = (sub.student_category || '').toLowerCase();
+        if (!name.includes(q) && !email.includes(q) && !code.includes(q) && !cat.includes(q)) return false;
       }
       return true;
     });
@@ -213,6 +214,7 @@ export default function StaffView() {
                 <tr className="border-b bg-muted/50">
                   <th className="p-3 text-left font-medium text-xs">Name</th>
                   <th className="p-3 text-left font-medium text-xs">Program</th>
+                  <th className="p-3 text-left font-medium text-xs">Category</th>
                   <th className="p-3 text-left font-medium text-xs">Code</th>
                   <th className="p-3 text-left font-medium text-xs">Status</th>
                   <th className="p-3 text-left font-medium text-xs">Submitted</th>
@@ -224,6 +226,9 @@ export default function StaffView() {
                   <tr key={sub.id} className="border-b hover:bg-muted/30 transition-colors">
                     <td className="p-3 font-medium">{getStudentName(sub)}</td>
                     <td className="p-3 text-xs">{getStudentProgram(sub)}</td>
+                    <td className="p-3 text-xs">
+                      <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{toUpperDisplay(sub.student_category)}</span>
+                    </td>
                     <td className="p-3 font-mono text-xs">{toUpperDisplay(sub.verification_code)}</td>
                     <td className="p-3">
                       {sub.status === 'verified' ? (
@@ -265,7 +270,7 @@ export default function StaffView() {
                 ))}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-12 text-center text-muted-foreground">
+                    <td colSpan={7} className="p-12 text-center text-muted-foreground">
                       <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
                       No submissions assigned to your slot
                     </td>
