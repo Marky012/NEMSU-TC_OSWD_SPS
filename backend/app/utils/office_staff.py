@@ -19,6 +19,7 @@ def distribute_unassigned_submissions(db: Session):
     unassigned = db.query(models.Submission).filter(
         models.Submission.assigned_staff_slot == None,
         models.Submission.semester_id == active_sem.id,
+        models.Submission.is_final == True,
     ).all()
 
     for i, sub in enumerate(unassigned):

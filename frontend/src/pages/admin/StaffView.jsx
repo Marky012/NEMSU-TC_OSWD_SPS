@@ -55,6 +55,7 @@ export default function StaffView() {
   useEffect(() => { setPage(1); }, [search, filterStatus, filterCategory]);
 
   const loadSubmissions = async (slot) => {
+    setLoading(true);
     try {
       const [subRes, qRes] = await Promise.all([
         apiClient.get(`/admin/staff-submissions?slot=${slot}`),
@@ -67,6 +68,7 @@ export default function StaffView() {
   };
 
   const refresh = () => {
+    setPage(1);
     if (mySlot) loadSubmissions(mySlot.slot_number);
   };
 
@@ -132,6 +134,9 @@ export default function StaffView() {
   }, [submissions, search, filterStatus, filterCategory]);
 
   const pendingCount = useMemo(() => submissions.filter(s => s.status === 'pending').length, [submissions]);
+  const verifiedCount = useMemo(() => submissions.filter(s => s.status === 'verified').length, [submissions]);
+  const declinedCount = useMemo(() => submissions.filter(s => s.status === 'declined').length, [submissions]);
+  const returnedCount = useMemo(() => submissions.filter(s => s.status === 'returned').length, [submissions]);
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   const safePage = Math.min(page, totalPages);
   const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
@@ -181,7 +186,7 @@ export default function StaffView() {
         <div>
           <h1 className="font-heading text-2xl font-bold">Staff View — Slot {mySlot?.slot_number}</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {mySlot?.full_name} ({mySlot?.email}) &mdash; {pendingCount} pending of {submissions.length} total assigned
+            {mySlot?.full_name} ({mySlot?.email}) &mdash; {submissions.length} total assigned ({pendingCount} pending, {verifiedCount} verified, {declinedCount} declined, {returnedCount} returned)
           </p>
         </div>
         <TooltipBox label="Refresh data"><Button variant="outline" size="sm" onClick={refresh} className="rounded-lg">
@@ -371,20 +376,23 @@ export default function StaffView() {
                             ? <span className="text-sm whitespace-pre-wrap">{val || 'N/A'}</span>
                             : q.field_type === 'table'
                             ? (() => {
-                                const label = q.options?.join('/') || 'Details';
                                 let rows;
                                 try { rows = typeof val === 'string' ? JSON.parse(val) : val; } catch { rows = null; }
                                 if (!Array.isArray(rows) || rows.length === 0) return <span className="text-sm text-muted-foreground italic">No entries</span>;
-                                return rows.map((row, ri) => (
-                                  <div key={ri} className="text-sm mb-1">
-                                    <span className="text-xs text-muted-foreground">Entry {ri + 1}:</span>
-                                    <ul className="list-disc list-inside ml-2">
-                                      {Object.entries(row).filter(([,v]) => v && String(v).trim()).map(([col, cv]) => (
-                                        <li key={col}><span className="font-medium">{col}:</span> {String(cv).toUpperCase()}</li>
-                                      ))}
-                                    </ul>
+                                return (
+                                  <div className="space-y-2">
+                                    {rows.map((row, ri) => (
+                                      <div key={ri} className="text-sm bg-muted/30 rounded-lg p-2.5 border border-border/40">
+                                        {Object.entries(row).filter(([,v]) => v && String(v).trim()).map(([col, cv]) => (
+                                          <div key={col} className="flex gap-2 py-0.5">
+                                            <span className="font-medium text-muted-foreground shrink-0 min-w-[8rem]">{col}:</span>
+                                            <span>{String(cv).toUpperCase()}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ))}
                                   </div>
-                                ));
+                                );
                               })()
                             : <span className="text-sm">{displayVal}</span>
                           }

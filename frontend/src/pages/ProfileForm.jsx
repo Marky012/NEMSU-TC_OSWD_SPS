@@ -45,7 +45,14 @@ const DynamicField = ({ question, value, onChange, error }) => {
       return (
         <Input
           value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            const raw = e.target.value;
+            if (question.system_key === 'active_contact_number' || question.system_key === 'emergency_contact_number') {
+              onChange(raw.replace(/\D/g, ''));
+            } else {
+              onChange(raw);
+            }
+          }}
           placeholder={ph(question)}
         />
       );
