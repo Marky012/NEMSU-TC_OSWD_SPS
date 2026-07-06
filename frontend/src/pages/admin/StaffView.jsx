@@ -24,6 +24,7 @@ export default function StaffView() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
   const [viewSub, setViewSub] = useState(null);
   const [verifyOneId, setVerifyOneId] = useState(null);
   const [reviewSub, setReviewSub] = useState(null);
@@ -51,7 +52,7 @@ export default function StaffView() {
     }
   }, []);
 
-  useEffect(() => { setPage(1); }, [search, filterStatus]);
+  useEffect(() => { setPage(1); }, [search, filterStatus, filterCategory]);
 
   const loadSubmissions = async (slot) => {
     try {
@@ -117,6 +118,7 @@ export default function StaffView() {
   const filtered = useMemo(() => {
     return submissions.filter(sub => {
       if (filterStatus !== 'all' && sub.status !== filterStatus) return false;
+      if (filterCategory !== 'all' && toUpperDisplay(sub.student_category) !== toUpperDisplay(filterCategory)) return false;
       if (search) {
         const q = search.toLowerCase();
         const name = getStudentName(sub).toLowerCase();
@@ -127,7 +129,7 @@ export default function StaffView() {
       }
       return true;
     });
-  }, [submissions, search, filterStatus]);
+  }, [submissions, search, filterStatus, filterCategory]);
 
   const pendingCount = useMemo(() => submissions.filter(s => s.status === 'pending').length, [submissions]);
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
@@ -192,7 +194,7 @@ export default function StaffView() {
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <div className="w-40">
+        <div className="w-36">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-full pr-8"><SelectValue>{filterStatus === 'all' ? 'All Status' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}</SelectValue></SelectTrigger>
             <SelectContent>
@@ -201,6 +203,18 @@ export default function StaffView() {
               <SelectItem value="verified">Verified</SelectItem>
               <SelectItem value="returned">Returned</SelectItem>
               <SelectItem value="declined">Declined</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-36">
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="w-full pr-8"><SelectValue>{filterCategory === 'all' ? 'All Categories' : filterCategory}</SelectValue></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="New">New</SelectItem>
+              <SelectItem value="Transferee">Transferee</SelectItem>
+              <SelectItem value="Returnee">Returnee</SelectItem>
+              <SelectItem value="Continuing">Continuing</SelectItem>
             </SelectContent>
           </Select>
         </div>
