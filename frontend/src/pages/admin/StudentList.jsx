@@ -657,6 +657,32 @@ export default function StudentList() {
                   <p className="text-sm text-amber-800 mt-1">{viewSub.admin_comment}</p>
                 </div>
               )}
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                {viewSub.status !== 'verified' && (
+                  <TooltipBox label="Verify this student">
+                    <Button size="sm" className="rounded-lg" onClick={() => { setVerifyConfirmSub(viewSub); }}>
+                      <Shield className="w-3.5 h-3.5 mr-1" /> Verify
+                    </Button>
+                  </TooltipBox>
+                )}
+                <TooltipBox label="Return for correction">
+                  <Button size="sm" variant="outline" className="rounded-lg text-amber-600 border-amber-300 hover:bg-amber-50" onClick={() => { setReviewSub(viewSub); setReviewAction('returned'); setReviewComment(''); setViewSub(null); }}>
+                    <ArrowLeftFromLine className="w-3.5 h-3.5 mr-1" /> Return
+                  </Button>
+                </TooltipBox>
+                <TooltipBox label="Decline permanently">
+                  <Button size="sm" variant="outline" className="rounded-lg text-red-600 border-red-300 hover:bg-red-50" onClick={() => { setReviewSub(viewSub); setReviewAction('declined'); setReviewComment(''); setViewSub(null); }}>
+                    <XCircle className="w-3.5 h-3.5 mr-1" /> Decline
+                  </Button>
+                </TooltipBox>
+                <TooltipBox label="Delete student permanently">
+                  <Button size="sm" variant="outline" className="rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => { setDeleteSub(viewSub); setViewSub(null); }}>
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Delete
+                  </Button>
+                </TooltipBox>
+              </div>
+
               <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Automated SEG Flags (CHED Report)</p>
                 <div className="flex flex-wrap gap-2">
