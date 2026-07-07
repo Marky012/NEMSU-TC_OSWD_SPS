@@ -234,7 +234,7 @@ Open `.env` and configure:
 Start the backend:
 
 ```bash
-python run.py
+python run.py | python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The API will launch at **`http://127.0.0.1:8000`**.
@@ -252,7 +252,7 @@ cd frontend
 npm install
 
 # Start the dev server
-npm run dev
+npm run dev | npm run dev -- --host
 ```
 
 The frontend will launch at **`http://localhost:5173`**.

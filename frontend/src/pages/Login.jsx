@@ -128,7 +128,8 @@ export default function Login() {
       if (result.error?.toLowerCase?.()?.includes?.("verify your email")) {
         setUnverifiedEmail(email);
       }
-      setError(result.error || "Invalid email or password");
+      const baseMsg = result.error || "Incorrect email or password.";
+      setError(baseMsg + " If you are not yet registered, please create an account first by clicking \"Create one\" below to go to the registration page.");
     }
     setLoading(false);
   };
