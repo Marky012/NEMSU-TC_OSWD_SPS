@@ -110,7 +110,6 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setUnverifiedEmail("");
     setResendMessage("");
     setLoading(true);
@@ -187,7 +186,7 @@ export default function Login() {
                 autoFocus
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setError(""); }}
                 className="pl-10 h-12"
                 required
               />
@@ -208,7 +207,7 @@ export default function Login() {
                 autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 className="pl-10 pr-10 h-12"
                 required
               />
