@@ -46,6 +46,9 @@ export default function StudentList() {
   const [resetting, setResetting] = useState(false);
   const [deleteSub, setDeleteSub] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [inlineReviewAction, setInlineReviewAction] = useState('');
+  const [inlineReviewComment, setInlineReviewComment] = useState('');
+  const [inlineReviewing, setInlineReviewing] = useState(false);
   const [bulkReviewAction, setBulkReviewAction] = useState('');
   const [bulkReviewComment, setBulkReviewComment] = useState('');
   const [showBulkReviewDialog, setShowBulkReviewDialog] = useState(false);
@@ -149,6 +152,25 @@ export default function StudentList() {
   const totalPages = Math.ceil(filtered.length / pageSize) || 1;
   const safePage = Math.min(page, totalPages);
   const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  const handleInlineReview = async () => {
+    if (!viewSub || !inlineReviewAction) return;
+    setInlineReviewing(true);
+    try {
+      await apiClient.post(`/admin/submissions/${viewSub.id}/review`, {
+        status: inlineReviewAction,
+        admin_comment: inlineReviewComment || null,
+      });
+      toast.success(`Submission ${inlineReviewAction === 'returned' ? 'returned' : 'declined'} successfully`);
+      setInlineReviewAction('');
+      setInlineReviewComment('');
+      setViewSub(null);
+      loadData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Review failed');
+    }
+    setInlineReviewing(false);
+  };
 
   const handleIndividualVerify = async (sub) => {
     setVerifyOneId(sub.id);
@@ -668,12 +690,12 @@ export default function StudentList() {
                   </TooltipBox>
                 )}
                 <TooltipBox label="Return for correction">
-                  <Button size="sm" variant="outline" className="rounded-lg text-amber-600 border-amber-300 hover:bg-amber-50" onClick={() => { setReviewSub(viewSub); setReviewAction('returned'); setReviewComment(''); setViewSub(null); }}>
+                  <Button size="sm" variant="outline" className="rounded-lg text-amber-600 border-amber-300 hover:bg-amber-50" onClick={() => { setInlineReviewAction(inlineReviewAction === 'returned' ? '' : 'returned'); setInlineReviewComment(''); }}>
                     <ArrowLeftFromLine className="w-3.5 h-3.5 mr-1" /> Return
                   </Button>
                 </TooltipBox>
                 <TooltipBox label="Decline permanently">
-                  <Button size="sm" variant="outline" className="rounded-lg text-red-600 border-red-300 hover:bg-red-50" onClick={() => { setReviewSub(viewSub); setReviewAction('declined'); setReviewComment(''); setViewSub(null); }}>
+                  <Button size="sm" variant="outline" className="rounded-lg text-red-600 border-red-300 hover:bg-red-50" onClick={() => { setInlineReviewAction(inlineReviewAction === 'declined' ? '' : 'declined'); setInlineReviewComment(''); }}>
                     <XCircle className="w-3.5 h-3.5 mr-1" /> Decline
                   </Button>
                 </TooltipBox>
@@ -683,6 +705,32 @@ export default function StudentList() {
                   </Button>
                 </TooltipBox>
               </div>
+
+              {inlineReviewAction && (
+                <div className="p-3 border rounded-lg bg-muted/20 border-border space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {inlineReviewAction === 'returned' ? 'Return Reason (student will see this):' : 'Decline Reason (student will see this):'}
+                  </p>
+                  <Textarea
+                    placeholder="Enter the reason for this action..."
+                    value={inlineReviewComment}
+                    onChange={(e) => setInlineReviewComment(e.target.value)}
+                    rows={3}
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button size="sm" variant="outline" onClick={() => { setInlineReviewAction(''); setInlineReviewComment(''); }}>Cancel</Button>
+                    <Button
+                      size="sm"
+                      onClick={handleInlineReview}
+                      disabled={inlineReviewing || !inlineReviewComment.trim()}
+                      variant={inlineReviewAction === 'declined' ? 'destructive' : 'default'}
+                    >
+                      {inlineReviewing && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+                      {inlineReviewAction === 'returned' ? 'Confirm Return' : 'Confirm Decline'}
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Automated SEG Flags (CHED Report)</p>

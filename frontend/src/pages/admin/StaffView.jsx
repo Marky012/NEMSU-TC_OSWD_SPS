@@ -33,6 +33,9 @@ export default function StaffView() {
   const [reviewing, setReviewing] = useState(false);
   const [showReviewConfirm, setShowReviewConfirm] = useState(false);
   const [verifyConfirmSub, setVerifyConfirmSub] = useState(null);
+  const [inlineReviewAction, setInlineReviewAction] = useState('');
+  const [inlineReviewComment, setInlineReviewComment] = useState('');
+  const [inlineReviewing, setInlineReviewing] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
@@ -150,6 +153,23 @@ export default function StaffView() {
       refresh();
     } catch (e) { toast.error(e.response?.data?.detail || 'Verification failed'); }
     setVerifyOneId(null);
+  };
+
+  const handleInlineReview = async () => {
+    if (!viewSub || !inlineReviewAction || !mySlot) return;
+    setInlineReviewing(true);
+    try {
+      await apiClient.post(`/admin/staff-submissions/${viewSub.id}/review?slot=${mySlot.slot_number}`, {
+        status: inlineReviewAction,
+        admin_comment: inlineReviewComment || null,
+      });
+      toast.success(`Submission ${inlineReviewAction === 'returned' ? 'returned' : 'declined'}`);
+      setInlineReviewAction('');
+      setInlineReviewComment('');
+      setViewSub(null);
+      refresh();
+    } catch (e) { toast.error(e.response?.data?.detail || 'Review failed'); }
+    setInlineReviewing(false);
   };
 
   const handleReview = async () => {
@@ -354,16 +374,42 @@ export default function StaffView() {
                   </TooltipBox>
                 )}
                 <TooltipBox label="Return for correction">
-                  <Button size="sm" variant="outline" className="rounded-lg text-amber-600 border-amber-300 hover:bg-amber-50" onClick={() => { setReviewSub(viewSub); setReviewAction('returned'); setReviewComment(''); setViewSub(null); }}>
+                  <Button size="sm" variant="outline" className="rounded-lg text-amber-600 border-amber-300 hover:bg-amber-50" onClick={() => { setInlineReviewAction(inlineReviewAction === 'returned' ? '' : 'returned'); setInlineReviewComment(''); }}>
                     <ArrowLeftFromLine className="w-3.5 h-3.5 mr-1" /> Return
                   </Button>
                 </TooltipBox>
                 <TooltipBox label="Decline permanently">
-                  <Button size="sm" variant="outline" className="rounded-lg text-red-600 border-red-300 hover:bg-red-50" onClick={() => { setReviewSub(viewSub); setReviewAction('declined'); setReviewComment(''); setViewSub(null); }}>
+                  <Button size="sm" variant="outline" className="rounded-lg text-red-600 border-red-300 hover:bg-red-50" onClick={() => { setInlineReviewAction(inlineReviewAction === 'declined' ? '' : 'declined'); setInlineReviewComment(''); }}>
                     <XCircle className="w-3.5 h-3.5 mr-1" /> Decline
                   </Button>
                 </TooltipBox>
               </div>
+
+              {inlineReviewAction && (
+                <div className="p-3 border rounded-lg bg-muted/20 border-border space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    {inlineReviewAction === 'returned' ? 'Return Reason (student will see this):' : 'Decline Reason (student will see this):'}
+                  </p>
+                  <Textarea
+                    placeholder="Enter the reason for this action..."
+                    value={inlineReviewComment}
+                    onChange={(e) => setInlineReviewComment(e.target.value)}
+                    rows={3}
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <Button size="sm" variant="outline" onClick={() => { setInlineReviewAction(''); setInlineReviewComment(''); }}>Cancel</Button>
+                    <Button
+                      size="sm"
+                      onClick={handleInlineReview}
+                      disabled={inlineReviewing || !inlineReviewComment.trim()}
+                      variant={inlineReviewAction === 'declined' ? 'destructive' : 'default'}
+                    >
+                      {inlineReviewing && <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />}
+                      {inlineReviewAction === 'returned' ? 'Confirm Return' : 'Confirm Decline'}
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {viewSub.draft_data_json && (() => {
                 const parsed = JSON.parse(viewSub.draft_data_json);
