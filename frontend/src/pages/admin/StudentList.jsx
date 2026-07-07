@@ -155,6 +155,7 @@ export default function StudentList() {
     try {
       await apiClient.post('/admin/verify-bulk', [sub.user_id]);
       toast.success(`${getStudentName(sub)} verified for enrollment`);
+      setViewSub(null);
       loadData();
     } catch (e) {
       toast.error('Verification failed');
@@ -423,7 +424,7 @@ export default function StudentList() {
         </div>
         <div className="flex-1 min-w-[180px] max-w-[260px]">
           <Select value={filterSem} onValueChange={v => setFilterSem(v)}>
-            <SelectTrigger className="w-full pr-8 truncate"><SelectValue placeholder="All Semesters">{filterSem ? semesters.find(s => String(s.id) === filterSem)?.label : ''}</SelectValue></SelectTrigger>
+            <SelectTrigger className="w-full pr-8 truncate"><SelectValue placeholder="All Semesters">{filterSem ? semesters.find(s => String(s.id) === filterSem)?.label : 'All Semesters'}</SelectValue></SelectTrigger>
             <SelectContent className="min-w-[220px] max-w-[360px]">
               <SelectItem value="">All Semesters</SelectItem>
               {semesters.map(s => <SelectItem key={s.id} value={String(s.id)} className="whitespace-normal break-words">{s.label}</SelectItem>)}
@@ -444,7 +445,7 @@ export default function StudentList() {
         </div>
         <div className="flex-1 min-w-[220px] max-w-[340px]">
           <Select value={filterProg} onValueChange={setFilterProg}>
-            <SelectTrigger className="w-full pr-8 truncate"><SelectValue placeholder="All Programs">{filterProg || ''}</SelectValue></SelectTrigger>
+            <SelectTrigger className="w-full pr-8 truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
             <SelectContent className="min-w-[160px] max-w-[280px]">
               <SelectItem value="">All Programs</SelectItem>
               {Object.keys(allProgSummary).sort().map(p => (
