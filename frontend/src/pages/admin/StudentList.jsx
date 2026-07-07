@@ -44,6 +44,10 @@ export default function StudentList() {
   const [resetting, setResetting] = useState(false);
   const [deleteSub, setDeleteSub] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [bulkReviewAction, setBulkReviewAction] = useState('');
+  const [bulkReviewComment, setBulkReviewComment] = useState('');
+  const [showBulkReviewDialog, setShowBulkReviewDialog] = useState(false);
+  const [bulkReviewing, setBulkReviewing] = useState(false);
   const [sortMode, setSortMode] = useState('newest');
   const [page, setPage] = useState(1);
   const pageSize = 25;
@@ -194,6 +198,26 @@ export default function StudentList() {
   };
 
 
+  const handleBulkReview = async () => {
+    if (selectedIds.length === 0 || !bulkReviewAction) return;
+    setBulkReviewing(true);
+    try {
+      await apiClient.post('/admin/submissions/bulk-review', {
+        submission_ids: selectedIds,
+        status: bulkReviewAction,
+        admin_comment: bulkReviewComment || null,
+      });
+      setSelectedIds([]);
+      setBulkReviewComment('');
+      toast.success(`${selectedIds.length} submissions ${bulkReviewAction}`);
+      setShowBulkReviewDialog(false);
+      loadData();
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Bulk review failed');
+    }
+    setBulkReviewing(false);
+  };
+
   const exportCSV = () => {
     const headers = ['Name', 'Email', 'Category', 'Program', 'Verification Code', 'Verified', 'Submitted At'];
     const rows = filtered.map(sub => [
@@ -292,11 +316,23 @@ export default function StudentList() {
         </div>
         <div className="flex items-center gap-2">
           {selectedIds.length > 0 && (
-            <TooltipBox label="Verify selected submissions">
-              <Button onClick={() => setShowVerifyDialog(true)} size="sm" disabled={verifying}>
-                <Shield className="w-3 h-3 mr-1" /> Verify ({selectedIds.length})
-              </Button>
-            </TooltipBox>
+            <>
+              <TooltipBox label="Verify selected submissions">
+                <Button onClick={() => setShowVerifyDialog(true)} size="sm" disabled={verifying}>
+                  <Shield className="w-3 h-3 mr-1" /> Verify ({selectedIds.length})
+                </Button>
+              </TooltipBox>
+              <TooltipBox label="Return selected submissions for correction">
+                <Button onClick={() => { setBulkReviewAction('returned'); setBulkReviewComment(''); setShowBulkReviewDialog(true); }} size="sm" variant="outline" className="text-amber-600 border-amber-300 hover:bg-amber-50">
+                  <ArrowLeftFromLine className="w-3 h-3 mr-1" /> Return ({selectedIds.length})
+                </Button>
+              </TooltipBox>
+              <TooltipBox label="Decline selected submissions">
+                <Button onClick={() => { setBulkReviewAction('declined'); setBulkReviewComment(''); setShowBulkReviewDialog(true); }} size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50">
+                  <XCircle className="w-3 h-3 mr-1" /> Decline ({selectedIds.length})
+                </Button>
+              </TooltipBox>
+            </>
           )}
           <TooltipBox label="Export to CSV file">
             <Button variant="outline" size="sm" onClick={() => setShowExportDialog(true)} className="rounded-lg">
@@ -793,6 +829,42 @@ export default function StudentList() {
         variant={reviewAction === 'declined' ? 'destructive' : 'default'}
         loading={reviewing}
       />
+
+      {/* Bulk review dialog */}
+      <Dialog open={showBulkReviewDialog} onOpenChange={(open) => { if (!open) setShowBulkReviewDialog(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{bulkReviewAction === 'returned' ? 'Return for Correction' : 'Decline Submissions'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              {bulkReviewAction === 'returned'
+                ? `Return ${selectedIds.length} submission(s) to the students for correction.`
+                : `Decline ${selectedIds.length} submission(s) permanently.`}
+            </p>
+            <div className="space-y-2">
+              <Label>Comment (optional)</Label>
+              <Textarea
+                placeholder="Enter a shared comment for all selected submissions..."
+                value={bulkReviewComment}
+                onChange={(e) => setBulkReviewComment(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowBulkReviewDialog(false)}>Cancel</Button>
+            <Button
+              onClick={handleBulkReview}
+              disabled={bulkReviewing}
+              variant={bulkReviewAction === 'declined' ? 'destructive' : 'default'}
+            >
+              {bulkReviewing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {bulkReviewAction === 'returned' ? 'Return All' : 'Decline All'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Confirm delete student */}
       <ConfirmDialog

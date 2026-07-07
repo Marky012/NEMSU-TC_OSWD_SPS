@@ -66,6 +66,39 @@ def verify_students_bulk(
         "verified_emails": [s.email for s in students]
     }
 
+
+@router.post("/submissions/bulk-review", status_code=status.HTTP_200_OK)
+def bulk_review_submissions(
+    data: schemas.BulkReviewRequest,
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin", "verification_officer"])),
+    db: Session = Depends(get_db),
+):
+    """Return or decline multiple submissions with a shared comment."""
+    if data.status not in ("returned", "declined"):
+        raise HTTPException(status_code=400, detail="Status must be 'returned' or 'declined'")
+
+    subs = db.query(models.Submission).filter(models.Submission.id.in_(data.submission_ids)).all()
+    if not subs:
+        raise HTTPException(status_code=404, detail="No submissions found")
+
+    for sub in subs:
+        if sub.status == "verified":
+            continue
+        sub.status = data.status
+        if data.admin_comment is not None:
+            sub.admin_comment = data.admin_comment
+
+    db.commit()
+
+    log_admin_action(
+        db, current_admin.id,
+        f"Bulk {data.status.capitalize()}",
+        f"{data.status} {len(subs)} submissions: {', '.join(str(s.id) for s in subs)}"
+    )
+
+    return {"detail": f"{len(subs)} submissions marked as {data.status}"}
+
+
 # --- PWD ASSISTANCE TASK TRACKING ---
 @router.get("/pwd-tasks", response_model=List[schemas.PWDTaskResponse])
 def get_pwd_assistance_tasks(

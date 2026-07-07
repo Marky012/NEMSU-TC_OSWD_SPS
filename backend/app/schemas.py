@@ -384,6 +384,11 @@ class SubmissionReview(BaseModel):
     status: str  # "returned" | "declined" | "verified"
     admin_comment: Optional[str] = None
 
+class BulkReviewRequest(BaseModel):
+    submission_ids: List[int]
+    status: str  # "returned" | "declined"
+    admin_comment: Optional[str] = None
+
 # --- ANNOUNCEMENTS ---
 class AnnouncementCreate(BaseModel):
     message: str = Field(..., min_length=1, max_length=5000)
