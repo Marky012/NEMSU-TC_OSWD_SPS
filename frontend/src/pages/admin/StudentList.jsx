@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw, Trash2, ArrowUpDown } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
+import { getProgramAbbr, PROGRAM_ABBR_UPPER } from '@/lib/constants';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function StudentList() {
@@ -403,9 +404,9 @@ export default function StudentList() {
       )}
 
       <motion.div variants={fadeIn} className="flex flex-col sm:flex-row flex-wrap gap-3">
-        <div className="relative flex-1 min-w-0">
+        <div className="relative flex-[2] min-w-[250px]">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10" />
         </div>
         <div className="w-[140px]">
           <Select value={sortMode} onValueChange={setSortMode}>
@@ -444,10 +445,10 @@ export default function StudentList() {
         <div className="flex-1 min-w-[220px] max-w-[340px]">
           <Select value={filterProg} onValueChange={setFilterProg}>
             <SelectTrigger className="w-full pr-8 truncate"><SelectValue placeholder="All Programs">{filterProg || ''}</SelectValue></SelectTrigger>
-            <SelectContent className="min-w-[280px] max-w-[480px]">
+            <SelectContent className="min-w-[160px] max-w-[280px]">
               <SelectItem value="">All Programs</SelectItem>
               {Object.keys(allProgSummary).sort().map(p => (
-                <SelectItem key={p} value={p} className="whitespace-normal break-words">{p}</SelectItem>
+                <SelectItem key={p} value={p}>{getProgramAbbr(p)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -503,7 +504,7 @@ export default function StudentList() {
                     </td>
                     <td className="p-3 font-medium">{getStudentName(sub)}</td>
                     <td className="p-3">{toUpperDisplay(sub.student_category)}</td>
-                    <td className="p-3 text-xs">{getStudentProgram(sub)}</td>
+                    <td className="p-3 text-xs font-mono">{getProgramAbbr(getStudentProgram(sub))}</td>
                     <td className="p-3 font-mono text-xs">{toUpperDisplay(sub.verification_code)}</td>
                     <td className="p-3">
                       {sub.assigned_staff_slot ? (

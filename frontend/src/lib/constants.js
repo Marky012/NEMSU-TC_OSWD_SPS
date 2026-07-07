@@ -69,6 +69,27 @@ export const SECURITY_QUESTIONS = [
   "What is your favorite book?",
 ];
 
+export const PROGRAM_ABBR = {
+  'Bachelor of Secondary Education': 'BSED',
+  'Bachelor of Science in Business Administration major in Human Resource Management': 'BSBA-HRM',
+  'Bachelor of Science in Agriculture': 'BSA',
+  'Bachelor of Science in Business Administration major in Financial Management': 'BSBA-FM',
+  'Bachelor of Elementary Education': 'BEED',
+  'Bachelor of Science in Computer Science': 'BSCS',
+  'Bachelor of Agriculture Technology': 'BAT',
+  'Bachelor of Science in Hospitality Management': 'BSHM',
+};
+
+export const PROGRAM_ABBR_UPPER = {};
+Object.entries(PROGRAM_ABBR).forEach(([k, v]) => {
+  PROGRAM_ABBR_UPPER[k.toUpperCase()] = v;
+});
+
+export const getProgramAbbr = (name) => {
+  if (!name) return name;
+  return PROGRAM_ABBR_UPPER[name.toUpperCase()] || name;
+};
+
 export const generateVerificationCode = (semesterNumber, year) => {
   const prefix = `OSWD-TG-${year || '2025'}`;
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
