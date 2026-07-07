@@ -554,7 +554,7 @@ export default function StudentList() {
                       )}
                     </td>
                     <td className="p-3 text-xs text-muted-foreground">
-                      {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : 'N/A'}
+                      {sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : 'N/A'}
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-1">
