@@ -423,11 +423,10 @@ export default function ProfileForm() {
     return ['na', 'notapplicable', 'none', 'no'].includes(v);
   };
 
-  const validate = () => {
+  const getValidationErrors = () => {
     const errs = {};
     const visible = getVisibleQuestions();
     const ipGroupQ = questions.find(q => q.system_key === 'indigenous_peoples_group');
-    const ipOtherQ = questions.find(q => q.system_key === 'indigenous_peoples_other_specify');
     visible.forEach(q => {
       if (q.system_key === 'emergency_contact_name' && answers[q.id] && !/[a-zA-Z]/.test(answers[q.id])) {
         errs[q.id] = 'Must contain at least one letter';
@@ -469,13 +468,30 @@ export default function ProfileForm() {
         }
       }
     });
+    return errs;
+  };
+
+  const validate = () => {
+    const errs = getValidationErrors();
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
+  const getMissingFieldList = () => {
+    const errs = getValidationErrors();
+    const requiredErrs = Object.keys(errs).filter(k => errs[k] === 'This field is required');
+    if (requiredErrs.length === 0) return '';
+    const names = requiredErrs.map(k => {
+      const q = questions.find(qq => String(qq.id) === k || qq.system_key === k);
+      return q ? q.question_text : k;
+    });
+    return names.join(', ');
+  };
+
   const handleSubmit = async () => {
     if (!validate()) {
-      toast.error('Please fill in all required fields');
+      const missing = getMissingFieldList();
+      toast.error(missing ? `Please fill in all required fields: ${missing}` : 'Please fill in all required fields');
       return;
     }
 
@@ -810,7 +826,7 @@ export default function ProfileForm() {
             Next <span className="ml-1">&rarr;</span>
           </Button>
         ) : (
-          <Button onClick={() => { if (validate()) setShowSubmitDialog(true); else toast.error('Please fill in all required fields'); }} disabled={submitting}>
+          <Button onClick={() => { if (validate()) setShowSubmitDialog(true); else { const missing = getMissingFieldList(); toast.error(missing ? `Please fill in all required fields: ${missing}` : 'Please fill in all required fields'); } }} disabled={submitting}>
             {submitting ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Send className="w-4 h-4 mr-1" />}
             Submit
           </Button>
