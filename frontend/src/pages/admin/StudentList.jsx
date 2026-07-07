@@ -488,7 +488,7 @@ export default function StudentList() {
                   <th className="p-3 text-left font-medium text-xs">Assigned</th>
                   <th className="p-3 text-left font-medium text-xs">Status</th>
                   <th className="p-3 text-left font-medium text-xs">Submitted</th>
-                  <th className="p-3 w-10"></th>
+                  <th className="p-3 w-10 text-left font-medium text-xs">Actions</th>
                 </tr>
               </thead>
               <tbody>
