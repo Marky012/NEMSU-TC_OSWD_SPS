@@ -400,8 +400,14 @@ export default function ProfileForm() {
     }
     setSaving(true);
     try {
+      const visibleSet = new Set();
+      getVisibleQuestions().forEach(q => visibleSet.add(q.id));
+      const visibleAnswers = {};
+      Object.entries(answers).forEach(([qId, val]) => {
+        if (visibleSet.has(parseInt(qId)) || visibleSet.has(qId)) visibleAnswers[qId] = val;
+      });
       await apiClient.post('/students/draft', {
-        draft_data: answers,
+        draft_data: visibleAnswers,
       });
       toast.success('Draft saved');
     } catch (e) {
@@ -497,12 +503,16 @@ export default function ProfileForm() {
 
     setSubmitting(true);
     try {
+      const visibleSet = new Set();
+      getVisibleQuestions().forEach(q => visibleSet.add(q.id));
       const incomeQ = questions.find(q => q.system_key === 'estimated_household_income');
       const incomeKey = incomeQ ? String(incomeQ.id) : null;
-      const answerList = Object.entries(answers).map(([question_id, answer_text]) => ({
-        question_id: parseInt(question_id),
-        answer_text: question_id === incomeKey ? String(answer_text).replace(/,/g, '') : String(answer_text),
-      }));
+      const answerList = Object.entries(answers)
+        .filter(([question_id]) => visibleSet.has(parseInt(question_id)) || visibleSet.has(question_id))
+        .map(([question_id, answer_text]) => ({
+          question_id: parseInt(question_id),
+          answer_text: question_id === incomeKey ? String(answer_text).replace(/,/g, '') : String(answer_text),
+        }));
       const response = await apiClient.post('/students/submit', { answers: answerList });
 
       toast.success(`Form submitted! Ref: ${response.data.verification_code}`);
