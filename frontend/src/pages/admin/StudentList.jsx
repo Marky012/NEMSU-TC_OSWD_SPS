@@ -453,6 +453,17 @@ export default function StudentList() {
             </SelectContent>
           </Select>
         </div>
+        <div className="flex-1 min-w-[220px] max-w-[340px]">
+          <Select value={filterProg} onValueChange={setFilterProg}>
+            <SelectTrigger className="w-full truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
+            <SelectContent className="min-w-[160px] max-w-[280px]">
+              <SelectItem value="">All Programs</SelectItem>
+              {Object.keys(allProgSummary).sort().map(p => (
+                <SelectItem key={p} value={p}>{getProgramAbbr(p)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex-1 min-w-[140px] max-w-[180px]">
           <Select value={filterCat} onValueChange={setFilterCat}>
             <SelectTrigger className="w-full"><SelectValue>{filterCat === 'all' ? 'All Categories' : filterCat}</SelectValue></SelectTrigger>
@@ -462,17 +473,6 @@ export default function StudentList() {
               <SelectItem value="Transferee">Transferee</SelectItem>
               <SelectItem value="Returnee">Returnee</SelectItem>
               <SelectItem value="Continuing">Continuing</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1 min-w-[220px] max-w-[340px]">
-          <Select value={filterProg} onValueChange={setFilterProg}>
-            <SelectTrigger className="w-full truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
-            <SelectContent className="min-w-[160px] max-w-[280px]">
-              <SelectItem value="">All Programs</SelectItem>
-              {Object.keys(allProgSummary).sort().map(p => (
-                <SelectItem key={p} value={p}>{getProgramAbbr(p)}</SelectItem>
-              ))}
             </SelectContent>
           </Select>
         </div>
