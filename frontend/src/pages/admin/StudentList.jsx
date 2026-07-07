@@ -26,6 +26,7 @@ export default function StudentList() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('all');
+  const [filterProg, setFilterProg] = useState('');
   const [filterSem, setFilterSem] = useState('');
   const [filterVerified, setFilterVerified] = useState('all');
   const [selectedIds, setSelectedIds] = useState([]);
@@ -53,7 +54,7 @@ export default function StudentList() {
   const pageSize = 25;
 
   useEffect(() => { loadData(); }, []);
-  useEffect(() => { setPage(1); }, [search, filterCat, filterSem, filterVerified, sortMode]);
+  useEffect(() => { setPage(1); }, [search, filterCat, filterProg, filterSem, filterVerified, sortMode]);
 
   const loadData = async () => {
     setLoading(true);
@@ -109,6 +110,7 @@ export default function StudentList() {
   const filtered = sorted.filter(sub => {
     if (filterSem && sub.semester_id !== Number(filterSem)) return false;
     if (filterCat !== 'all' && sub.student_category !== filterCat) return false;
+    if (filterProg && getStudentProgram(sub) !== filterProg) return false;
     if (filterVerified === 'verified' && sub.status !== 'verified') return false;
     if (filterVerified === 'unverified' && sub.status !== 'pending') return false;
     if (filterVerified === 'returned' && sub.status !== 'returned') return false;
@@ -436,6 +438,17 @@ export default function StudentList() {
               <SelectItem value="Transferee">Transferee</SelectItem>
               <SelectItem value="Returnee">Returnee</SelectItem>
               <SelectItem value="Continuing">Continuing</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex-1 min-w-0">
+          <Select value={filterProg} onValueChange={setFilterProg}>
+            <SelectTrigger className="w-full pr-8"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All Programs</SelectItem>
+              {Object.keys(allProgSummary).sort().map(p => (
+                <SelectItem key={p} value={p}>{p}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
