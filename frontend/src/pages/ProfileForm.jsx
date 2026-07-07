@@ -49,6 +49,8 @@ const DynamicField = ({ question, value, onChange, error }) => {
             const raw = e.target.value;
             if (question.system_key === 'active_contact_number' || question.system_key === 'emergency_contact_number') {
               onChange(raw.replace(/\D/g, ''));
+            } else if (question.system_key === 'emergency_contact_name') {
+              onChange(raw.replace(/[0-9]/g, ''));
             } else {
               onChange(raw);
             }
@@ -435,7 +437,7 @@ export default function ProfileForm() {
     const ipGroupQ = questions.find(q => q.system_key === 'indigenous_peoples_group');
     visible.forEach(q => {
       if (q.system_key === 'emergency_contact_name' && answers[q.id] && !/[a-zA-Z]/.test(answers[q.id])) {
-        errs[q.id] = 'Must contain at least one letter';
+        errs[q.id] = 'Emergency contact name must contain at least one letter';
       }
       if (q.system_key === 'indigenous_peoples_other_specify' && ipGroupQ && answers[ipGroupQ.id] === 'Others' && meaninglessIp(answers[q.id])) {
         errs[q.id] = 'If you do not belong to any IP group, select "I do not belong to IP" instead';
