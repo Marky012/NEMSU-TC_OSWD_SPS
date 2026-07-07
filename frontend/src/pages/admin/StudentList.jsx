@@ -96,7 +96,7 @@ export default function StudentList() {
   };
 
   const sorted = [...submissions].sort((a, b) => {
-    if (sortMode === 'newest') return (b.id || 0) - (a.id || 0);
+    if (sortMode === 'newest') return (a.id || 0) - (b.id || 0);
     const nameA = (getAnswerBySystemKey(a, 'surname') || '').toLowerCase();
     const nameB = (getAnswerBySystemKey(b, 'surname') || '').toLowerCase();
     return sortMode === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
@@ -106,7 +106,7 @@ export default function StudentList() {
     if (filterSem && sub.semester_id !== Number(filterSem)) return false;
     if (filterCat !== 'all' && sub.student_category !== filterCat) return false;
     if (filterVerified === 'verified' && sub.status !== 'verified') return false;
-    if (filterVerified === 'unverified' && sub.status === 'verified') return false;
+    if (filterVerified === 'unverified' && sub.status !== 'pending') return false;
     if (filterVerified === 'returned' && sub.status !== 'returned') return false;
     if (filterVerified === 'declined' && sub.status !== 'declined') return false;
     if (search) {
