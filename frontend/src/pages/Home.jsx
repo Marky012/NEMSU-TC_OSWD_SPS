@@ -244,6 +244,26 @@ export default function Home() {
         </motion.div>
       )}
 
+      {currentSub?.status === 'returned' && currentSub?.admin_comment && (
+        <div className="p-4 bg-amber-50 border-2 border-amber-400 rounded-xl shadow-md">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <ArrowLeftFromLine className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-heading font-bold text-amber-800">Submission Returned for Correction</h3>
+              <p className="text-sm text-amber-700 mt-1 font-medium">Admin Feedback:</p>
+              <p className="text-sm text-amber-900 mt-0.5 bg-white/70 p-3 rounded-lg border border-amber-200">{currentSub.admin_comment}</p>
+              <Link to="/profile-form" className="inline-block mt-3">
+                <Button className="gap-2 bg-amber-600 hover:bg-amber-700 text-white">
+                  Re-edit Form Now <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {profile?.category && (
         <div className="flex items-center justify-between gap-3 bg-muted/40 border border-border rounded-xl px-4 py-3">
           <div className="flex items-center gap-2">
