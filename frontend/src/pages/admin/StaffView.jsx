@@ -221,7 +221,7 @@ export default function StaffView() {
         </div>
         <div className="w-36">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-full pr-8"><SelectValue>{filterStatus === 'all' ? 'All Status' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}</SelectValue></SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue>{filterStatus === 'all' ? 'All Status' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}</SelectValue></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
@@ -233,7 +233,7 @@ export default function StaffView() {
         </div>
         <div className="w-36">
           <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-full pr-8"><SelectValue>{filterCategory === 'all' ? 'All Categories' : filterCategory}</SelectValue></SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue>{filterCategory === 'all' ? 'All Categories' : filterCategory}</SelectValue></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
               <SelectItem value="New">New</SelectItem>

@@ -433,8 +433,8 @@ export default function StudentList() {
         </div>
         <div className="w-[140px]">
           <Select value={sortMode} onValueChange={setSortMode}>
-            <SelectTrigger className="w-full pr-8">
-              <ArrowUpDown className="w-3.5 h-3.5 mr-1.5 shrink-0" />
+            <SelectTrigger className="w-full">
+              <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -446,7 +446,7 @@ export default function StudentList() {
         </div>
         <div className="flex-1 min-w-[180px] max-w-[260px]">
           <Select value={filterSem} onValueChange={v => setFilterSem(v)}>
-            <SelectTrigger className="w-full pr-8 truncate"><SelectValue placeholder="All Semesters">{filterSem ? semesters.find(s => String(s.id) === filterSem)?.label : 'All Semesters'}</SelectValue></SelectTrigger>
+            <SelectTrigger className="w-full truncate"><SelectValue placeholder="All Semesters">{filterSem ? semesters.find(s => String(s.id) === filterSem)?.label : 'All Semesters'}</SelectValue></SelectTrigger>
             <SelectContent className="min-w-[220px] max-w-[360px]">
               <SelectItem value="">All Semesters</SelectItem>
               {semesters.map(s => <SelectItem key={s.id} value={String(s.id)} className="whitespace-normal break-words">{s.label}</SelectItem>)}
@@ -455,7 +455,7 @@ export default function StudentList() {
         </div>
         <div className="flex-1 min-w-[140px] max-w-[180px]">
           <Select value={filterCat} onValueChange={setFilterCat}>
-            <SelectTrigger className="w-full pr-8"><SelectValue>{filterCat === 'all' ? 'All Categories' : filterCat}</SelectValue></SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue>{filterCat === 'all' ? 'All Categories' : filterCat}</SelectValue></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
               <SelectItem value="New">New</SelectItem>
@@ -467,7 +467,7 @@ export default function StudentList() {
         </div>
         <div className="flex-1 min-w-[220px] max-w-[340px]">
           <Select value={filterProg} onValueChange={setFilterProg}>
-            <SelectTrigger className="w-full pr-8 truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
+            <SelectTrigger className="w-full truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
             <SelectContent className="min-w-[160px] max-w-[280px]">
               <SelectItem value="">All Programs</SelectItem>
               {Object.keys(allProgSummary).sort().map(p => (
@@ -478,7 +478,7 @@ export default function StudentList() {
         </div>
         <div className="flex-1 min-w-[150px] max-w-[180px]">
           <Select value={filterVerified} onValueChange={setFilterVerified}>
-            <SelectTrigger className="w-full pr-8"><SelectValue>{filterVerified === 'all' ? 'All Status' : filterVerified === 'unverified' ? 'Pending' : filterVerified.charAt(0).toUpperCase() + filterVerified.slice(1)}</SelectValue></SelectTrigger>
+            <SelectTrigger className="w-full"><SelectValue>{filterVerified === 'all' ? 'All Status' : filterVerified === 'unverified' ? 'Pending' : filterVerified.charAt(0).toUpperCase() + filterVerified.slice(1)}</SelectValue></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="verified">Verified</SelectItem>
