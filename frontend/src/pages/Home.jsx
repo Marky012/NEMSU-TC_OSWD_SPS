@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   FileText, Clock, AlertCircle, ArrowRight,
   GraduationCap, History, Shield, Key, ShieldCheck,
-  RefreshCw, Loader2, Megaphone, Pin
+  RefreshCw, Loader2, Megaphone, Pin, ArrowLeftFromLine
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TooltipBox } from '@/components/ui/tooltip';

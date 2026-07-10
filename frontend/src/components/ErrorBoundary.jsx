@@ -27,7 +27,7 @@ export default class ErrorBoundary extends React.Component {
               <p className="text-xs text-muted-foreground">
                 {this.state.error.stack?.split('\n').slice(0, 5).join('\n')}
               </p>
-              <Button variant="outline" onClick={() => { this.setState({ error: null }); window.location.href = '/'; }}>
+              <Button variant="outline" onClick={() => { window.location.href = '/'; }}>
                 Return to Dashboard
               </Button>
             </CardContent>
