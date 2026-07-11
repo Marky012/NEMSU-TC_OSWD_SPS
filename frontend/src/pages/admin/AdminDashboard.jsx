@@ -279,7 +279,7 @@ export default function AdminDashboard() {
       />
 
       {/* Announcements Card */}
-      <motion.div variants={fadeIn}>
+      <motion.div variants={fadeIn} className="mt-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-base font-heading flex items-center gap-2">

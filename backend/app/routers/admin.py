@@ -7,7 +7,7 @@ from app.database import get_db
 from app import models, schemas
 from app.dependencies import RoleChecker, get_current_user
 from app.utils import security
-from app.utils.office_staff import distribute_unassigned_submissions
+from app.utils.office_staff import distribute_unassigned_submissions, redistribute_pending_submissions
 
 router = APIRouter(prefix="/api/admin", tags=["Admin Module"])
 
@@ -737,6 +737,7 @@ def claim_staff_slot(
     db.commit()
 
     distribute_unassigned_submissions(db)
+    redistribute_pending_submissions(db)
 
     log_admin_action(
         db, current_user.id,

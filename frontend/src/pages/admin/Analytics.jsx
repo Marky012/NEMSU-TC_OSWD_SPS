@@ -92,7 +92,7 @@ export default function Analytics() {
         const belongs = data[noneQ?.id] || data[String(noneQ?.id)];
         if (belongs === 'I do not belong to IP') {
           counts['Non-IP'] = (counts['Non-IP'] || 0) + 1;
-        } else if (groupQ) {
+        } else if (belongs === 'Yes' && groupQ) {
           const group = data[groupQ.id] || data[String(groupQ.id)];
           if (group === 'Others' && specifyQ) {
             const customIp = data[specifyQ.id] || data[String(specifyQ.id)];
@@ -101,10 +101,10 @@ export default function Analytics() {
           } else if (group) {
             counts[group] = (counts[group] || 0) + 1;
           } else {
-            counts['Not Specified'] = (counts['Not Specified'] || 0) + 1;
+            counts['Non-IP'] = (counts['Non-IP'] || 0) + 1;
           }
         } else {
-          counts['Not Specified'] = (counts['Not Specified'] || 0) + 1;
+          counts['Non-IP'] = (counts['Non-IP'] || 0) + 1;
         }
       } catch { /* skip */ }
     });
@@ -175,16 +175,16 @@ export default function Analytics() {
   };
 
   const GROUPS = [
-    { id: 'all_ip', title: 'All IP Students', description: 'Belong to any Indigenous Peoples group', tab: 'ip', check: (sub) => { const g = getAnswer(sub, 'indigenous_peoples_group'); return !!g; } },
-    { id: 'blaan', title: 'Blaan', description: 'IP Group: Blaan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'BLAAN' },
-    { id: 'mandaya', title: 'Mandaya', description: 'IP Group: Mandaya', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MANDAYA' },
-    { id: 'manobo', title: 'Manobo', description: 'IP Group: Manobo', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MANOBO' },
-    { id: 'bukidnon', title: 'Bukidnon', description: 'IP Group: Bukidnon', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'BUKIDNON' },
-    { id: 'subanen', title: 'Subanen', description: 'IP Group: Subanen', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'SUBANEN' },
-    { id: 'tboli', title: "T'boli", description: "IP Group: T'boli", tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === "T'BOLI" },
-    { id: 'mamanwa', title: 'Mamanwa', description: 'IP Group: Mamanwa', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MAMANWA' },
-    { id: 'mangyan', title: 'Mangyan', description: 'IP Group: Mangyan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'MANGYAN' },
-    { id: 'others_ip', title: 'Other IP Groups', description: 'Specified via "Others" IP entry', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_group') === 'Others' },
+    { id: 'all_ip', title: 'All IP Students', description: 'Belong to any Indigenous Peoples group', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && !!getAnswer(sub, 'indigenous_peoples_group') },
+    { id: 'blaan', title: 'Blaan', description: 'IP Group: Blaan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'BLAAN' },
+    { id: 'mandaya', title: 'Mandaya', description: 'IP Group: Mandaya', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'MANDAYA' },
+    { id: 'manobo', title: 'Manobo', description: 'IP Group: Manobo', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'MANOBO' },
+    { id: 'bukidnon', title: 'Bukidnon', description: 'IP Group: Bukidnon', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'BUKIDNON' },
+    { id: 'subanen', title: 'Subanen', description: 'IP Group: Subanen', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'SUBANEN' },
+    { id: 'tboli', title: "T'boli", description: "IP Group: T'boli", tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === "T'BOLI" },
+    { id: 'mamanwa', title: 'Mamanwa', description: 'IP Group: Mamanwa', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'MAMANWA' },
+    { id: 'mangyan', title: 'Mangyan', description: 'IP Group: Mangyan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'MANGYAN' },
+    { id: 'others_ip', title: 'Other IP Groups', description: 'Specified via "Others" IP entry', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'Others' },
     { id: 'low_income', title: 'Low Income', description: 'Household income below ₱5,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i < 5000; } },
     { id: 'mid_income', title: 'Mid Income', description: 'Household income ₱5,000–₱15,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i >= 5000 && i <= 15000; } },
     { id: 'high_income', title: 'High Income', description: 'Household income above ₱15,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i > 15000; } },

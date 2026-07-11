@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '@/api/apiClient';
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { STUDENT_CATEGORIES } from '@/lib/constants';
 import { toUpperDisplay } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const formatSemesterLabel = (label) => {
   if (!label) return '';
@@ -46,19 +47,31 @@ export default function Home() {
   const [changeError, setChangeError] = useState('');
   const [submissionsClosed, setSubmissionsClosed] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
+  const prevStatusRef = useRef(null);
 
   useEffect(() => {
     if (user) loadData();
     apiClient.get('/students/announcements').then(({ data }) => setAnnouncements(data)).catch(() => {});
   }, [user]);
 
-  // Poll submissions status every 30s so students see toggle changes in real-time
+  // Poll every 30s: update submissions status and check for returned submission
   useEffect(() => {
     if (!user) return;
     const interval = setInterval(async () => {
       try {
-        const statusRes = await apiClient.get('/admin/submissions-status');
+        const [statusRes, activeSubRes] = await Promise.all([
+          apiClient.get('/admin/submissions-status'),
+          apiClient.get('/students/active-submission').catch(() => null),
+        ]);
         setSubmissionsClosed(!statusRes.data.accepting_submissions);
+        if (activeSubRes?.data) {
+          const sub = activeSubRes.data;
+          setActiveSubmission(sub);
+          if (sub.status === 'returned' && prevStatusRef.current && prevStatusRef.current !== 'returned') {
+            toast.error('Your submission has been returned for correction. Check the feedback above.');
+          }
+          prevStatusRef.current = sub.status;
+        }
       } catch { /* ok */ }
     }, 30000);
     return () => clearInterval(interval);

@@ -94,7 +94,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <AppRoutes />
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="top-right" closeButton />
       </AuthProvider>
     </BrowserRouter>
   );

@@ -32,6 +32,9 @@ const DynamicField = ({ question, value, onChange, error }) => {
     municipality: 'Tagbina',
     barangay_name: 'Poblacion',
     present_home_address: 'PUROK 1',
+    emergency_contact_name: 'Enter full name of parent/guardian',
+    emergency_contact_number: 'Enter parent/guardian active phone number',
+    religion: 'Enter religion e.g. ROMAN CATHOLIC',
   };
 
   const handleSelectChange = (val) => {
