@@ -378,47 +378,28 @@ export default function StudentList() {
         </div>
       </motion.div>
 
-      <motion.div variants={fadeIn} className="bg-muted/30 border border-border rounded-xl p-3">
-        <p className="text-xs font-medium text-muted-foreground mb-2">All Entries (unfiltered)</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {CATEGORIES.map(cat => (
-            <div key={cat} className="bg-white border border-border/60 rounded-lg px-3 py-2 flex items-center gap-2">
-              <div className={`w-2.5 h-2.5 rounded-full ${CAT_COLORS[cat]} shrink-0`} />
-              <div className="min-w-0 flex items-center gap-1.5">
-                <span className="text-sm font-bold font-heading">{allCatSummary[cat] || 0}</span>
-                <span className="text-xs text-muted-foreground truncate">{cat}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        {Object.keys(allProgSummary).length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {Object.entries(allProgSummary).sort((a, b) => b[1] - a[1]).map(([prog, count]) => (
-              <span key={prog} className="inline-flex items-center gap-1 text-xs bg-white border border-border/60 px-2 py-0.5 rounded-full">
-                <span className="font-medium">{prog}</span>
-                <span className="text-muted-foreground">({count})</span>
-              </span>
-            ))}
-          </div>
-        )}
-      </motion.div>
-
-      <motion.div variants={fadeIn} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <motion.div variants={fadeIn} className="flex flex-wrap items-stretch gap-2">
         {CATEGORIES.map(cat => (
-          <div key={cat} className="bg-white border border-border rounded-xl p-4 flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${CAT_COLORS[cat]} shrink-0`} />
-            <div className="min-w-0">
+          <div key={cat} className="flex items-center gap-2 bg-white border border-border rounded-xl px-4 py-2.5 min-w-0 flex-1">
+            <div className={`w-2.5 h-2.5 rounded-full ${CAT_COLORS[cat]} shrink-0`} />
+            <div className="flex items-baseline gap-1.5 min-w-0">
               <p className="text-lg font-bold font-heading">{catSummary[cat] || 0}</p>
               <p className="text-xs text-muted-foreground truncate">{cat}</p>
             </div>
           </div>
         ))}
+        <div className="flex items-center gap-2 bg-muted/40 border border-border rounded-xl px-4 py-2.5">
+          <p className="text-xs text-muted-foreground">Filtered: <span className="text-sm font-bold text-foreground">{filtered.length}</span></p>
+          {filtered.length !== submissions.length && (
+            <p className="text-[11px] text-muted-foreground">of {submissions.length}</p>
+          )}
+        </div>
       </motion.div>
 
       {Object.keys(progSummary).length > 0 && (
         <motion.div variants={fadeIn} className="flex flex-wrap gap-1.5">
           {Object.entries(progSummary).sort((a, b) => b[1] - a[1]).map(([prog, count]) => (
-            <span key={prog} className="inline-flex items-center gap-1 text-xs bg-accent px-2.5 py-1 rounded-full">
+            <span key={prog} className="inline-flex items-center gap-1 text-xs bg-white border border-border/60 px-2.5 py-1 rounded-full">
               <span className="font-medium">{prog}</span>
               <span className="text-muted-foreground">({count})</span>
             </span>
@@ -426,87 +407,89 @@ export default function StudentList() {
         </motion.div>
       )}
 
-      <motion.div variants={fadeIn} className="flex flex-col sm:flex-row flex-wrap gap-3">
-        <div className="relative flex-[2] min-w-[250px]">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-10" />
-        </div>
-        <div className="w-[140px]">
-          <Select value={sortMode} onValueChange={setSortMode}>
-            <SelectTrigger className="w-full">
-              <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Sort from newest</SelectItem>
-              <SelectItem value="asc">Sort A–Z</SelectItem>
-              <SelectItem value="desc">Sort Z–A</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1 min-w-[180px] max-w-[260px]">
-          <Select value={filterSem} onValueChange={v => setFilterSem(v)}>
-            <SelectTrigger className="w-full truncate"><SelectValue placeholder="All Semesters">{filterSem ? semesters.find(s => String(s.id) === filterSem)?.label : 'All Semesters'}</SelectValue></SelectTrigger>
-            <SelectContent className="min-w-[220px] max-w-[360px]">
-              <SelectItem value="">All Semesters</SelectItem>
-              {semesters.map(s => <SelectItem key={s.id} value={String(s.id)} className="whitespace-normal break-words">{s.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1 min-w-[220px] max-w-[340px]">
-          <Select value={filterProg} onValueChange={setFilterProg}>
-            <SelectTrigger className="w-full truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
-            <SelectContent className="min-w-[160px] max-w-[280px]">
-              <SelectItem value="">All Programs</SelectItem>
-              {Object.keys(allProgSummary).sort().map(p => (
-                <SelectItem key={p} value={p}>{getProgramAbbr(p)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1 min-w-[200px] max-w-[260px]">
-          <div className="flex items-center gap-1.5 flex-wrap p-2 border border-border rounded-lg bg-white">
-            {['New', 'Transferee', 'Returnee', 'Continuing'].map(cat => {
-              const active = filterCat.includes(cat);
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setFilterCat(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
-                    active
-                      ? 'bg-brand-blue text-white border-brand-blue'
-                      : 'bg-white text-muted-foreground border-border hover:bg-muted/50'
-                  }`}
-                >
-                  {cat}
-                </button>
-              );
-            })}
+      <motion.div variants={fadeIn} className="bg-white border border-border rounded-xl p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          <div className="relative flex-[2] min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={sortMode} onValueChange={setSortMode}>
+              <SelectTrigger className="h-9 w-[150px]">
+                <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Sort from newest</SelectItem>
+                <SelectItem value="asc">Sort A–Z</SelectItem>
+                <SelectItem value="desc">Sort Z–A</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterSem} onValueChange={v => setFilterSem(v)}>
+              <SelectTrigger className="h-9 w-full sm:w-[180px] truncate"><SelectValue placeholder="All Semesters">{filterSem ? semesters.find(s => String(s.id) === filterSem)?.label : 'All Semesters'}</SelectValue></SelectTrigger>
+              <SelectContent className="min-w-[220px] max-w-[360px]">
+                <SelectItem value="">All Semesters</SelectItem>
+                {semesters.map(s => <SelectItem key={s.id} value={String(s.id)} className="whitespace-normal break-words">{s.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterProg} onValueChange={setFilterProg}>
+              <SelectTrigger className="h-9 w-full sm:w-[160px] truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
+              <SelectContent className="min-w-[160px] max-w-[280px]">
+                <SelectItem value="">All Programs</SelectItem>
+                {Object.keys(allProgSummary).sort().map(p => (
+                  <SelectItem key={p} value={p}>{getProgramAbbr(p)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        <div className="flex-1 min-w-[200px] max-w-[260px]">
-          <div className="flex items-center gap-1.5 flex-wrap p-2 border border-border rounded-lg bg-white">
-            {[
-              { key: 'unverified', label: 'Pending' },
-              { key: 'verified', label: 'Verified' },
-              { key: 'returned', label: 'Returned' },
-              { key: 'declined', label: 'Declined' },
-            ].map(({ key, label }) => {
-              const active = filterVerified.includes(key);
-              return (
-                <button
-                  key={key}
-                  onClick={() => setFilterVerified(prev => active ? prev.filter(s => s !== key) : [...prev, key])}
-                  className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
-                    active
-                      ? 'bg-brand-blue text-white border-brand-blue'
-                      : 'bg-white text-muted-foreground border-border hover:bg-muted/50'
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Category</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {['New', 'Transferee', 'Returnee', 'Continuing'].map(cat => {
+                const active = filterCat.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setFilterCat(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      active
+                        ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                        : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Status</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[
+                { key: 'unverified', label: 'Pending' },
+                { key: 'verified', label: 'Verified' },
+                { key: 'returned', label: 'Returned' },
+                { key: 'declined', label: 'Declined' },
+              ].map(({ key, label }) => {
+                const active = filterVerified.includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setFilterVerified(prev => active ? prev.filter(s => s !== key) : [...prev, key])}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      active
+                        ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                        : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </motion.div>
