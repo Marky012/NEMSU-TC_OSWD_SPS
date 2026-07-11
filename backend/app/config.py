@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     BACKUP_DIR: str = "backups"
 
     LOGIN_RATE_LIMIT: str = "5/minute"
-    API_RATE_LIMIT: str = "100/minute"
+    API_RATE_LIMIT: str = "20/minute"
     
     CSRF_ENABLED: bool = False
     CSRF_SECRET_KEY: str = ""
