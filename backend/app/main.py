@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import engine, Base, SessionLocal
 from app.seeders.seed_questions import seed_database
-from app.routers import auth, forms, students, admin, reports, address
+from app.routers import auth, forms, students, admin, reports, address, data_import
 import json
 import secrets
 from fastapi import Request, Response
@@ -442,6 +442,7 @@ app.include_router(students.router)
 app.include_router(admin.router)
 app.include_router(reports.router)
 app.include_router(address.router)
+app.include_router(data_import.router)
 
 # --- PUBLIC VERIFICATION ALIAS (no auth required — for Registrar use) ---
 from app import models, schemas
