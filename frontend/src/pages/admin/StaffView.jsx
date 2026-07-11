@@ -66,6 +66,7 @@ export default function StaffView() {
       ]);
       setSubmissions(subRes.data);
       setQuestions(qRes.data);
+      toast.success('Submissions refreshed to latest');
     } catch (e) { console.error(e); }
     setLoading(false);
   };

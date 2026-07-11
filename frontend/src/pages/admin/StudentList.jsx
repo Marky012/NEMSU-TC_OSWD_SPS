@@ -26,10 +26,10 @@ export default function StudentList() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterCat, setFilterCat] = useState('all');
+  const [filterCat, setFilterCat] = useState([]);
   const [filterProg, setFilterProg] = useState('');
   const [filterSem, setFilterSem] = useState('');
-  const [filterVerified, setFilterVerified] = useState('all');
+  const [filterVerified, setFilterVerified] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [viewSub, setViewSub] = useState(null);
   const [verifying, setVerifying] = useState(false);
@@ -113,12 +113,12 @@ export default function StudentList() {
 
   const filtered = sorted.filter(sub => {
     if (filterSem && sub.semester_id !== Number(filterSem)) return false;
-    if (filterCat !== 'all' && sub.student_category !== filterCat) return false;
+    if (filterCat.length > 0 && !filterCat.includes(sub.student_category)) return false;
     if (filterProg && getStudentProgram(sub) !== filterProg) return false;
-    if (filterVerified === 'verified' && sub.status !== 'verified') return false;
-    if (filterVerified === 'unverified' && sub.status !== 'pending') return false;
-    if (filterVerified === 'returned' && sub.status !== 'returned') return false;
-    if (filterVerified === 'declined' && sub.status !== 'declined') return false;
+    if (filterVerified.length > 0) {
+      const statusKey = sub.status === 'pending' ? 'unverified' : sub.status;
+      if (!filterVerified.includes(statusKey)) return false;
+    }
     if (search) {
       const q = search.toLowerCase();
       const name = getStudentName(sub).toLowerCase();
@@ -464,29 +464,50 @@ export default function StudentList() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex-1 min-w-[140px] max-w-[180px]">
-          <Select value={filterCat} onValueChange={setFilterCat}>
-            <SelectTrigger className="w-full"><SelectValue>{filterCat === 'all' ? 'All Categories' : filterCat}</SelectValue></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="New">New</SelectItem>
-              <SelectItem value="Transferee">Transferee</SelectItem>
-              <SelectItem value="Returnee">Returnee</SelectItem>
-              <SelectItem value="Continuing">Continuing</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex-1 min-w-[200px] max-w-[260px]">
+          <div className="flex items-center gap-1.5 flex-wrap p-2 border border-border rounded-lg bg-white">
+            {['New', 'Transferee', 'Returnee', 'Continuing'].map(cat => {
+              const active = filterCat.includes(cat);
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setFilterCat(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
+                    active
+                      ? 'bg-brand-blue text-white border-brand-blue'
+                      : 'bg-white text-muted-foreground border-border hover:bg-muted/50'
+                  }`}
+                >
+                  {cat}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="flex-1 min-w-[150px] max-w-[180px]">
-          <Select value={filterVerified} onValueChange={setFilterVerified}>
-            <SelectTrigger className="w-full"><SelectValue>{filterVerified === 'all' ? 'All Status' : filterVerified === 'unverified' ? 'Pending' : filterVerified.charAt(0).toUpperCase() + filterVerified.slice(1)}</SelectValue></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="verified">Verified</SelectItem>
-              <SelectItem value="returned">Returned</SelectItem>
-              <SelectItem value="declined">Declined</SelectItem>
-              <SelectItem value="unverified">Pending</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex-1 min-w-[200px] max-w-[260px]">
+          <div className="flex items-center gap-1.5 flex-wrap p-2 border border-border rounded-lg bg-white">
+            {[
+              { key: 'unverified', label: 'Pending' },
+              { key: 'verified', label: 'Verified' },
+              { key: 'returned', label: 'Returned' },
+              { key: 'declined', label: 'Declined' },
+            ].map(({ key, label }) => {
+              const active = filterVerified.includes(key);
+              return (
+                <button
+                  key={key}
+                  onClick={() => setFilterVerified(prev => active ? prev.filter(s => s !== key) : [...prev, key])}
+                  className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
+                    active
+                      ? 'bg-brand-blue text-white border-brand-blue'
+                      : 'bg-white text-muted-foreground border-border hover:bg-muted/50'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </motion.div>
 

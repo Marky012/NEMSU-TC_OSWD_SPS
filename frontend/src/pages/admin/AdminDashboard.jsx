@@ -75,6 +75,7 @@ export default function AdminDashboard() {
         categoryData: catData,
         programData: programData,
       });
+      if (!silent) toast.success('Dashboard data refreshed to latest');
     } catch (e) { console.error(e); }
     setLoading(false);
     setRefreshing(false);

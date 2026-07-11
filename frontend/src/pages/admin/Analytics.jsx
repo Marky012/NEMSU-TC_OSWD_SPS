@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedPage, { staggerContainer, fadeIn } from '@/components/AnimatedPage';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,6 +10,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TooltipBox } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
 import { Search, Download, Users, RefreshCw, Filter, X, Eye } from 'lucide-react';
+import { toast } from 'sonner';
 import { toUpperDisplay } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -27,6 +28,7 @@ export default function Analytics() {
   const [groupSearch, setGroupSearch] = useState('');
   const [viewSub, setViewSub] = useState(null);
   const [ipSort, setIpSort] = useState(''); // ''=all, 'name_asc', 'name_desc', 'ip_asc', 'ip_desc'
+  const detailRef = useRef(null);
 
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setRefreshing(true);
@@ -41,6 +43,7 @@ export default function Analytics() {
       setSemesters(sems.data);
       const active = sems.data.find(s => s.is_active);
       if (active) setSelectedSem(active.id);
+      if (!silent) toast.success('Analytics data refreshed to latest');
     } catch (e) { console.error(e); }
     setLoading(false);
     setRefreshing(false);
@@ -161,7 +164,10 @@ export default function Analytics() {
 
   const getCustomIp = (sub) => {
     const val = getAnswer(sub, 'indigenous_peoples_other_specify');
-    return val ? toUpperDisplay(String(val)) : '';
+    if (!val) return '';
+    const cleaned = String(val).toLowerCase().replace(/[\s.\-/]/g, '');
+    if (['na', 'none', 'no', 'notapplicable', 'nope', 'nothing', 'nil', 'null', '-', '--'].includes(cleaned)) return '';
+    return toUpperDisplay(String(val));
   };
 
   const getStudentIpGroup = (sub) => {
@@ -184,7 +190,7 @@ export default function Analytics() {
     { id: 'tboli', title: "T'boli", description: "IP Group: T'boli", tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === "T'BOLI" },
     { id: 'mamanwa', title: 'Mamanwa', description: 'IP Group: Mamanwa', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'MAMANWA' },
     { id: 'mangyan', title: 'Mangyan', description: 'IP Group: Mangyan', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'MANGYAN' },
-    { id: 'others_ip', title: 'Other IP Groups', description: 'Specified via "Others" IP entry', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'Others' },
+    { id: 'others_ip', title: 'Other IP Groups', description: 'Specified via "Others" IP entry', tab: 'ip', check: (sub) => getAnswer(sub, 'indigenous_peoples_none') === 'Yes' && getAnswer(sub, 'indigenous_peoples_group') === 'Others' && !!getCustomIp(sub) },
     { id: 'low_income', title: 'Low Income', description: 'Household income below ₱5,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i < 5000; } },
     { id: 'mid_income', title: 'Mid Income', description: 'Household income ₱5,000–₱15,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i >= 5000 && i <= 15000; } },
     { id: 'high_income', title: 'High Income', description: 'Household income above ₱15,000/month', tab: 'socio', check: (sub) => { const raw = (getAnswer(sub, 'estimated_household_income') || '').replace(/,/g, ''); const i = parseFloat(raw); return !isNaN(i) && i > 15000; } },
@@ -246,6 +252,7 @@ export default function Analytics() {
   const exportGroupCsv = () => {
     if (!expandedGroup) return;
     let subs = groupSubs[expandedGroup] || [];
+    const hasIpCol = expandedGroup === 'others_ip' || expandedGroup === 'all_ip';
     const headers = hasIpCol
       ? ['Name', 'Email', 'IP Group', 'Program', 'Year', 'Category', 'Status']
       : ['Name', 'Email', 'Program', 'Year', 'Category', 'Status'];
@@ -418,7 +425,10 @@ export default function Analytics() {
             return (
               <button key={g.id}
                 title={`View ${g.title} details`}
-                onClick={() => { setExpandedGroup(isExpanded ? null : g.id); }}
+                onClick={() => {
+                  setExpandedGroup(isExpanded ? null : g.id);
+                  if (!isExpanded) setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                }}
                 className={`h-full w-full flex flex-col text-left border rounded-xl p-4 transition-all cursor-pointer hover:shadow-md ${isExpanded ? 'bg-blue-50 border-2 border-sidebar-primary shadow-sm' : 'bg-white border border-border shadow-sm'}`}
               >
                 <div className="flex flex-col flex-1 min-w-0">
@@ -434,6 +444,7 @@ export default function Analytics() {
         </div>
 
         {/* Expanded Detail Section */}
+        <div ref={detailRef}>
         {expandedGroup && (() => {
           const g = GROUPS.find(gr => gr.id === expandedGroup);
           if (!g) return null;
@@ -501,7 +512,7 @@ export default function Analytics() {
                       <tr key={sub.id} className={`border-b border-border/50 ${i % 2 === 1 ? 'bg-[#F8FAFC]' : 'bg-white'}`}>
                         <td className="p-3 text-muted-foreground text-xs">{i + 1}</td>
                         <td className="p-3 font-medium text-sm">{getStudentName(sub)}</td>
-                        {(expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && <td className="p-3 text-sm">{expandedGroup === 'others_ip' ? (getCustomIp(sub) || 'N/A') : (getStudentIpGroup(sub) || 'N/A')}</td>}
+                        {(expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && <td className="p-3 text-sm">{expandedGroup === 'others_ip' ? (getCustomIp(sub) || 'Others (unspecified)') : (getStudentIpGroup(sub) || 'Others (unspecified)')}</td>}
                         <td className="p-3 text-sm">{toUpperDisplay(getAnswer(sub, 'program')) || 'N/A'}</td>
                         <td className="p-3 text-sm">{toUpperDisplay(getAnswer(sub, 'year_level')) || 'N/A'}</td>
                         <td className="p-3 text-sm">{toUpperDisplay(sub.student_category) || 'N/A'}</td>
@@ -523,6 +534,7 @@ export default function Analytics() {
             </div>
           );
         })()}
+        </div>
 
       {/* Student Detail Modal */}
       <Dialog open={!!viewSub} onOpenChange={() => setViewSub(null)}>
