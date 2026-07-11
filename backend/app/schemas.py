@@ -404,6 +404,37 @@ class AnnouncementResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+# --- DATA IMPORT SCHEMAS ---
+class ImportPreview(BaseModel):
+    total_csv_rows: int
+    will_keep: int
+    will_archive: int
+    not_found: int
+    sample_not_found: List[str] = []
+
+class ImportResult(BaseModel):
+    import_id: int
+    total_csv_rows: int
+    kept: int
+    archived: int
+    not_found: int
+    imported_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ImportLogItem(BaseModel):
+    id: int
+    semester_label: str
+    filename: str
+    total_rows: int
+    kept: int
+    archived: int
+    not_found: int
+    imported_at: datetime
+    imported_by_name: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
 # --- ANALYTICS AND CHED REPORTS ---
 class SummaryReport(BaseModel):
     report_title: str

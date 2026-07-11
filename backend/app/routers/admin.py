@@ -299,7 +299,7 @@ def list_all_submissions(
     """Returns all finalized submissions with student info for admin review."""
     subs = (
         db.query(models.Submission)
-        .filter(models.Submission.is_final == True)
+        .filter(models.Submission.is_final == True, models.Submission.is_archived == False)
         .order_by(models.Submission.submitted_at.desc())
         .offset(skip)
         .limit(limit)
@@ -792,7 +792,8 @@ def list_staff_submissions(
     subs = db.query(models.Submission).filter(
         models.Submission.assigned_staff_slot == slot,
         models.Submission.semester_id == (active_sem.id if active_sem else None),
-        models.Submission.is_final == True
+        models.Submission.is_final == True,
+        models.Submission.is_archived == False,
     ).order_by(models.Submission.submitted_at.desc().nullslast()).all()
 
     result = []

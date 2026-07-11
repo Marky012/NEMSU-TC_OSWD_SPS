@@ -5,7 +5,7 @@ import NEMSULogo from './NEMSU LOGO.jpg';
 import { 
   LayoutDashboard, FileText, Settings, Users, BarChart3, 
   LogOut, Menu, Shield, ClipboardCheck,
-  GraduationCap, UserCog, UserCheck
+  GraduationCap, UserCog, UserCheck, Upload
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TooltipBox } from '@/components/ui/tooltip';
@@ -54,6 +54,7 @@ export default function AppLayout() {
     { to: '/admin/reports', label: 'CHED Reports', icon: FileText, adminOnly: false },
     { to: '/admin/logs', label: 'Audit Log', icon: Shield, adminOnly: false },
     { to: '/admin/admins', label: 'Manage Admins', icon: UserCog, adminOnly: true },
+    { to: '/admin/data-import', label: 'Data Import', icon: Upload, adminOnly: true },
     ...(hasStaffSlot ? [{ to: '/admin/staff-view', label: 'Staff View', icon: UserCheck, adminOnly: false }] : []),
   ];
 

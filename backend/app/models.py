@@ -203,3 +203,21 @@ class Announcement(Base):
     # Relationship
     admin = relationship("User")
 
+
+class ImportLog(Base):
+    __tablename__ = "import_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    semester_id = Column(Integer, ForeignKey("semesters.id"), nullable=False, index=True)
+    filename = Column(String, nullable=False)
+    total_rows = Column(Integer, nullable=False)
+    kept = Column(Integer, nullable=False)
+    archived = Column(Integer, nullable=False)
+    not_found = Column(Integer, nullable=False)
+    imported_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+    imported_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Relationships
+    semester = relationship("Semester")
+    importer = relationship("User", foreign_keys=[imported_by])
+

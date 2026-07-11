@@ -41,7 +41,7 @@ def get_filtered_submissions(db: Session, program: Optional[str] = None, year_le
     query = db.query(models.Submission).options(
         joinedload(models.Submission.user),
         selectinload(models.Submission.answers).joinedload(models.Answer.question)
-    ).filter(models.Submission.is_final == True)
+    ).filter(models.Submission.is_final == True, models.Submission.is_archived == False)
     
     # Filter by semester if provided
     if semester_id:
