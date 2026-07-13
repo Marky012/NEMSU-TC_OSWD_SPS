@@ -174,7 +174,7 @@ IDENTIFYING_COLS = [
     "middle_name", "program", "year_level", "birthdate", "gender"
 ]
 
-METADATA_COLS = ["category", "status", "assigned_staff_slot", "submitted_at"]
+METADATA_COLS = ["category", "status", "assigned_staff_slot", "submitted_at", "is_senior_citizen", "is_magna_carta_poor", "is_underprivileged"]
 
 
 def build_export_columns(db: Session, semester_id: int) -> List[str]:
@@ -225,6 +225,25 @@ def write_cleaned_data(
             pass
     elif "assigned_staff_slot" in csv_row:
         submission.assigned_staff_slot = None
+
+    # SEG flags
+    csv_senior = csv_row.get("is_senior_citizen", "").strip().lower()
+    if csv_senior in ("yes", "true", "1"):
+        submission.is_senior_citizen = True
+    elif csv_senior in ("no", "false", "0"):
+        submission.is_senior_citizen = False
+
+    csv_magna = csv_row.get("is_magna_carta_poor", "").strip().lower()
+    if csv_magna in ("yes", "true", "1"):
+        submission.is_magna_carta_poor = True
+    elif csv_magna in ("no", "false", "0"):
+        submission.is_magna_carta_poor = False
+
+    csv_under = csv_row.get("is_underprivileged", "").strip().lower()
+    if csv_under in ("yes", "true", "1"):
+        submission.is_underprivileged = True
+    elif csv_under in ("no", "false", "0"):
+        submission.is_underprivileged = False
 
     if not submission.draft_data_json:
         return
@@ -305,6 +324,12 @@ def export_data_csv(
                 row.append(str(sub.assigned_staff_slot) if sub.assigned_staff_slot else "")
             elif col == "submitted_at":
                 row.append(sub.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if sub.submitted_at else "")
+            elif col == "is_senior_citizen":
+                row.append("Yes" if sub.is_senior_citizen else "No")
+            elif col == "is_magna_carta_poor":
+                row.append("Yes" if sub.is_magna_carta_poor else "No")
+            elif col == "is_underprivileged":
+                row.append("Yes" if sub.is_underprivileged else "No")
             else:
                 row.append(get_answer_from_submission(sub, system_key_map, col) or "")
         writer.writerow(row)
