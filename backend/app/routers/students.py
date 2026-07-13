@@ -340,10 +340,10 @@ def finalize_submission(
             cv = (answers_map.get(cq.id) or "").strip()
             if cv:
                 digits_only = re.sub(r"\D", "", cv)
-                if len(digits_only) != 13:
+                if len(digits_only) != 11:
                     raise HTTPException(
                         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=f"'{cq.question_text}' must be exactly 13 digits.",
+                        detail=f"'{cq.question_text}' must be exactly 11 digits.",
                     )
 
     # --- 2c. Cross-field validation: emergency_contact_number != active_contact_number ---

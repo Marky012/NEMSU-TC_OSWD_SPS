@@ -51,7 +51,7 @@ const DynamicField = ({ question, value, onChange, error }) => {
           onChange={(e) => {
             const raw = e.target.value;
             if (question.system_key === 'active_contact_number' || question.system_key === 'emergency_contact_number') {
-              onChange(raw.replace(/\D/g, '').slice(0, 13));
+              onChange(raw.replace(/\D/g, '').slice(0, 11));
             } else if (question.system_key === 'emergency_contact_name') {
               onChange(raw.replace(/[0-9]/g, ''));
             } else {
@@ -444,8 +444,8 @@ export default function ProfileForm() {
       }
       if ((q.system_key === 'active_contact_number' || q.system_key === 'emergency_contact_number') && answers[q.id]) {
         const digits = String(answers[q.id]).replace(/\D/g, '');
-        if (digits.length !== 13) {
-          errs[q.id] = 'Contact number must be exactly 13 digits';
+        if (digits.length !== 11) {
+          errs[q.id] = 'Contact number must be exactly 11 digits';
         }
       }
       if (q.system_key === 'indigenous_peoples_other_specify' && ipGroupQ && answers[ipGroupQ.id] === 'Others' && meaninglessIp(answers[q.id])) {
