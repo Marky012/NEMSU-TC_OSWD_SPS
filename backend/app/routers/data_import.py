@@ -176,10 +176,32 @@ def write_cleaned_data(
     csv_row: Dict[str, str],
     header_to_qid: Dict[str, int],
 ):
-    """Write back cleaned values from a CSV row to a submission's data.
-    Updates both draft_data_json and answers table.
+    """Write back ALL cleaned values from a CSV row to a submission.
+    The imported CSV is the source of truth — it fully replaces existing data.
+    Updates draft_data_json, answers table, and model fields (category, status, slot).
     Only non-empty CSV values are written — empty cells preserve existing data.
     """
+    # --- 1. Metadata columns → model fields ---
+    csv_category = csv_row.get("category", "").strip()
+    if csv_category and submission.user and submission.user.category != csv_category:
+        submission.user.category = csv_category
+
+    csv_status = csv_row.get("status", "").strip()
+    if csv_status and submission.status != csv_status:
+        submission.status = csv_status
+
+    csv_slot = csv_row.get("assigned_staff_slot", "").strip()
+    if csv_slot:
+        try:
+            new_slot = int(csv_slot)
+            if submission.assigned_staff_slot != new_slot:
+                submission.assigned_staff_slot = new_slot
+        except ValueError:
+            pass
+    elif "assigned_staff_slot" in csv_row:
+        submission.assigned_staff_slot = None
+
+    # --- 2. System_key columns → draft_data_json + answers table ---
     if not submission.draft_data_json:
         return
     try:
