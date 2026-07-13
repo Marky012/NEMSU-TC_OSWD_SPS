@@ -9,11 +9,11 @@ import { Button } from '@/components/ui/button';
 import { TooltipBox } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { Search, CheckCircle2, Shield, Eye, ArrowLeftFromLine, XCircle, Loader2, Users, RefreshCw } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
+import { YEAR_LEVELS } from '@/lib/constants';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function StaffView() {
@@ -23,8 +23,9 @@ export default function StaffView() {
   const [mySlot, setMySlot] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterStatus, setFilterStatus] = useState([]);
+  const [filterCategory, setFilterCategory] = useState([]);
+  const [filterYearLevel, setFilterYearLevel] = useState([]);
   const [viewSub, setViewSub] = useState(null);
   const [verifyOneId, setVerifyOneId] = useState(null);
   const [reviewSub, setReviewSub] = useState(null);
@@ -55,7 +56,7 @@ export default function StaffView() {
     }
   }, []);
 
-  useEffect(() => { setPage(1); }, [search, filterStatus, filterCategory]);
+  useEffect(() => { setPage(1); }, [search, filterStatus, filterCategory, filterYearLevel]);
 
   const loadSubmissions = async (slot) => {
     setLoading(true);
@@ -123,8 +124,12 @@ export default function StaffView() {
 
   const filtered = useMemo(() => {
     return submissions.filter(sub => {
-      if (filterStatus !== 'all' && sub.status !== filterStatus) return false;
-      if (filterCategory !== 'all' && toUpperDisplay(sub.student_category) !== toUpperDisplay(filterCategory)) return false;
+      if (filterStatus.length > 0 && !filterStatus.includes(sub.status)) return false;
+      if (filterCategory.length > 0 && !filterCategory.includes(sub.student_category)) return false;
+      if (filterYearLevel.length > 0) {
+        const yearLevel = getAnswerBySystemKey(sub, 'year_level');
+        if (!filterYearLevel.includes(yearLevel)) return false;
+      }
       if (search) {
         const q = search.toLowerCase();
         const name = getStudentName(sub).toLowerCase();
@@ -135,7 +140,7 @@ export default function StaffView() {
       }
       return true;
     });
-  }, [submissions, search, filterStatus, filterCategory]);
+  }, [submissions, search, filterStatus, filterCategory, filterYearLevel]);
 
   const pendingCount = useMemo(() => submissions.filter(s => s.status === 'pending').length, [submissions]);
   const verifiedCount = useMemo(() => submissions.filter(s => s.status === 'verified').length, [submissions]);
@@ -215,34 +220,80 @@ export default function StaffView() {
         </Button></TooltipBox>
       </motion.div>
 
-      <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
+      <motion.div variants={fadeIn} className="bg-white border border-border rounded-xl p-4 space-y-3">
+        <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
         </div>
-        <div className="w-36">
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-full"><SelectValue>{filterStatus === 'all' ? 'All Status' : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}</SelectValue></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="verified">Verified</SelectItem>
-              <SelectItem value="returned">Returned</SelectItem>
-              <SelectItem value="declined">Declined</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-36">
-          <Select value={filterCategory} onValueChange={setFilterCategory}>
-            <SelectTrigger className="w-full"><SelectValue>{filterCategory === 'all' ? 'All Categories' : filterCategory}</SelectValue></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              <SelectItem value="New">New</SelectItem>
-              <SelectItem value="Transferee">Transferee</SelectItem>
-              <SelectItem value="Returnee">Returnee</SelectItem>
-              <SelectItem value="Continuing">Continuing</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Category</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {['New', 'Transferee', 'Returnee', 'Continuing'].map(cat => {
+                const active = filterCategory.includes(cat);
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setFilterCategory(prev => active ? prev.filter(c => c !== cat) : [...prev, cat])}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      active
+                        ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                        : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Year Level</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {YEAR_LEVELS.map(year => {
+                const active = filterYearLevel.includes(year);
+                return (
+                  <button
+                    key={year}
+                    onClick={() => setFilterYearLevel(prev => active ? prev.filter(y => y !== year) : [...prev, year])}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      active
+                        ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                        : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {year}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Status</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[
+                { key: 'pending', label: 'Pending' },
+                { key: 'verified', label: 'Verified' },
+                { key: 'returned', label: 'Returned' },
+                { key: 'declined', label: 'Declined' },
+              ].map(({ key, label }) => {
+                const active = filterStatus.includes(key);
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setFilterStatus(prev => active ? prev.filter(s => s !== key) : [...prev, key])}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      active
+                        ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                        : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </motion.div>
 
