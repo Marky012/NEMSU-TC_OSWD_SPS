@@ -313,26 +313,33 @@ def export_data_csv(
         models.Submission.semester_id == active_sem.id,
         models.Submission.is_final == True,
         models.Submission.is_archived == False,
-    ).order_by(models.Submission.submitted_at.desc().nullslast()).all()
+    ).all()
+
+    filtered_subs = []
+    for sub in subs:
+        student = sub.user
+        if not student:
+            continue
+        if yl_filter:
+            yl = get_answer_from_submission(sub, system_key_map, "year_level") or ""
+            if yl not in yl_filter:
+                continue
+        if cat_filter:
+            cat = (student.category or "").strip()
+            if cat not in cat_filter:
+                continue
+        prog = (get_answer_from_submission(sub, system_key_map, "program") or "").strip().lower()
+        surname = (get_answer_from_submission(sub, system_key_map, "surname") or "").strip().lower()
+        firstname = (get_answer_from_submission(sub, system_key_map, "first_name") or "").strip().lower()
+        filtered_subs.append((sub, prog, surname, firstname))
+
+    filtered_subs.sort(key=lambda x: (x[1], x[2], x[3]))
 
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(export_cols)
 
-    for sub in subs:
-        student = sub.user
-        if not student:
-            continue
-        # Filter by year level if specified
-        if yl_filter:
-            yl = get_answer_from_submission(sub, system_key_map, "year_level") or ""
-            if yl not in yl_filter:
-                continue
-        # Filter by category if specified
-        if cat_filter:
-            cat = (student.category or "").strip()
-            if cat not in cat_filter:
-                continue
+    for sub, _prog, _surname, _firstname in filtered_subs:
         row = []
         for col in export_cols:
             if col == "verification_code":
