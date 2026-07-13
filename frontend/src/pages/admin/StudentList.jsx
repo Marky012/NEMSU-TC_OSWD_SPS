@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw, Trash2, ArrowUpDown } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
-import { getProgramAbbr, PROGRAM_ABBR_UPPER } from '@/lib/constants';
+import { getProgramAbbr, PROGRAM_ABBR_UPPER, YEAR_LEVELS } from '@/lib/constants';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function StudentList() {
@@ -30,6 +30,7 @@ export default function StudentList() {
   const [filterProg, setFilterProg] = useState('');
   const [filterSem, setFilterSem] = useState('');
   const [filterVerified, setFilterVerified] = useState([]);
+  const [filterYearLevel, setFilterYearLevel] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [viewSub, setViewSub] = useState(null);
   const [verifying, setVerifying] = useState(false);
@@ -58,7 +59,7 @@ export default function StudentList() {
   const pageSize = 25;
 
   useEffect(() => { loadData(); }, []);
-  useEffect(() => { setPage(1); }, [search, filterCat, filterProg, filterSem, filterVerified, sortMode]);
+  useEffect(() => { setPage(1); }, [search, filterCat, filterProg, filterSem, filterVerified, filterYearLevel, sortMode]);
 
   const loadData = async () => {
     setLoading(true);
@@ -118,6 +119,10 @@ export default function StudentList() {
     if (filterVerified.length > 0) {
       const statusKey = sub.status === 'pending' ? 'unverified' : sub.status;
       if (!filterVerified.includes(statusKey)) return false;
+    }
+    if (filterYearLevel.length > 0) {
+      const yearLevel = getAnswerBySystemKey(sub, 'year_level');
+      if (!filterYearLevel.includes(yearLevel)) return false;
     }
     if (search) {
       const q = search.toLowerCase();
@@ -460,6 +465,27 @@ export default function StudentList() {
                     }`}
                   >
                     {cat}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Year Level</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {YEAR_LEVELS.map(year => {
+                const active = filterYearLevel.includes(year);
+                return (
+                  <button
+                    key={year}
+                    onClick={() => setFilterYearLevel(prev => active ? prev.filter(y => y !== year) : [...prev, year])}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                      active
+                        ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                        : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {year}
                   </button>
                 );
               })}

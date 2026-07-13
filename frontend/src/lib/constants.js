@@ -48,6 +48,8 @@ export const STUDENT_CATEGORIES = [
   { value: 'Continuing', label: 'Continuing', description: 'Currently enrolled, proceeding to next term' },
 ];
 
+export const YEAR_LEVELS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+
 export const FIELD_TYPES = [
   { value: 'text', label: 'Text' },
   { value: 'number', label: 'Number' },
