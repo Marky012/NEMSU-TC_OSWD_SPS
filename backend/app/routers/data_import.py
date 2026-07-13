@@ -206,16 +206,22 @@ def write_cleaned_data(
 ):
     """Write back ALL cleaned values from a CSV row to a submission.
     The imported CSV is the source of truth — it fully replaces existing data.
+    "N/A" values from export are treated as empty (no write).
     """
-    csv_category = csv_row.get("category", "").strip()
+    def clean(val):
+        """Strip and treat N/A / n/a as empty."""
+        v = (val or "").strip()
+        return "" if v.upper() == "N/A" else v
+
+    csv_category = clean(csv_row.get("category", ""))
     if csv_category and submission.user and submission.user.category != csv_category:
         submission.user.category = csv_category
 
-    csv_status = csv_row.get("status", "").strip()
+    csv_status = clean(csv_row.get("status", ""))
     if csv_status and submission.status != csv_status:
         submission.status = csv_status
 
-    csv_slot = csv_row.get("assigned_staff_slot", "").strip()
+    csv_slot = clean(csv_row.get("assigned_staff_slot", ""))
     if csv_slot:
         try:
             new_slot = int(csv_slot)
@@ -227,19 +233,19 @@ def write_cleaned_data(
         submission.assigned_staff_slot = None
 
     # SEG flags
-    csv_senior = csv_row.get("is_senior_citizen", "").strip().lower()
+    csv_senior = clean(csv_row.get("is_senior_citizen", "")).lower()
     if csv_senior in ("yes", "true", "1"):
         submission.is_senior_citizen = True
     elif csv_senior in ("no", "false", "0"):
         submission.is_senior_citizen = False
 
-    csv_magna = csv_row.get("is_magna_carta_poor", "").strip().lower()
+    csv_magna = clean(csv_row.get("is_magna_carta_poor", "")).lower()
     if csv_magna in ("yes", "true", "1"):
         submission.is_magna_carta_poor = True
     elif csv_magna in ("no", "false", "0"):
         submission.is_magna_carta_poor = False
 
-    csv_under = csv_row.get("is_underprivileged", "").strip().lower()
+    csv_under = clean(csv_row.get("is_underprivileged", "")).lower()
     if csv_under in ("yes", "true", "1"):
         submission.is_underprivileged = True
     elif csv_under in ("no", "false", "0"):
@@ -254,7 +260,7 @@ def write_cleaned_data(
 
     changed = False
     for header, qid in header_to_qid.items():
-        csv_val = csv_row.get(header, "").strip()
+        csv_val = clean(csv_row.get(header, ""))
         if not csv_val:
             continue
         str_qid = str(qid)
@@ -313,17 +319,17 @@ def export_data_csv(
         row = []
         for col in export_cols:
             if col == "verification_code":
-                row.append(sub.verification_code or "")
+                row.append(sub.verification_code or "N/A")
             elif col == "email":
-                row.append(student.email or "")
+                row.append(student.email or "N/A")
             elif col == "category":
-                row.append(student.category or "")
+                row.append(student.category or "N/A")
             elif col == "status":
-                row.append(sub.status or "")
+                row.append(sub.status or "N/A")
             elif col == "assigned_staff_slot":
-                row.append(str(sub.assigned_staff_slot) if sub.assigned_staff_slot else "")
+                row.append(str(sub.assigned_staff_slot) if sub.assigned_staff_slot else "N/A")
             elif col == "submitted_at":
-                row.append(sub.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if sub.submitted_at else "")
+                row.append(sub.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if sub.submitted_at else "N/A")
             elif col == "is_senior_citizen":
                 row.append("Yes" if sub.is_senior_citizen else "No")
             elif col == "is_magna_carta_poor":
@@ -331,7 +337,7 @@ def export_data_csv(
             elif col == "is_underprivileged":
                 row.append("Yes" if sub.is_underprivileged else "No")
             else:
-                row.append(get_answer_from_submission(sub, system_key_map, col) or "")
+                row.append(get_answer_from_submission(sub, system_key_map, col) or "N/A")
         writer.writerow(row)
 
     output.seek(0)
