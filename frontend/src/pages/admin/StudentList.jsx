@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw, Trash2, ArrowUpDown } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
 import StudentDetailSections from '@/components/StudentDetailSections';
-import { getProgramAbbr, PROGRAM_ABBR_UPPER, YEAR_LEVELS } from '@/lib/constants';
+import { getProgramAbbr, PROGRAM_ABBR, PROGRAM_ABBR_UPPER, YEAR_LEVELS } from '@/lib/constants';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function StudentList() {
@@ -116,7 +116,7 @@ export default function StudentList() {
   const filtered = sorted.filter(sub => {
     if (filterSem && sub.semester_id !== Number(filterSem)) return false;
     if (filterCat.length > 0 && !filterCat.includes(sub.student_category)) return false;
-    if (filterProg && getStudentProgram(sub) !== filterProg) return false;
+    if (filterProg && getProgramAbbr(getStudentProgram(sub)) !== filterProg) return false;
     if (filterVerified.length > 0) {
       const statusKey = sub.status === 'pending' ? 'unverified' : sub.status;
       if (!filterVerified.includes(statusKey)) return false;
@@ -140,7 +140,7 @@ export default function StudentList() {
   submissions.forEach(sub => {
     const cat = sub.student_category || 'Unknown';
     allCatSummary[cat] = (allCatSummary[cat] || 0) + 1;
-    const prog = getStudentProgram(sub);
+    const prog = getProgramAbbr(getStudentProgram(sub));
     if (prog !== 'N/A') allProgSummary[prog] = (allProgSummary[prog] || 0) + 1;
   });
 
@@ -149,7 +149,7 @@ export default function StudentList() {
   filtered.forEach(sub => {
     const cat = sub.student_category || 'Unknown';
     catSummary[cat] = (catSummary[cat] || 0) + 1;
-    const prog = getStudentProgram(sub);
+    const prog = getProgramAbbr(getStudentProgram(sub));
     if (prog !== 'N/A') progSummary[prog] = (progSummary[prog] || 0) + 1;
   });
   const CATEGORIES = ['New', 'Transferee', 'Returnee', 'Continuing'];
@@ -439,11 +439,11 @@ export default function StudentList() {
               </SelectContent>
             </Select>
             <Select value={filterProg} onValueChange={setFilterProg}>
-              <SelectTrigger className="h-9 w-full sm:w-[160px] truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
-              <SelectContent className="min-w-[160px] max-w-[280px]">
+              <SelectTrigger className="h-9 w-full sm:w-[130px] truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
+              <SelectContent className="min-w-[130px] max-w-[200px]">
                 <SelectItem value="">All Programs</SelectItem>
                 {Object.keys(allProgSummary).sort().map(p => (
-                  <SelectItem key={p} value={p}>{getProgramAbbr(p)}</SelectItem>
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
