@@ -53,8 +53,8 @@ export default function AppLayout() {
     { to: '/admin/analytics', label: 'Analytics', icon: BarChart3, adminOnly: false },
     { to: '/admin/reports', label: 'CHED Reports', icon: FileText, adminOnly: false },
     { to: '/admin/logs', label: 'Audit Log', icon: Shield, adminOnly: false },
-    { to: '/admin/admins', label: 'Manage Admins', icon: UserCog, adminOnly: true },
     { to: '/admin/data-import', label: 'Data Import', icon: Upload, adminOnly: true },
+    { to: '/admin/admins', label: 'Manage Admins', icon: UserCog, adminOnly: true },
     ...(hasStaffSlot ? [{ to: '/admin/staff-view', label: 'Staff View', icon: UserCheck, adminOnly: false }] : []),
   ];
 
