@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Search, Download, Users, RefreshCw, Filter, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { toUpperDisplay } from '@/lib/utils';
+import StudentDetailSections from '@/components/StudentDetailSections';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const COLORS = ['#1e40af', '#d97706', '#2d7fc1', '#8b5cf6', '#e85d3a', '#d94480', '#0ea5e9', '#84cc16'];
@@ -582,23 +583,11 @@ export default function Analytics() {
               )}
               {viewSub.draft_data_json && (() => {
                 const parsed = JSON.parse(viewSub.draft_data_json);
-                const ipGroupQ = questions.find(qq => qq.system_key === 'indigenous_peoples_group');
-                const ipGroupVal = ipGroupQ ? (parsed[ipGroupQ.id] ?? parsed[String(ipGroupQ.id)]) : null;
-                const entries = Object.entries(parsed)
-                  .map(([qId, val]) => {
-                    const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-                    return { qId, val, q, order: q?.display_order ?? 9999 };
-                  })
-                  .filter(({ q, val, qId }) => {
-                    if (!q) return false;
-                    if (q.system_key === 'indigenous_peoples_other_specify' && ipGroupVal === 'Others') return false;
-                    if (q.field_type === 'textarea' && !val) return false;
-                    return true;
-                  })
-                  .sort((a, b) => a.order - b.order);
                 return (
-                  <div className="border-t pt-3 space-y-2">
-                    {entries.map(({ qId, val, q }) => {
+                  <StudentDetailSections
+                    questions={questions}
+                    parsed={parsed}
+                    renderValue={(qId, val, q) => {
                       const formatRow = item => typeof item === 'object' ? Object.values(item).filter(v => v && String(v).trim()).join(' — ') : String(item);
                       let rawVal = !val ? 'N/A' : Array.isArray(val) ? val.map(formatRow).filter(r => r).join('; ') : typeof val === 'object' ? JSON.stringify(val) : (typeof val === 'string' && val.startsWith('[') ? (() => { try { return JSON.parse(val).map(formatRow).filter(r => r).join('; '); } catch { return val; } })() : val);
                       if (q.system_key === 'indigenous_peoples_group' && val === 'Others') {
@@ -610,38 +599,9 @@ export default function Analytics() {
                         const cleaned = String(rawVal).replace(/,/g, '');
                         if (/^\d+(\.\d+)?$/.test(cleaned)) rawVal = Number(cleaned).toLocaleString();
                       }
-                      const displayVal = toUpperDisplay(rawVal);
-                      return (
-                        <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
-                          <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q.question_text}</span>
-                          {q.field_type === 'textarea'
-                            ? <span className="text-sm whitespace-pre-wrap">{val || 'N/A'}</span>
-                            : q.field_type === 'table'
-                            ? (() => {
-                                let rows;
-                                try { rows = typeof val === 'string' ? JSON.parse(val) : val; } catch { rows = null; }
-                                if (!Array.isArray(rows) || rows.length === 0) return <span className="text-sm text-muted-foreground italic">No entries</span>;
-                                return (
-                                  <div className="space-y-2">
-                                    {rows.map((row, ri) => (
-                                      <div key={ri} className="text-sm bg-muted/30 rounded-lg p-2.5 border border-border/40">
-                                        {Object.entries(row).filter(([,v]) => v && String(v).trim()).map(([col, cv]) => (
-                                          <div key={col} className="flex gap-2 py-0.5">
-                                            <span className="font-medium text-muted-foreground shrink-0 min-w-[8rem]">{col}:</span>
-                                            <span>{String(cv).toUpperCase()}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              })()
-                            : <span className="text-sm">{displayVal}</span>
-                          }
-                        </div>
-                      );
-                    })}
-                  </div>
+                      return toUpperDisplay(rawVal);
+                    }}
+                  />
                 );
               })()}
             </div>

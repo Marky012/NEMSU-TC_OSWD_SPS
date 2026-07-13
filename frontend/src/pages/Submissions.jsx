@@ -11,6 +11,7 @@ import { TooltipBox } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ArrowRight, Check, Clock, Eye, FileText, Shield, ShieldCheck, GraduationCap, ArrowLeftFromLine, XCircle } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
+import StudentDetailSections from '@/components/StudentDetailSections';
 
 const formatSemesterLabel = (label) => {
   if (!label) return '';
@@ -292,23 +293,11 @@ export default function Submissions() {
               {viewSub.draft_data && (
                 <div className="border-t pt-4">
                   <h3 className="font-heading font-semibold mb-3">Answers</h3>
-                  <div className="space-y-2">
-                    {Object.entries(viewSub.draft_data)
-                      .map(([qId, val]) => {
-                        const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-                        return { qId, val, q, order: q?.display_order ?? 9999 };
-                      })
-                      .filter(({ q }) => !!q)
-                      .sort((a, b) => a.order - b.order)
-                      .map(({ qId, val, q }) => (
-                      <div key={qId} className="flex flex-col sm:flex-row sm:items-start gap-1 py-2 border-b border-border/50 last:border-0">
-                        <span className="text-xs font-medium text-muted-foreground sm:w-1/2 flex-shrink-0">
-                          {q.question_text}
-                        </span>
-                        <span className="text-sm">{getAnswerDisplay(qId, viewSub.draft_data)}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <StudentDetailSections
+                    questions={questions}
+                    parsed={viewSub.draft_data}
+                    renderValue={(qId, val, q) => getAnswerDisplay(qId, viewSub.draft_data)}
+                  />
                 </div>
               )}
             </div>

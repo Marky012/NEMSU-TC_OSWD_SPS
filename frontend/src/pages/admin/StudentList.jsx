@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Search, CheckCircle2, Shield, Eye, Download, Users, Loader2, ArrowLeftFromLine, XCircle, MessageCircle, RefreshCw, Trash2, ArrowUpDown } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
+import StudentDetailSections from '@/components/StudentDetailSections';
 import { getProgramAbbr, PROGRAM_ABBR_UPPER, YEAR_LEVELS } from '@/lib/constants';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
@@ -784,60 +785,20 @@ export default function StudentList() {
               </div>
               {viewSub.draft_data_json && (() => {
                 const parsed = JSON.parse(viewSub.draft_data_json);
-                const ipGroupQ = questions.find(qq => qq.system_key === 'indigenous_peoples_group');
-                const ipGroupVal = ipGroupQ ? (parsed[ipGroupQ.id] ?? parsed[String(ipGroupQ.id)]) : null;
-                const entries = Object.entries(parsed)
-                  .map(([qId, val]) => {
-                    const q = questions.find(qq => String(qq.id) === qId || qq.system_key === qId);
-                    return { qId, val, q, order: q?.display_order ?? 9999 };
-                  })
-                  .filter(({ q, val, qId }) => {
-                    if (!q) return false;
-                    if (q.system_key === 'indigenous_peoples_other_specify' && ipGroupVal === 'Others') return false;
-                    if (q.field_type === 'textarea' && !val) return false;
-                    return true;
-                  })
-                  .sort((a, b) => a.order - b.order);
                 return (
-                  <div className="border-t pt-3 space-y-2">
-                    {entries.map(({ qId, val, q }) => {
+                  <StudentDetailSections
+                    questions={questions}
+                    parsed={parsed}
+                    renderValue={(qId, val, q) => {
                       let displayVal = getAnswerDisplay(qId, parsed, q);
                       if (q.system_key === 'indigenous_peoples_group' && val === 'Others') {
                         const specifyQ = questions.find(qq => qq.system_key === 'indigenous_peoples_other_specify');
                         const specifyVal = specifyQ ? (parsed[specifyQ.id] ?? parsed[String(specifyQ.id)]) : null;
                         if (specifyVal) displayVal = toUpperDisplay(String(specifyVal));
                       }
-                      return (
-                        <div key={qId} className="flex flex-col sm:flex-row gap-1 py-1.5 border-b border-border/30 last:border-0">
-                          <span className="text-xs font-medium text-muted-foreground sm:w-1/2">{q.question_text}</span>
-                          {q.field_type === 'textarea'
-                            ? <span className="text-sm whitespace-pre-wrap">{val || 'N/A'}</span>
-                            : q.field_type === 'table'
-                            ? (() => {
-                                let rows;
-                                try { rows = typeof val === 'string' ? JSON.parse(val) : val; } catch { rows = null; }
-                                if (!Array.isArray(rows) || rows.length === 0) return <span className="text-sm text-muted-foreground italic">No entries</span>;
-                                return (
-                                  <div className="space-y-2">
-                                    {rows.map((row, ri) => (
-                                      <div key={ri} className="text-sm bg-muted/30 rounded-lg p-2.5 border border-border/40">
-                                        {Object.entries(row).filter(([,v]) => v && String(v).trim()).map(([col, cv]) => (
-                                          <div key={col} className="flex gap-2 py-0.5">
-                                            <span className="font-medium text-muted-foreground shrink-0 min-w-[8rem]">{col}:</span>
-                                            <span>{String(cv).toUpperCase()}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ))}
-                                  </div>
-                                );
-                              })()
-                            : <span className="text-sm">{displayVal}</span>
-                          }
-                        </div>
-                      );
-                    })}
-                  </div>
+                      return displayVal;
+                    }}
+                  />
                 );
               })()}
             </div>
