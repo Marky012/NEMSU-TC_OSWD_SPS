@@ -3,7 +3,7 @@ import csv
 import json
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any, Tuple
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload, selectinload
 from app.database import get_db
@@ -33,11 +33,9 @@ def get_answer_from_submission(
     qid = system_key_map.get(system_key)
     if not qid:
         return None
-    # Check answers table (for finalized submissions)
     for ans in submission.answers:
         if ans.question_id == qid:
             return ans.answer_text
-    # Fall back to draft_data_json
     if submission.draft_data_json:
         try:
             data = json.loads(submission.draft_data_json)
@@ -52,9 +50,13 @@ def get_answer_from_submission(
 def build_submission_lookup(
     db: Session,
     semester_id: int,
-    system_key_map: Dict[str, int]
+    system_key_map: Dict[str, int],
+    year_levels: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
-    """Build a list of active submissions with their identifying fields for matching."""
+    """Build a list of active submissions with their identifying fields for matching.
+    Optionally filter by year_levels — only submissions whose year_level answer
+    is in the provided list will be included.
+    """
     subs = db.query(models.Submission).options(
         joinedload(models.Submission.user),
         selectinload(models.Submission.answers).joinedload(models.Answer.question)
@@ -69,6 +71,9 @@ def build_submission_lookup(
         student = sub.user
         if not student:
             continue
+        year_level = get_answer_from_submission(sub, system_key_map, "year_level")
+        if year_levels and year_level not in year_levels:
+            continue
         lookup.append({
             "submission": sub,
             "email": (student.email or "").strip().lower(),
@@ -77,6 +82,7 @@ def build_submission_lookup(
             "first_name": (get_answer_from_submission(sub, system_key_map, "first_name") or "").strip().upper(),
             "program": (get_answer_from_submission(sub, system_key_map, "program") or "").strip().upper(),
             "birthdate": (get_answer_from_submission(sub, system_key_map, "birthdate") or "").strip(),
+            "year_level": (year_level or "").strip(),
         })
     return lookup
 
@@ -85,12 +91,7 @@ def match_csv_row(
     row: Dict[str, str],
     lookup: List[Dict[str, Any]]
 ) -> Optional[models.Submission]:
-    """Match a CSV row to an existing submission using multi-field strategy.
-    Priority:
-      1. verification_code (exact)
-      2. email (exact, case-insensitive)
-      3. surname + first_name + program + birthdate (all 4 must match)
-    """
+    """Match a CSV row to an existing submission using multi-field strategy."""
     csv_vc = (row.get("verification_code", "") or "").strip()
     csv_email = (row.get("email", "") or "").strip().lower()
     csv_surname = (row.get("surname", "") or "").strip().upper()
@@ -98,19 +99,16 @@ def match_csv_row(
     csv_program = (row.get("program", "") or "").strip().upper()
     csv_birthdate = (row.get("birthdate", "") or "").strip()
 
-    # 1. Match by verification_code
     if csv_vc:
         for entry in lookup:
             if entry["verification_code"] == csv_vc:
                 return entry["submission"]
 
-    # 2. Match by email
     if csv_email:
         for entry in lookup:
             if entry["email"] == csv_email:
                 return entry["submission"]
 
-    # 3. Match by composite (surname + first_name + program + birthdate)
     if csv_surname and csv_first_name and csv_program and csv_birthdate:
         for entry in lookup:
             if (entry["surname"] == csv_surname
@@ -134,6 +132,38 @@ def parse_csv_file(content: str) -> Tuple[List[str], List[Dict[str, str]]]:
     return headers, rows
 
 
+def parse_year_levels_param(year_levels: Optional[str]) -> Optional[List[str]]:
+    """Parse comma-separated year_levels query param into a list, or None."""
+    if not year_levels or not year_levels.strip():
+        return None
+    parts = [yl.strip() for yl in year_levels.split(",") if yl.strip()]
+    return parts if parts else None
+
+
+def get_targeted_submissions(
+    db: Session,
+    semester_id: int,
+    system_key_map: Dict[str, int],
+    year_levels: Optional[List[str]] = None,
+) -> List[models.Submission]:
+    """Get active submissions filtered by year_levels (for archiving)."""
+    query = db.query(models.Submission).options(
+        joinedload(models.Submission.user),
+        selectinload(models.Submission.answers).joinedload(models.Answer.question)
+    ).filter(
+        models.Submission.semester_id == semester_id,
+        models.Submission.is_final == True,
+        models.Submission.is_archived == False,
+    )
+    subs = query.all()
+    if not year_levels:
+        return subs
+    return [
+        sub for sub in subs
+        if get_answer_from_submission(sub, system_key_map, "year_level") in year_levels
+    ]
+
+
 REQUIRED_CSV_COLS = [
     "verification_code", "email", "surname", "first_name",
     "program", "birthdate"
@@ -154,7 +184,6 @@ def build_export_columns(db: Session, semester_id: int) -> List[str]:
         models.Question.system_key.isnot(None),
     ).order_by(models.Question.display_order).all()
     system_key_cols = [q.system_key for q in questions]
-    # Remove any system key already in IDENTIFYING_COLS to avoid duplicates
     existing = set(IDENTIFYING_COLS)
     extra = [sk for sk in system_key_cols if sk not in existing]
     return IDENTIFYING_COLS + extra + METADATA_COLS
@@ -169,7 +198,6 @@ def build_csv_header_map(semester_id: int, db: Session) -> Dict[str, int]:
     return {q.system_key: q.id for q in questions}
 
 
-
 def write_cleaned_data(
     db: Session,
     submission: models.Submission,
@@ -178,10 +206,7 @@ def write_cleaned_data(
 ):
     """Write back ALL cleaned values from a CSV row to a submission.
     The imported CSV is the source of truth — it fully replaces existing data.
-    Updates draft_data_json, answers table, and model fields (category, status, slot).
-    Only non-empty CSV values are written — empty cells preserve existing data.
     """
-    # --- 1. Metadata columns → model fields ---
     csv_category = csv_row.get("category", "").strip()
     if csv_category and submission.user and submission.user.category != csv_category:
         submission.user.category = csv_category
@@ -201,7 +226,6 @@ def write_cleaned_data(
     elif "assigned_staff_slot" in csv_row:
         submission.assigned_staff_slot = None
 
-    # --- 2. System_key columns → draft_data_json + answers table ---
     if not submission.draft_data_json:
         return
     try:
@@ -218,7 +242,6 @@ def write_cleaned_data(
         if draft.get(str_qid) != csv_val:
             draft[str_qid] = csv_val
             changed = True
-        # Upsert the answer record so reports/charts see the cleaned value
         existing = db.query(models.Answer).filter(
             models.Answer.submission_id == submission.id,
             models.Answer.question_id == qid,
@@ -283,7 +306,6 @@ def export_data_csv(
             elif col == "submitted_at":
                 row.append(sub.submitted_at.strftime("%Y-%m-%d %H:%M:%S") if sub.submitted_at else "")
             else:
-                # Everything else is a system_key — extract from submission
                 row.append(get_answer_from_submission(sub, system_key_map, col) or "")
         writer.writerow(row)
 
@@ -310,10 +332,13 @@ def export_data_csv(
 @router.post("/import/preview")
 def preview_import(
     file: UploadFile = File(...),
+    year_levels: Optional[str] = Query(None, description="Comma-separated year levels to target, e.g. '1st Year,2nd Year'"),
     current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
     db: Session = Depends(get_db)
 ):
-    """Preview an import CSV: match rows and return stats without making changes."""
+    """Preview an import CSV: match rows and return stats without making changes.
+    If year_levels is provided, only submissions for those year levels are targeted.
+    """
     if not file.filename or not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
 
@@ -331,8 +356,9 @@ def preview_import(
             detail=f"Missing required columns: {', '.join(missing)}"
         )
 
+    yl_filter = parse_year_levels_param(year_levels)
     system_key_map = get_system_key_map(db, active_sem.id)
-    lookup = build_submission_lookup(db, active_sem.id, system_key_map)
+    lookup = build_submission_lookup(db, active_sem.id, system_key_map, year_levels=yl_filter)
 
     not_found_examples = []
     matched_ids = set()
@@ -358,16 +384,20 @@ def preview_import(
         will_archive=will_archive,
         not_found=not_found_count,
         sample_not_found=not_found_examples,
+        year_levels_targeted=yl_filter or [],
     )
 
 
 @router.post("/import/execute", response_model=schemas.ImportResult)
 def execute_import(
     file: UploadFile = File(...),
+    year_levels: Optional[str] = Query(None, description="Comma-separated year levels to target"),
     current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
     db: Session = Depends(get_db)
 ):
-    """Execute an import: archive all current submissions, then unarchive those in the CSV."""
+    """Execute an import: archive targeted submissions, then unarchive those in the CSV.
+    If year_levels is provided, only submissions for those year levels are archived/replaced.
+    """
     if not file.filename or not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Only CSV files are accepted.")
 
@@ -385,9 +415,10 @@ def execute_import(
             detail=f"Missing required columns: {', '.join(missing)}"
         )
 
+    yl_filter = parse_year_levels_param(year_levels)
     system_key_map = get_system_key_map(db, active_sem.id)
     header_to_qid = build_csv_header_map(active_sem.id, db)
-    lookup = build_submission_lookup(db, active_sem.id, system_key_map)
+    lookup = build_submission_lookup(db, active_sem.id, system_key_map, year_levels=yl_filter)
 
     matched_ids = set()
     not_found_count = 0
@@ -396,20 +427,22 @@ def execute_import(
         sub = match_csv_row(row, lookup)
         if sub:
             matched_ids.add(sub.id)
-            # Write back cleaned data from CSV into this submission
             write_cleaned_data(db, sub, row, header_to_qid)
         else:
             not_found_count += 1
 
-    # Flush data updates before archiving
     db.flush()
 
-    # Archive ALL current active submissions
-    total_archived = db.query(models.Submission).filter(
-        models.Submission.semester_id == active_sem.id,
-        models.Submission.is_final == True,
-        models.Submission.is_archived == False,
-    ).update({"is_archived": True}, synchronize_session="fetch")
+    # Get the IDs of submissions targeted for archiving (filtered by year level)
+    targeted_subs = get_targeted_submissions(db, active_sem.id, system_key_map, yl_filter)
+    targeted_ids = {sub.id for sub in targeted_subs}
+
+    # Archive only targeted submissions
+    total_archived = 0
+    if targeted_ids:
+        total_archived = db.query(models.Submission).filter(
+            models.Submission.id.in_(list(targeted_ids)),
+        ).update({"is_archived": True}, synchronize_session="fetch")
 
     # Unarchive only the matched ones
     matched_id_list = list(matched_ids)
@@ -418,7 +451,6 @@ def execute_import(
             models.Submission.id.in_(matched_id_list),
         ).update({"is_archived": False}, synchronize_session="fetch")
 
-    # Create import log
     unique_kept = len(matched_id_list)
     import_log = models.ImportLog(
         semester_id=active_sem.id,
@@ -433,10 +465,11 @@ def execute_import(
     db.commit()
     db.refresh(import_log)
 
+    yl_label = ", ".join(yl_filter) if yl_filter else "all year levels"
     log = models.AdminLog(
         admin_id=current_admin.id,
         action="import_csv",
-        details=f"Imported CSV '{file.filename}': {unique_kept} kept, {max(0, total_archived - unique_kept)} archived, {not_found_count} not found",
+        details=f"Imported CSV '{file.filename}' ({yl_label}): {unique_kept} kept, {max(0, total_archived - unique_kept)} archived, {not_found_count} not found",
         timestamp=datetime.now(timezone.utc)
     )
     db.add(log)
@@ -449,7 +482,67 @@ def execute_import(
         archived=import_log.archived,
         not_found=import_log.not_found,
         imported_at=import_log.imported_at,
+        year_levels_targeted=yl_filter or [],
     )
+
+
+@router.get("/import/archived")
+def list_archived_submissions(
+    year_levels: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=1, le=100),
+    current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
+    db: Session = Depends(get_db)
+):
+    """List archived submissions for the active semester, optionally filtered by year level."""
+    active_sem = db.query(models.Semester).filter(models.Semester.is_active == True).first()
+    if not active_sem:
+        raise HTTPException(status_code=400, detail="No active semester configured.")
+
+    system_key_map = get_system_key_map(db, active_sem.id)
+    yl_filter = parse_year_levels_param(year_levels)
+
+    subs = db.query(models.Submission).options(
+        joinedload(models.Submission.user),
+        selectinload(models.Submission.answers).joinedload(models.Answer.question)
+    ).filter(
+        models.Submission.semester_id == active_sem.id,
+        models.Submission.is_final == True,
+        models.Submission.is_archived == True,
+    ).all()
+
+    # Filter by year level if requested
+    items = []
+    for sub in subs:
+        student = sub.user
+        if not student:
+            continue
+        year_level = get_answer_from_submission(sub, system_key_map, "year_level") or ""
+        if yl_filter and year_level not in yl_filter:
+            continue
+        items.append(schemas.ArchivedSubmissionItem(
+            id=sub.id,
+            user_id=sub.user_id,
+            student_name=student.first_name or student.email.split("@")[0] if student.email else "Student",
+            student_email=student.email or "",
+            student_category=student.category,
+            year_level=year_level,
+            status=sub.status or "pending",
+            verification_code=sub.verification_code or "",
+            submitted_at=sub.submitted_at,
+        ))
+
+    total = len(items)
+    start = (page - 1) * page_size
+    paginated = items[start:start + page_size]
+
+    return {
+        "items": paginated,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": (total + page_size - 1) // page_size,
+    }
 
 
 @router.get("/import/history", response_model=List[schemas.ImportLogItem])

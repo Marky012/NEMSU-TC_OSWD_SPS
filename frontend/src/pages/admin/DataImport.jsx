@@ -5,11 +5,12 @@ import { Skeleton, ListSkeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Download, Upload, FileUp, Eye, CheckCircle2, XCircle, AlertTriangle, History, Loader2, FileSpreadsheet } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Download, Upload, FileUp, Eye, CheckCircle2, XCircle, AlertTriangle, History, Loader2, FileSpreadsheet, Archive, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import apiClient from '@/api/apiClient';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import ConfirmDialog from '@/components/ConfirmDialog';
+import { YEAR_LEVELS } from '@/lib/constants';
 
 export default function DataImport() {
   const [loading, setLoading] = useState(true);
@@ -19,16 +20,29 @@ export default function DataImport() {
   const [importing, setImporting] = useState(false);
   const [preview, setPreview] = useState(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [confirmChecked, setConfirmChecked] = useState(false);
   const [importResult, setImportResult] = useState(null);
   const [importHistory, setImportHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedYearLevels, setSelectedYearLevels] = useState([]);
   const fileInputRef = useRef(null);
+
+  // Archived viewer state
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedItems, setArchivedItems] = useState([]);
+  const [archivedTotal, setArchivedTotal] = useState(0);
+  const [archivedPage, setArchivedPage] = useState(1);
+  const [archivedTotalPages, setArchivedTotalPages] = useState(1);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [archivedYearFilter, setArchivedYearFilter] = useState([]);
 
   useEffect(() => {
     loadHistory();
     setLoading(false);
   }, []);
+
+  const yearLevelsParam = (yls) => yls.length > 0 ? yls.join(',') : '';
 
   const loadHistory = async () => {
     setHistoryLoading(true);
@@ -39,6 +53,34 @@ export default function DataImport() {
       console.error(e);
     }
     setHistoryLoading(false);
+  };
+
+  const loadArchived = async (page = 1, ylFilter = []) => {
+    setArchivedLoading(true);
+    try {
+      const params = { page, page_size: 10 };
+      if (ylFilter.length > 0) params.year_levels = ylFilter.join(',');
+      const { data } = await apiClient.get('/admin/import/archived', { params });
+      setArchivedItems(data.items || []);
+      setArchivedTotal(data.total || 0);
+      setArchivedPage(data.page || 1);
+      setArchivedTotalPages(data.total_pages || 1);
+    } catch (e) {
+      toast.error('Failed to load archived submissions');
+    }
+    setArchivedLoading(false);
+  };
+
+  const handleViewArchived = (ylFilter = []) => {
+    setArchivedYearFilter(ylFilter);
+    setArchivedPage(1);
+    loadArchived(1, ylFilter);
+    setShowArchived(true);
+  };
+
+  const handleArchivedPageChange = (newPage) => {
+    setArchivedPage(newPage);
+    loadArchived(newPage, archivedYearFilter);
   };
 
   const handleExport = async () => {
@@ -87,8 +129,12 @@ export default function DataImport() {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
+      const params = {};
+      const ylParam = yearLevelsParam(selectedYearLevels);
+      if (ylParam) params.year_levels = ylParam;
       const { data } = await apiClient.post('/admin/import/preview', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        params,
       });
       setPreview(data);
     } catch (e) {
@@ -100,6 +146,7 @@ export default function DataImport() {
   };
 
   const handleImportConfirm = () => {
+    setConfirmChecked(false);
     setShowConfirm(true);
   };
 
@@ -110,12 +157,17 @@ export default function DataImport() {
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
+      const params = {};
+      const ylParam = yearLevelsParam(selectedYearLevels);
+      if (ylParam) params.year_levels = ylParam;
       const { data } = await apiClient.post('/admin/import/execute', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        params,
       });
       setImportResult(data);
       setPreview(null);
       setSelectedFile(null);
+      setSelectedYearLevels([]);
       if (fileInputRef.current) fileInputRef.current.value = '';
       toast.success(`Import complete: ${data.kept} kept, ${data.archived} archived`);
       loadHistory();
@@ -126,6 +178,8 @@ export default function DataImport() {
     }
     setImporting(false);
   };
+
+  const ylLabel = selectedYearLevels.length > 0 ? selectedYearLevels.join(', ') : 'All Year Levels';
 
   if (loading) {
     return (
@@ -145,7 +199,7 @@ export default function DataImport() {
         <h1 className="font-heading text-2xl font-bold">Data Import</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Export current data, clean it externally, then import the result back.
-          Old data is archived (never deleted) for audit purposes.
+          Select which year levels to target — other year levels remain untouched.
         </p>
       </motion.div>
 
@@ -161,9 +215,9 @@ export default function DataImport() {
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Download current active-semester submissions as a CSV file containing
-              5 identifying fields for multi-angle comparison in your external workflow
+              identifying fields for multi-angle comparison in your external workflow
               (Google Colab, etc.):
-              <span className="font-mono text-xs ml-1">email, surname, first_name, program, birthdate</span>
+              <span className="font-mono text-xs ml-1">email, surname, first_name, program, birthdate, year_level</span>
             </p>
             <div className="flex items-center gap-4">
               <Button onClick={handleExport} disabled={exporting}>
@@ -186,10 +240,45 @@ export default function DataImport() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Upload the cleaned CSV file (same format as the export above).
-              Only students listed in the CSV will remain active —
-              all other current submissions will be archived.
+              Upload the cleaned CSV file. Select which year levels to update —
+              only submissions for the selected year levels will be archived and replaced.
             </p>
+
+            {/* Year Level Toggle Buttons */}
+            <div>
+              <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Year Levels to Import</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {YEAR_LEVELS.map(year => {
+                  const active = selectedYearLevels.includes(year);
+                  return (
+                    <button
+                      key={year}
+                      onClick={() => setSelectedYearLevels(prev => active ? prev.filter(y => y !== year) : [...prev, year])}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                        active
+                          ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                          : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  );
+                })}
+                {selectedYearLevels.length > 0 && (
+                  <button
+                    onClick={() => setSelectedYearLevels([])}
+                    className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                {selectedYearLevels.length === 0
+                  ? 'No year level selected — all year levels will be targeted'
+                  : `Targeting: ${selectedYearLevels.join(', ')}`}
+              </p>
+            </div>
 
             <div className="flex items-center gap-4">
               <Input
@@ -226,6 +315,11 @@ export default function DataImport() {
               <CardTitle className="flex items-center gap-2 text-lg">
                 <FileUp className="w-5 h-5 text-primary" />
                 Preview Results
+                {preview.year_levels_targeted?.length > 0 && (
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    — {preview.year_levels_targeted.join(', ')}
+                  </span>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -271,12 +365,14 @@ export default function DataImport() {
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                   <p className="text-sm font-medium text-amber-700 flex items-center gap-1">
                     <AlertTriangle className="w-4 h-4" />
-                    {preview.will_archive} submission(s) will be archived (removed from active analytics)
+                    {preview.will_archive} submission(s) will be archived
+                    {preview.year_levels_targeted?.length > 0 && (
+                      <> for <strong>{preview.year_levels_targeted.join(', ')}</strong></>
+                    )}
                   </p>
                   <p className="text-xs text-amber-600 mt-1">
-                    Archived data is never deleted — it stays in the database with{' '}
-                    <code className="bg-amber-100 px-1 rounded">is_archived = True</code>
-                    {' '}and can always be restored.
+                    This will overwrite existing data for the selected year levels with your cleaned CSV.
+                    Archived data is preserved in the database and can be viewed later.
                   </p>
                 </div>
               )}
@@ -325,6 +421,9 @@ export default function DataImport() {
                     <p>Kept active: <strong>{importResult.kept}</strong></p>
                     <p>Archived: <strong>{importResult.archived}</strong></p>
                     <p>Not matched: <strong>{importResult.not_found}</strong></p>
+                    {importResult.year_levels_targeted?.length > 0 && (
+                      <p>Year Levels: <strong>{importResult.year_levels_targeted.join(', ')}</strong></p>
+                    )}
                     <p className="text-xs text-muted-foreground">Import ID: #{importResult.import_id}</p>
                   </div>
                 </div>
@@ -337,11 +436,14 @@ export default function DataImport() {
       {/* Import History */}
       <motion.div variants={fadeIn}>
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg">
               <History className="w-5 h-5 text-primary" />
               Import History
             </CardTitle>
+            <Button variant="outline" size="sm" onClick={() => handleViewArchived()}>
+              <Archive className="w-3.5 h-3.5 mr-1" /> View Archived
+            </Button>
           </CardHeader>
           <CardContent>
             {historyLoading ? (
@@ -395,18 +497,186 @@ export default function DataImport() {
         </Card>
       </motion.div>
 
-      <ConfirmDialog
-        open={showConfirm}
-        onOpenChange={setShowConfirm}
-        onConfirm={handleExecuteImport}
-        title="Confirm Data Import"
-        description={
-          preview
-            ? `This will archive ${preview.will_archive} submission(s) and keep ${preview.will_keep} active. Old data will NOT be deleted — it is preserved in the database. Are you sure?`
-            : 'Are you sure you want to proceed with this import?'
-        }
-        confirmLabel="Import"
-      />
+      {/* Enhanced Confirmation Dialog */}
+      <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-lg">Confirm Data Import</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-2">
+              <p className="text-sm font-medium text-amber-800">
+                You are about to import cleaned data for:
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedYearLevels.length > 0 ? selectedYearLevels.map(yl => (
+                  <span key={yl} className="px-2.5 py-1 text-xs font-medium bg-brand-blue text-white rounded-md">
+                    {yl}
+                  </span>
+                )) : (
+                  <span className="px-2.5 py-1 text-xs font-medium bg-brand-blue text-white rounded-md">
+                    All Year Levels
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="text-sm space-y-2">
+              <p className="text-muted-foreground">
+                This action will:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2">
+                <li>Archive <strong className="text-foreground">{preview?.will_archive || 0}</strong> existing submission(s)
+                  {selectedYearLevels.length > 0 && <> for <strong className="text-foreground">{ylLabel}</strong></>}
+                </li>
+                <li>Replace them with cleaned data from your CSV</li>
+                <li>Keep <strong className="text-foreground">{preview?.will_keep || 0}</strong> matched submission(s) active</li>
+                {selectedYearLevels.length > 0 && (
+                  <li className="text-green-700">
+                    Submissions for <strong>{YEAR_LEVELS.filter(yl => !selectedYearLevels.includes(yl)).join(', ') || 'none'}</strong> will NOT be affected
+                  </li>
+                )}
+              </ul>
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-3">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={confirmChecked}
+                  onChange={(e) => setConfirmChecked(e.target.checked)}
+                  className="mt-0.5 rounded border-gray-300"
+                />
+                <span className="text-sm text-muted-foreground">
+                  I understand this will overwrite existing data for the selected year levels.
+                  Archived data can be viewed in the Import History.
+                </span>
+              </label>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowConfirm(false)}>Cancel</Button>
+            <Button
+              onClick={handleExecuteImport}
+              disabled={!confirmChecked || importing}
+            >
+              {importing && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Import & Replace
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Archived Submissions Viewer */}
+      <Dialog open={showArchived} onOpenChange={setShowArchived}>
+        <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-lg flex items-center gap-2">
+              <Archive className="w-5 h-5" />
+              Archived Submissions
+              <span className="text-sm font-normal text-muted-foreground">({archivedTotal} total)</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Year level filter for archived view */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] font-medium text-muted-foreground mr-1">Filter:</span>
+              {YEAR_LEVELS.map(year => {
+                const active = archivedYearFilter.includes(year);
+                return (
+                  <button
+                    key={year}
+                    onClick={() => {
+                      const next = active ? archivedYearFilter.filter(y => y !== year) : [...archivedYearFilter, year];
+                      setArchivedYearFilter(next);
+                      setArchivedPage(1);
+                      loadArchived(1, next);
+                    }}
+                    className={`px-2.5 py-1 text-xs font-medium rounded-md border transition-colors ${
+                      active
+                        ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                        : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                    }`}
+                  >
+                    {year}
+                  </button>
+                );
+              })}
+              {archivedYearFilter.length > 0 && (
+                <button
+                  onClick={() => { setArchivedYearFilter([]); setArchivedPage(1); loadArchived(1, []); }}
+                  className="px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {archivedLoading ? (
+              <ListSkeleton rows={5} />
+            ) : archivedItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                No archived submissions found.
+              </p>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Category</TableHead>
+                        <TableHead>Year Level</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Code</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {archivedItems.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium text-sm">{item.student_name}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{item.student_email}</TableCell>
+                          <TableCell className="text-xs">{item.student_category || '—'}</TableCell>
+                          <TableCell className="text-xs">{item.year_level || '—'}</TableCell>
+                          <TableCell className="text-xs">
+                            <span className={`px-2 py-0.5 rounded-full ${
+                              item.status === 'verified' ? 'bg-primary/10 text-primary' :
+                              item.status === 'returned' ? 'bg-amber-100 text-amber-700' :
+                              item.status === 'declined' ? 'bg-red-100 text-red-700' :
+                              'bg-secondary/10 text-secondary'
+                            }`}>
+                              {item.status?.charAt(0).toUpperCase() + item.status?.slice(1)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs">{item.verification_code}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {archivedTotalPages > 1 && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      Page {archivedPage} of {archivedTotalPages} ({archivedTotal} submissions)
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button variant="outline" size="sm" onClick={() => handleArchivedPageChange(archivedPage - 1)} disabled={archivedPage <= 1}>
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleArchivedPageChange(archivedPage + 1)} disabled={archivedPage >= archivedTotalPages}>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
     </AnimatedPage>
   );

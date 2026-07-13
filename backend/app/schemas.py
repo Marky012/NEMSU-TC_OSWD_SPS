@@ -411,6 +411,7 @@ class ImportPreview(BaseModel):
     will_archive: int
     not_found: int
     sample_not_found: List[str] = []
+    year_levels_targeted: List[str] = []
 
 class ImportResult(BaseModel):
     import_id: int
@@ -419,8 +420,20 @@ class ImportResult(BaseModel):
     archived: int
     not_found: int
     imported_at: datetime
+    year_levels_targeted: List[str] = []
 
     model_config = ConfigDict(from_attributes=True)
+
+class ArchivedSubmissionItem(BaseModel):
+    id: int
+    user_id: int
+    student_name: Optional[str] = None
+    student_email: Optional[str] = None
+    student_category: Optional[str] = None
+    year_level: Optional[str] = None
+    status: str = "pending"
+    verification_code: Optional[str] = None
+    submitted_at: Optional[datetime] = None
 
 class ImportLogItem(BaseModel):
     id: int
