@@ -333,17 +333,17 @@ def finalize_submission(
                 detail="Emergency Contact Name must contain at least one letter.",
             )
 
-    # --- 2b. Contact number must contain only digits ---
+    # --- 2b. Contact number must be exactly 13 digits, no letters ---
     for cq_key in ("active_contact_number", "emergency_contact_number"):
         cq = next((q for q in applicable_questions if q.system_key == cq_key), None)
         if cq:
             cv = (answers_map.get(cq.id) or "").strip()
             if cv:
                 digits_only = re.sub(r"\D", "", cv)
-                if not digits_only:
+                if len(digits_only) != 13:
                     raise HTTPException(
                         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                        detail=f"'{cq.question_text}' must contain at least one digit.",
+                        detail=f"'{cq.question_text}' must be exactly 13 digits.",
                     )
 
     # --- 2c. Cross-field validation: emergency_contact_number != active_contact_number ---
