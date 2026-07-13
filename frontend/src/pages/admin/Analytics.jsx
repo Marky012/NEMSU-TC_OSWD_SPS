@@ -9,10 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { TooltipBox } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
-import { Search, Download, Users, RefreshCw, Filter, X, Eye } from 'lucide-react';
+import { Search, Download, Users, RefreshCw, Filter, X, Eye, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { toUpperDisplay } from '@/lib/utils';
 import StudentDetailSections from '@/components/StudentDetailSections';
+import { getProgramAbbr } from '@/lib/constants';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const COLORS = ['#1e40af', '#d97706', '#2d7fc1', '#8b5cf6', '#e85d3a', '#d94480', '#0ea5e9', '#84cc16'];
@@ -29,6 +30,8 @@ export default function Analytics() {
   const [groupSearch, setGroupSearch] = useState('');
   const [viewSub, setViewSub] = useState(null);
   const [ipSort, setIpSort] = useState(''); // ''=all, 'name_asc', 'name_desc', 'ip_asc', 'ip_desc'
+  const [groupSortMode, setGroupSortMode] = useState('');
+  const [groupFilterProg, setGroupFilterProg] = useState('');
   const detailRef = useRef(null);
 
   const loadData = useCallback(async (silent = false) => {
@@ -215,6 +218,17 @@ export default function Analytics() {
     { id: 'continuing', title: 'Continuing Students', description: 'Student category: Continuing', tab: 'category', check: (sub) => sub.student_category === 'Continuing' },
   ];
 
+  const getStudentProgram = (sub) => toUpperDisplay(getAnswer(sub, 'program')) || 'N/A';
+
+  const allProgSummary = useMemo(() => {
+    const map = {};
+    filteredSubs.forEach(sub => {
+      const prog = getProgramAbbr(getStudentProgram(sub));
+      if (prog !== 'N/A') map[prog] = (map[prog] || 0) + 1;
+    });
+    return map;
+  }, [filteredSubs]);
+
   const groupSubs = useMemo(() => {
     const map = {};
     GROUPS.forEach(g => { map[g.id] = []; });
@@ -232,7 +246,26 @@ export default function Analytics() {
   const expandedData = useMemo(() => {
     if (!expandedGroup) return [];
     let subs = groupSubs[expandedGroup] || [];
-    if ((expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && ipSort) {
+
+    if (groupFilterProg) {
+      subs = subs.filter(sub => getProgramAbbr(getStudentProgram(sub)) === groupFilterProg);
+    }
+
+    if (groupSortMode) {
+      subs = [...subs].sort((a, b) => {
+        if (groupSortMode === 'name_asc' || groupSortMode === 'name_desc') {
+          const nameA = getStudentName(a).toLowerCase();
+          const nameB = getStudentName(b).toLowerCase();
+          return groupSortMode === 'name_asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+        }
+        if (groupSortMode === 'prog_asc' || groupSortMode === 'prog_desc') {
+          const pA = getProgramAbbr(getStudentProgram(a)).toLowerCase();
+          const pB = getProgramAbbr(getStudentProgram(b)).toLowerCase();
+          return groupSortMode === 'prog_asc' ? pA.localeCompare(pB) : pB.localeCompare(pA);
+        }
+        return 0;
+      });
+    } else if ((expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && ipSort) {
       subs = [...subs].sort((a, b) => {
         if (ipSort === 'ip_asc' || ipSort === 'ip_desc') {
           const cmpA = expandedGroup === 'others_ip' ? getCustomIp(a) : getStudentIpGroup(a);
@@ -245,10 +278,11 @@ export default function Analytics() {
         return ipSort === 'name_asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
       });
     }
+
     if (!groupSearch) return subs;
     const q = groupSearch.toLowerCase();
     return subs.filter(sub => getStudentName(sub).toLowerCase().includes(q));
-  }, [expandedGroup, groupSubs, groupSearch, ipSort, questions]);
+  }, [expandedGroup, groupSubs, groupSearch, ipSort, groupSortMode, groupFilterProg, questions]);
 
   const exportGroupCsv = () => {
     if (!expandedGroup) return;
@@ -461,7 +495,7 @@ export default function Analytics() {
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {(expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && (
-                      <Select value={ipSort} onValueChange={setIpSort}>
+                      <Select value={ipSort} onValueChange={v => { setIpSort(v); setGroupSortMode(''); }}>
                         <SelectTrigger className="h-9 w-full sm:w-56 text-sm"><SelectValue placeholder={expandedGroup === 'others_ip' ? 'All Other IP Groups' : 'All IP Students'} /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="">{expandedGroup === 'others_ip' ? 'All Other IP Groups' : 'All IP Students'}</SelectItem>
@@ -472,6 +506,30 @@ export default function Analytics() {
                         </SelectContent>
                       </Select>
                     )}
+                    {!(expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && (
+                      <Select value={groupSortMode} onValueChange={setGroupSortMode}>
+                        <SelectTrigger className="h-9 w-full sm:w-[160px]">
+                          <ArrowUpDown className="w-3.5 h-3.5 shrink-0 mr-1" />
+                          <SelectValue placeholder="Sort" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Default Order</SelectItem>
+                          <SelectItem value="name_asc">A–Z by Last Name</SelectItem>
+                          <SelectItem value="name_desc">Z–A by Last Name</SelectItem>
+                          <SelectItem value="prog_asc">A–Z by Program</SelectItem>
+                          <SelectItem value="prog_desc">Z–A by Program</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                    <Select value={groupFilterProg} onValueChange={setGroupFilterProg}>
+                      <SelectTrigger className="h-9 w-full sm:w-[130px] truncate"><SelectValue placeholder="All Programs">{groupFilterProg || 'All Programs'}</SelectValue></SelectTrigger>
+                      <SelectContent className="min-w-[130px] max-w-[200px]">
+                        <SelectItem value="">All Programs</SelectItem>
+                        {Object.keys(allProgSummary).sort().map(p => (
+                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <Input placeholder="Search name..." value={groupSearch} onChange={e => setGroupSearch(e.target.value)} className="pl-9 h-9 w-full sm:w-56 text-sm" />
@@ -481,7 +539,7 @@ export default function Analytics() {
                         <Download className="w-3.5 h-3.5" /> Export CSV
                       </Button>
                     </TooltipBox>
-                    <button onClick={() => { setExpandedGroup(null); setGroupSearch(''); setIpSort(''); }} className="p-1.5 rounded-full hover:bg-gray-100 text-muted-foreground hover:text-foreground transition-colors" title="Close">
+                    <button onClick={() => { setExpandedGroup(null); setGroupSearch(''); setIpSort(''); setGroupSortMode(''); setGroupFilterProg(''); }} className="p-1.5 rounded-full hover:bg-gray-100 text-muted-foreground hover:text-foreground transition-colors" title="Close">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -514,7 +572,7 @@ export default function Analytics() {
                         <td className="p-3 text-muted-foreground text-xs">{i + 1}</td>
                         <td className="p-3 font-medium text-sm">{getStudentName(sub)}</td>
                         {(expandedGroup === 'others_ip' || expandedGroup === 'all_ip') && <td className="p-3 text-sm">{expandedGroup === 'others_ip' ? (getCustomIp(sub) || 'Others (unspecified)') : (getStudentIpGroup(sub) || 'Others (unspecified)')}</td>}
-                        <td className="p-3 text-sm">{toUpperDisplay(getAnswer(sub, 'program')) || 'N/A'}</td>
+                        <td className="p-3 text-sm font-mono">{getProgramAbbr(getStudentProgram(sub))}</td>
                         <td className="p-3 text-sm">{toUpperDisplay(getAnswer(sub, 'year_level')) || 'N/A'}</td>
                         <td className="p-3 text-sm">{toUpperDisplay(sub.student_category) || 'N/A'}</td>
                         <td className="p-3">

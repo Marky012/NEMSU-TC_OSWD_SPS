@@ -11,10 +11,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Search, CheckCircle2, Shield, Eye, ArrowLeftFromLine, XCircle, Loader2, Users, RefreshCw } from 'lucide-react';
+import { Search, CheckCircle2, Shield, Eye, ArrowLeftFromLine, XCircle, Loader2, Users, RefreshCw, ArrowUpDown } from 'lucide-react';
 import { toUpperDisplay } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StudentDetailSections from '@/components/StudentDetailSections';
-import { YEAR_LEVELS } from '@/lib/constants';
+import { getProgramAbbr, YEAR_LEVELS } from '@/lib/constants';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function StaffView() {
@@ -27,6 +28,8 @@ export default function StaffView() {
   const [filterStatus, setFilterStatus] = useState([]);
   const [filterCategory, setFilterCategory] = useState([]);
   const [filterYearLevel, setFilterYearLevel] = useState([]);
+  const [filterProg, setFilterProg] = useState('');
+  const [sortMode, setSortMode] = useState('newest');
   const [viewSub, setViewSub] = useState(null);
   const [verifyOneId, setVerifyOneId] = useState(null);
   const [reviewSub, setReviewSub] = useState(null);
@@ -40,6 +43,8 @@ export default function StaffView() {
   const [inlineReviewing, setInlineReviewing] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 25;
+
+  useEffect(() => { setPage(1); }, [search, filterStatus, filterCategory, filterYearLevel, filterProg, sortMode]);
 
   useEffect(() => {
     const stored = localStorage.getItem('staff_slot');
@@ -123,6 +128,15 @@ export default function StaffView() {
     return toUpperDisplay(getAnswerBySystemKey(sub, 'program')) || 'N/A';
   };
 
+  const allProgSummary = useMemo(() => {
+    const map = {};
+    submissions.forEach(sub => {
+      const prog = getProgramAbbr(getStudentProgram(sub));
+      if (prog !== 'N/A') map[prog] = (map[prog] || 0) + 1;
+    });
+    return map;
+  }, [submissions]);
+
   const filtered = useMemo(() => {
     return submissions.filter(sub => {
       if (filterStatus.length > 0 && !filterStatus.includes(sub.status)) return false;
@@ -131,6 +145,7 @@ export default function StaffView() {
         const yearLevel = getAnswerBySystemKey(sub, 'year_level');
         if (!filterYearLevel.includes(yearLevel)) return false;
       }
+      if (filterProg && getProgramAbbr(getStudentProgram(sub)) !== filterProg) return false;
       if (search) {
         const q = search.toLowerCase();
         const name = getStudentName(sub).toLowerCase();
@@ -141,15 +156,24 @@ export default function StaffView() {
       }
       return true;
     });
-  }, [submissions, search, filterStatus, filterCategory, filterYearLevel]);
+  }, [submissions, search, filterStatus, filterCategory, filterYearLevel, filterProg]);
+
+  const sorted = useMemo(() => {
+    return [...filtered].sort((a, b) => {
+      if (sortMode === 'newest') return (b.id || 0) - (a.id || 0);
+      const nameA = (getAnswerBySystemKey(a, 'surname') || '').toLowerCase();
+      const nameB = (getAnswerBySystemKey(b, 'surname') || '').toLowerCase();
+      return sortMode === 'asc' ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+    });
+  }, [filtered, sortMode]);
 
   const pendingCount = useMemo(() => submissions.filter(s => s.status === 'pending').length, [submissions]);
   const verifiedCount = useMemo(() => submissions.filter(s => s.status === 'verified').length, [submissions]);
   const declinedCount = useMemo(() => submissions.filter(s => s.status === 'declined').length, [submissions]);
   const returnedCount = useMemo(() => submissions.filter(s => s.status === 'returned').length, [submissions]);
-  const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+  const totalPages = Math.ceil(sorted.length / pageSize) || 1;
   const safePage = Math.min(page, totalPages);
-  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const paginated = sorted.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   const handleVerify = async (sub) => {
     if (!mySlot) return;
@@ -222,9 +246,31 @@ export default function StaffView() {
       </motion.div>
 
       <motion.div variants={fadeIn} className="bg-white border border-border rounded-xl p-4 space-y-3">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-[2] min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search by name, email, or code..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 h-9 text-sm" />
+          </div>
+          <Select value={sortMode} onValueChange={setSortMode}>
+            <SelectTrigger className="h-9 w-full sm:w-[150px]">
+              <ArrowUpDown className="w-3.5 h-3.5 shrink-0 mr-1" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="asc">A–Z by Last Name</SelectItem>
+              <SelectItem value="desc">Z–A by Last Name</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterProg} onValueChange={setFilterProg}>
+            <SelectTrigger className="h-9 w-full sm:w-[130px] truncate"><SelectValue placeholder="All Programs">{filterProg || 'All Programs'}</SelectValue></SelectTrigger>
+            <SelectContent className="min-w-[130px] max-w-[200px]">
+              <SelectItem value="">All Programs</SelectItem>
+              {Object.keys(allProgSummary).sort().map(p => (
+                <SelectItem key={p} value={p}>{p}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-col sm:flex-row flex-wrap gap-3">
           <div className="flex-1 min-w-[200px]">
@@ -317,7 +363,7 @@ export default function StaffView() {
                 {paginated.map(sub => (
                   <tr key={sub.id} className="border-b hover:bg-muted/30 transition-colors">
                     <td className="p-3 font-medium">{getStudentName(sub)}</td>
-                    <td className="p-3 text-xs">{getStudentProgram(sub)}</td>
+                    <td className="p-3 text-xs font-mono">{getProgramAbbr(getStudentProgram(sub))}</td>
                     <td className="p-3 text-xs">
                       <span className="text-xs bg-muted px-2 py-0.5 rounded-full">{toUpperDisplay(sub.student_category)}</span>
                     </td>
@@ -360,7 +406,7 @@ export default function StaffView() {
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && (
+                {sorted.length === 0 && (
                   <tr>
                     <td colSpan={7} className="p-12 text-center text-muted-foreground">
                       <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
