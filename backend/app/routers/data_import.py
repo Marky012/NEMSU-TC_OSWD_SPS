@@ -288,16 +288,23 @@ def write_cleaned_data(
 
 @router.get("/export-csv")
 def export_data_csv(
+    year_levels: Optional[str] = Query(None, description="Comma-separated year levels to export"),
+    category: Optional[str] = Query(None, description="Comma-separated categories to export"),
     current_admin: models.User = Depends(RoleChecker(allowed_roles=["admin"])),
     db: Session = Depends(get_db)
 ):
-    """Export current active-semester submissions as CSV with identifying fields."""
+    """Export current active-semester submissions as CSV with identifying fields.
+    Optionally filter by year_levels and/or category.
+    """
     active_sem = db.query(models.Semester).filter(models.Semester.is_active == True).first()
     if not active_sem:
         raise HTTPException(status_code=400, detail="No active semester configured.")
 
     system_key_map = get_system_key_map(db, active_sem.id)
     export_cols = build_export_columns(db, active_sem.id)
+
+    yl_filter = parse_year_levels_param(year_levels)
+    cat_filter = parse_year_levels_param(category)  # reuse same parser for comma-separated list
 
     subs = db.query(models.Submission).options(
         joinedload(models.Submission.user),
@@ -316,6 +323,16 @@ def export_data_csv(
         student = sub.user
         if not student:
             continue
+        # Filter by year level if specified
+        if yl_filter:
+            yl = get_answer_from_submission(sub, system_key_map, "year_level") or ""
+            if yl not in yl_filter:
+                continue
+        # Filter by category if specified
+        if cat_filter:
+            cat = (student.category or "").strip()
+            if cat not in cat_filter:
+                continue
         row = []
         for col in export_cols:
             if col == "verification_code":
@@ -342,10 +359,17 @@ def export_data_csv(
 
     output.seek(0)
 
+    filter_parts = []
+    if yl_filter:
+        filter_parts.append(f"year_levels={','.join(yl_filter)}")
+    if cat_filter:
+        filter_parts.append(f"category={','.join(cat_filter)}")
+    filter_str = f" [{', '.join(filter_parts)}]" if filter_parts else ""
+
     log = models.AdminLog(
         admin_id=current_admin.id,
         action="export_csv",
-        details=f"Exported {len(subs)} submissions as CSV for semester '{active_sem.label}'",
+        details=f"Exported {len(subs)} submissions as CSV for semester '{active_sem.label}'{filter_str}",
         timestamp=datetime.now(timezone.utc)
     )
     db.add(log)

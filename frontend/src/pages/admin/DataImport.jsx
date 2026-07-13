@@ -10,7 +10,7 @@ import { Download, Upload, FileUp, Eye, CheckCircle2, XCircle, AlertTriangle, Hi
 import { toast } from 'sonner';
 import apiClient from '@/api/apiClient';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { YEAR_LEVELS } from '@/lib/constants';
+import { YEAR_LEVELS, STUDENT_CATEGORIES } from '@/lib/constants';
 
 export default function DataImport() {
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,8 @@ export default function DataImport() {
   const [historyLoading, setHistoryLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedYearLevels, setSelectedYearLevels] = useState([]);
+  const [selectedExportYearLevels, setSelectedExportYearLevels] = useState([]);
+  const [selectedExportCategories, setSelectedExportCategories] = useState([]);
   const fileInputRef = useRef(null);
 
   // Archived viewer state
@@ -86,7 +88,11 @@ export default function DataImport() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const response = await apiClient.get('/admin/export-csv', { responseType: 'blob' });
+      const params = {};
+      const ylParam = yearLevelsParam(selectedExportYearLevels);
+      if (ylParam) params.year_levels = ylParam;
+      if (selectedExportCategories.length > 0) params.category = selectedExportCategories.join(',');
+      const response = await apiClient.get('/admin/export-csv', { responseType: 'blob', params });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -219,6 +225,75 @@ export default function DataImport() {
               (Google Colab, etc.):
               <span className="font-mono text-xs ml-1">email, surname, first_name, program, birthdate, year_level</span>
             </p>
+
+            {/* Year Level Filter */}
+            <div>
+              <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Filter by Year Level</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {YEAR_LEVELS.map(year => {
+                  const active = selectedExportYearLevels.includes(year);
+                  return (
+                    <button
+                      key={year}
+                      onClick={() => setSelectedExportYearLevels(prev => active ? prev.filter(y => y !== year) : [...prev, year])}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                        active
+                          ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                          : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                      }`}
+                    >
+                      {year}
+                    </button>
+                  );
+                })}
+                {selectedExportYearLevels.length > 0 && (
+                  <button
+                    onClick={() => setSelectedExportYearLevels([])}
+                    className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <div>
+              <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Filter by Category</p>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {STUDENT_CATEGORIES.map(cat => {
+                  const active = selectedExportCategories.includes(cat.value);
+                  return (
+                    <button
+                      key={cat.value}
+                      onClick={() => setSelectedExportCategories(prev => active ? prev.filter(c => c !== cat.value) : [...prev, cat.value])}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                        active
+                          ? 'bg-brand-blue text-white border-brand-blue shadow-sm'
+                          : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  );
+                })}
+                {selectedExportCategories.length > 0 && (
+                  <button
+                    onClick={() => setSelectedExportCategories([])}
+                    className="px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground">
+              {(selectedExportYearLevels.length > 0 || selectedExportCategories.length > 0)
+                ? `Exporting filtered data${selectedExportYearLevels.length > 0 ? ` — ${selectedExportYearLevels.join(', ')}` : ''}${selectedExportCategories.length > 0 ? ` — ${selectedExportCategories.join(', ')}` : ''}`
+                : 'No filters applied — exporting all active submissions'}
+            </p>
+
             <div className="flex items-center gap-4">
               <Button onClick={handleExport} disabled={exporting}>
                 {exporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
