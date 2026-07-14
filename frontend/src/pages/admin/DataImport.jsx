@@ -356,13 +356,20 @@ export default function DataImport() {
             </div>
 
             <div className="flex items-center gap-4">
-              <Input
+              <input
                 ref={fileInputRef}
                 type="file"
                 accept=".csv"
                 onChange={handleFileSelect}
-                className="max-w-sm"
+                className="hidden"
               />
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                className="gap-2"
+              >
+                <Upload className="w-4 h-4" />
+                {selectedFile ? 'Change File' : 'Choose CSV File'}
+              </Button>
               <Button
                 variant="secondary"
                 onClick={handlePreview}
