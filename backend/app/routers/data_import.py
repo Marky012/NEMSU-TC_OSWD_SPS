@@ -340,6 +340,7 @@ def export_data_csv(
     writer.writerow(export_cols)
 
     for sub, _prog, _surname, _firstname in filtered_subs:
+        student = sub.user
         row = []
         for col in export_cols:
             if col == "verification_code":
