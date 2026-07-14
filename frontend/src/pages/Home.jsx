@@ -243,19 +243,96 @@ export default function Home() {
         </motion.div>
       )}
 
-      {announcements.length > 0 && (
-        <motion.div variants={fadeIn} className="space-y-2">
-          {announcements.filter(a => a.is_pinned).concat(announcements.filter(a => !a.is_pinned)).slice(0, 3).map(a => (
-            <div key={a.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-              <Megaphone className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm text-amber-800">{a.is_pinned && <Pin className="w-3 h-3 inline mr-1" />}{a.message}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(a.created_at).toLocaleDateString()}</p>
+      {isVerified ? (
+        <Card className="border border-emerald-200 shadow-sm rounded-2xl bg-emerald-50 overflow-hidden">
+          <div className="p-5 space-y-4">
+
+            <div className="flex gap-4">
+              <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                <ShieldCheck className="w-8 h-8 text-emerald-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="font-heading font-bold text-lg text-emerald-700">
+                  Profile Verified <span className="text-emerald-600 font-bold">&#10003;</span>
+                </h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Your profile has been verified by the OSWD office. Reference: {toUpperDisplay(currentSub?.verification_code)}
+                </p>
+                <div className="inline-flex items-center gap-2 bg-white/70 border border-gray-200 rounded-lg px-2 py-0.5 mt-2">
+                  <GraduationCap className="w-3.5 h-3.5 text-[#566581]" />
+                  <span className="text-xs text-[#566581]" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}>{semLabel || 'No active semester'}</span>
+                </div>
               </div>
             </div>
-          ))}
-        </motion.div>
-      )}
+
+            <div className="bg-white rounded-lg p-4">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-0">
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground">Reference Code</p>
+                  <p className="font-mono font-bold text-lg text-emerald-700 tracking-widest mt-0.5 break-all">{toUpperDisplay(currentSub?.verification_code)}</p>
+                </div>
+                <div className="flex-1 sm:text-right">
+                  <p className="text-xs text-muted-foreground">Verified on</p>
+                  <p className="text-sm font-semibold text-foreground mt-0.5">
+                    {currentSub?.submitted_at
+                      ? new Date(currentSub.submitted_at).toLocaleDateString('en-US', {
+                          month: 'short', day: 'numeric', year: 'numeric'
+                        })
+                      : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </Card>
+      ) : status ? (
+        <Card className={`border ${status.border} shadow-sm overflow-hidden`}>
+          <div className={`${status.bg} p-5 sm:p-7`}>
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white/70 flex items-center justify-center shadow-sm flex-shrink-0">
+                {React.createElement(status.icon, { className: `w-6 h-6 ${status.color}` })}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className={`font-heading font-bold text-xl ${status.color}`}>{status.label}</h2>
+                <p className="text-sm text-muted-foreground mt-1 break-words">{status.desc}</p>
+                {status.isReturned && currentSub?.admin_comment && (
+                  <div className="mt-2 p-3 bg-white/70 border border-amber-200 rounded-lg">
+                    <p className="text-xs font-medium text-amber-700">Admin Feedback:</p>
+                    <p className="text-sm text-amber-800 mt-0.5">{currentSub.admin_comment}</p>
+                  </div>
+                )}
+                {status.semester && (
+                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 flex-shrink-0" />
+                    {status.semester}
+                  </p>
+                )}
+              </div>
+              {activeSemester && (status.isReturned) && (
+                <Link to="/profile-form" className="w-full sm:w-auto flex-shrink-0">
+                  <Button className="gap-2 whitespace-nowrap w-full sm:w-auto">
+                    Re-edit Form <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              )}
+              {activeSemester && !status.isReturned && !currentSub?.is_final && (
+                <Link to="/profile-form" className="w-full sm:w-auto flex-shrink-0">
+                  <Button className="gap-2 whitespace-nowrap w-full sm:w-auto">
+                    {currentSub ? 'Continue' : 'Start Form'} <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </Link>
+              )}
+            </div>
+            {status.refCode && (
+              <div className="mt-5 pt-5 border-t border-white/60">
+                <p className="text-xs text-muted-foreground">Reference Code</p>
+                <p className="text-lg font-bold font-mono text-brand-blue tracking-wide mt-0.5">{status.refCode}</p>
+              </div>
+            )}
+          </div>
+        </Card>
+      ) : null}
 
       {currentSub?.status === 'returned' && currentSub?.admin_comment && (
         <div className="p-4 bg-amber-50 border-2 border-amber-400 rounded-xl shadow-md">
@@ -352,96 +429,19 @@ export default function Home() {
         </div>
       )}
 
-      {isVerified ? (
-        <Card className="border border-emerald-200 shadow-sm rounded-2xl bg-emerald-50 overflow-hidden">
-          <div className="p-5 space-y-4">
-
-            <div className="flex gap-4">
-              <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shadow-sm flex-shrink-0">
-                <ShieldCheck className="w-8 h-8 text-emerald-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="font-heading font-bold text-lg text-emerald-700">
-                  Profile Verified <span className="text-emerald-600 font-bold">&#10003;</span>
-                </h2>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Your profile has been verified by the OSWD office. Reference: {toUpperDisplay(currentSub?.verification_code)}
-                </p>
-                <div className="inline-flex items-center gap-2 bg-white/70 border border-gray-200 rounded-lg px-2 py-0.5 mt-2">
-                  <GraduationCap className="w-3.5 h-3.5 text-[#566581]" />
-                  <span className="text-xs text-[#566581]" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }}>{semLabel || 'No active semester'}</span>
-                </div>
+      {announcements.length > 0 && (
+        <motion.div variants={fadeIn} className="space-y-2">
+          {announcements.filter(a => a.is_pinned).concat(announcements.filter(a => !a.is_pinned)).slice(0, 3).map(a => (
+            <div key={a.id} className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+              <Megaphone className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-sm text-amber-800">{a.is_pinned && <Pin className="w-3 h-3 inline mr-1" />}{a.message}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(a.created_at).toLocaleDateString()}</p>
               </div>
             </div>
-
-            <div className="bg-white rounded-lg p-4">
-              <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-0">
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Reference Code</p>
-                  <p className="font-mono font-bold text-lg text-emerald-700 tracking-widest mt-0.5 break-all">{toUpperDisplay(currentSub?.verification_code)}</p>
-                </div>
-                <div className="flex-1 sm:text-right">
-                  <p className="text-xs text-muted-foreground">Verified on</p>
-                  <p className="text-sm font-semibold text-foreground mt-0.5">
-                    {currentSub?.submitted_at
-                      ? new Date(currentSub.submitted_at).toLocaleDateString('en-US', {
-                          month: 'short', day: 'numeric', year: 'numeric'
-                        })
-                      : 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </Card>
-      ) : status ? (
-        <Card className={`border ${status.border} shadow-sm overflow-hidden`}>
-          <div className={`${status.bg} p-5 sm:p-7`}>
-            <div className="flex flex-col sm:flex-row items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-white/70 flex items-center justify-center shadow-sm flex-shrink-0">
-                {React.createElement(status.icon, { className: `w-6 h-6 ${status.color}` })}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className={`font-heading font-bold text-xl ${status.color}`}>{status.label}</h2>
-                <p className="text-sm text-muted-foreground mt-1 break-words">{status.desc}</p>
-                {status.isReturned && currentSub?.admin_comment && (
-                  <div className="mt-2 p-3 bg-white/70 border border-amber-200 rounded-lg">
-                    <p className="text-xs font-medium text-amber-700">Admin Feedback:</p>
-                    <p className="text-sm text-amber-800 mt-0.5">{currentSub.admin_comment}</p>
-                  </div>
-                )}
-                {status.semester && (
-                  <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 flex-shrink-0" />
-                    {status.semester}
-                  </p>
-                )}
-              </div>
-              {activeSemester && (status.isReturned) && (
-                <Link to="/profile-form" className="w-full sm:w-auto flex-shrink-0">
-                  <Button className="gap-2 whitespace-nowrap w-full sm:w-auto">
-                    Re-edit Form <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              )}
-              {activeSemester && !status.isReturned && !currentSub?.is_final && (
-                <Link to="/profile-form" className="w-full sm:w-auto flex-shrink-0">
-                  <Button className="gap-2 whitespace-nowrap w-full sm:w-auto">
-                    {currentSub ? 'Continue' : 'Start Form'} <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              )}
-            </div>
-            {status.refCode && (
-              <div className="mt-5 pt-5 border-t border-white/60">
-                <p className="text-xs text-muted-foreground">Reference Code</p>
-                <p className="text-lg font-bold font-mono text-brand-blue tracking-wide mt-0.5">{status.refCode}</p>
-              </div>
-            )}
-          </div>
-        </Card>
-      ) : null}
+          ))}
+        </motion.div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Link to="/profile-form">
