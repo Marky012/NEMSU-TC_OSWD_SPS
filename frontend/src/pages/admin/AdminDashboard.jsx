@@ -15,8 +15,9 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 const COLORS = ['hsl(224, 76%, 48%)', 'hsl(42,87%,52%)', 'hsl(200,60%,45%)', 'hsl(280,50%,55%)', 'hsl(20,80%,55%)', 'hsl(340,60%,50%)'];
 const CATEGORY_COLORS = {
   New: 'hsl(224, 76%, 48%)',
-  Returning: 'hsl(42, 87%, 52%)',
+  Returnee: 'hsl(42, 87%, 52%)',
   Transferee: 'hsl(200, 60%, 45%)',
+  Continuing: 'hsl(280, 50%, 55%)',
 };
 const PROGRAM_ABBR = {
   'Bachelor of Secondary Education': 'BSED',

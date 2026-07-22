@@ -140,19 +140,23 @@ def get_dashboard_statistics(
     db: Session = Depends(get_db)
 ):
     """Retrieves aggregated statistics for rendering interactive Chart.js graphs on the admin dashboard."""
+    active_sem = db.query(models.Semester).filter(models.Semester.is_active == True).first()
     records = get_filtered_submissions(
-        db, program, year_level, category, ip_group, pwd_status, solo_parent, internet_access, start_date, end_date
+        db, program, year_level, category, ip_group, pwd_status, solo_parent, internet_access, start_date, end_date,
+        semester_id=active_sem.id if active_sem else None
     )
     
     total_submissions = len(records)
-    total_drafts = db.query(models.Submission).filter(models.Submission.is_final == False).count()
+    draft_query = db.query(models.Submission).filter(models.Submission.is_final == False)
+    if active_sem:
+        draft_query = draft_query.filter(models.Submission.semester_id == active_sem.id)
+    total_drafts = draft_query.count()
     total_users = db.query(models.User).filter(models.User.role == "student").count()
     total_verified = db.query(models.User).filter(models.User.role == "student", models.User.is_verified_for_enrollment == True).count()
     pending_pwd_tasks = db.query(models.PWDAssistanceTask).filter(models.PWDAssistanceTask.status == "pending").count()
     
-    # Category Distribution (merge Continuing + Returnee into Returning)
-    category_map = {"New": "New", "Transferee": "Transferee", "Returnee": "Returning", "Continuing": "Returning"}
-    category_counts = {"New": 0, "Transferee": 0, "Returning": 0}
+    # Category Distribution
+    category_counts = {"New": 0, "Transferee": 0, "Returnee": 0, "Continuing": 0}
     # Program Distribution
     program_counts = {}
     # Preferred Learning Modalities
@@ -162,9 +166,8 @@ def get_dashboard_statistics(
     
     for r in records:
         cat = r["student"].category
-        merged = category_map.get(cat)
-        if merged:
-            category_counts[merged] += 1
+        if cat in category_counts:
+            category_counts[cat] += 1
             
         prog = r["answers"].get("program", "Not Specified")
         program_counts[prog] = program_counts.get(prog, 0) + 1
