@@ -350,7 +350,7 @@ def export_data_csv(
             elif col == "category":
                 row.append(student.category or "N/A")
             elif col == "status":
-                row.append(sub.status or "N/A")
+                row.append((sub.status or "N/A").capitalize())
             elif col == "assigned_staff_slot":
                 row.append(str(sub.assigned_staff_slot) if sub.assigned_staff_slot else "N/A")
             elif col == "submitted_at":

@@ -223,7 +223,7 @@ export default function DataImport() {
               Download current active-semester submissions as a CSV file containing
               identifying fields for multi-angle comparison in your external workflow
               (Google Colab, etc.):
-              <span className="font-mono text-xs ml-1">email, surname, first_name, program, birthdate, year_level</span>
+              <span className="font-mono text-xs ml-1">email, surname, first_name, program, birthdate, year_level, status</span>
             </p>
 
             {/* Year Level Filter */}

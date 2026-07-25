@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import AnimatedPage, { staggerContainer, fadeIn } from '@/components/AnimatedPage';
 import { Skeleton, ListSkeleton, TableSkeleton } from '@/components/ui/skeleton';
@@ -56,11 +56,12 @@ export default function StudentList() {
   const [showBulkReviewDialog, setShowBulkReviewDialog] = useState(false);
   const [bulkReviewing, setBulkReviewing] = useState(false);
   const [sortMode, setSortMode] = useState('newest');
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
   useEffect(() => { loadData(); }, []);
-  useEffect(() => { setPage(1); }, [search, filterCat, filterProg, filterSem, filterVerified, filterYearLevel, sortMode]);
+  useEffect(() => { setPage(1); }, [search, filterCat, filterProg, filterSem, filterVerified, filterYearLevel, sortMode, showDuplicatesOnly]);
 
   const loadData = async () => {
     setLoading(true);
@@ -106,7 +107,43 @@ export default function StudentList() {
     return toUpperDisplay(getAnswerBySystemKey(sub, 'program')) || 'N/A';
   };
 
+  const { duplicateIds, duplicateGroupMap, duplicateCount } = useMemo(() => {
+    const groups = {};
+    submissions.forEach(sub => {
+      const surname = (getAnswerBySystemKey(sub, 'surname') || '').toLowerCase().trim();
+      const firstName = (getAnswerBySystemKey(sub, 'first_name') || '').toLowerCase().trim();
+      const birthdate = (getAnswerBySystemKey(sub, 'birthdate') || '').toLowerCase().trim();
+      const program = (getProgramAbbr(getStudentProgram(sub)) || '').toLowerCase().trim();
+      if (!surname && !firstName && !birthdate && !program) return;
+      const key = [surname, firstName, birthdate, program].join('|');
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(sub.id);
+    });
+    const ids = new Set();
+    const groupMap = {};
+    let count = 0;
+    Object.values(groups).forEach(group => {
+      if (group.length > 1) {
+        count++;
+        group.forEach(id => {
+          ids.add(id);
+          groupMap[id] = count;
+        });
+      }
+    });
+    return { duplicateIds: ids, duplicateGroupMap: groupMap, duplicateCount: count };
+  }, [submissions, questions]);
+
   const sorted = [...submissions].sort((a, b) => {
+    if (showDuplicatesOnly) {
+      const nameA = (getAnswerBySystemKey(a, 'surname') || '').toLowerCase();
+      const nameB = (getAnswerBySystemKey(b, 'surname') || '').toLowerCase();
+      const cmp = nameA.localeCompare(nameB);
+      if (cmp !== 0) return cmp;
+      const firstA = (getAnswerBySystemKey(a, 'first_name') || '').toLowerCase();
+      const firstB = (getAnswerBySystemKey(b, 'first_name') || '').toLowerCase();
+      return firstA.localeCompare(firstB);
+    }
     if (sortMode === 'newest') return (a.id || 0) - (b.id || 0);
     const nameA = (getAnswerBySystemKey(a, 'surname') || '').toLowerCase();
     const nameB = (getAnswerBySystemKey(b, 'surname') || '').toLowerCase();
@@ -114,6 +151,7 @@ export default function StudentList() {
   });
 
   const filtered = sorted.filter(sub => {
+    if (showDuplicatesOnly && !duplicateIds.has(sub.id)) return false;
     if (filterSem && sub.semester_id !== Number(filterSem)) return false;
     if (filterCat.length > 0 && !filterCat.includes(sub.student_category)) return false;
     if (filterProg && getProgramAbbr(getStudentProgram(sub)) !== filterProg) return false;
@@ -399,6 +437,9 @@ export default function StudentList() {
           {filtered.length !== submissions.length && (
             <p className="text-[11px] text-muted-foreground">of {submissions.length}</p>
           )}
+          {showDuplicatesOnly && duplicateCount > 0 && (
+            <p className="text-[11px] text-orange-600 font-medium">{duplicateCount} duplicate group{duplicateCount !== 1 ? 's' : ''}</p>
+          )}
         </div>
       </motion.div>
 
@@ -518,6 +559,21 @@ export default function StudentList() {
               })}
             </div>
           </div>
+          <div className="flex-1 min-w-[200px]">
+            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Duplicates</p>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button
+                onClick={() => setShowDuplicatesOnly(prev => !prev)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+                  showDuplicatesOnly
+                    ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
+                    : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
+                }`}
+              >
+                {showDuplicatesOnly ? `Showing Duplicates (${duplicateCount} groups)` : 'Show Duplicates'}
+              </button>
+            </div>
+          </div>
         </div>
       </motion.div>
 
@@ -547,7 +603,7 @@ export default function StudentList() {
               </thead>
               <tbody>
                 {paginated.map(sub => (
-                  <tr key={sub.id} className="border-b hover:bg-muted/30 transition-colors">
+                  <tr key={sub.id} className={`border-b hover:bg-muted/30 transition-colors ${showDuplicatesOnly && duplicateIds.has(sub.id) ? 'bg-orange-50/50' : ''}`}>
                     <td className="p-3">
                       <Checkbox
                         checked={selectedIds.includes(sub.id)}
@@ -556,7 +612,16 @@ export default function StudentList() {
                         }}
                       />
                     </td>
-                    <td className="p-3 font-medium">{getStudentName(sub)}</td>
+                    <td className="p-3 font-medium">
+                      <div className="flex items-center gap-2">
+                        {getStudentName(sub)}
+                        {showDuplicatesOnly && duplicateGroupMap[sub.id] && (
+                          <span className="text-[10px] font-mono bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                            Dup #{duplicateGroupMap[sub.id]}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-3">{toUpperDisplay(sub.student_category)}</td>
                     <td className="p-3 text-xs font-mono">{getProgramAbbr(getStudentProgram(sub))}</td>
                     <td className="p-3 font-mono text-xs">{toUpperDisplay(sub.verification_code)}</td>
@@ -629,7 +694,7 @@ export default function StudentList() {
                   <tr>
                     <td colSpan={9} className="p-12 text-center text-muted-foreground">
                       <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      No submissions found
+                      {showDuplicatesOnly ? 'No duplicate students found' : 'No submissions found'}
                     </td>
                   </tr>
                 )}
