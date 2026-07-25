@@ -56,12 +56,11 @@ export default function StudentList() {
   const [showBulkReviewDialog, setShowBulkReviewDialog] = useState(false);
   const [bulkReviewing, setBulkReviewing] = useState(false);
   const [sortMode, setSortMode] = useState('newest');
-  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
   useEffect(() => { loadData(); }, []);
-  useEffect(() => { setPage(1); }, [search, filterCat, filterProg, filterSem, filterVerified, filterYearLevel, sortMode, showDuplicatesOnly]);
+  useEffect(() => { setPage(1); }, [search, filterCat, filterProg, filterSem, filterVerified, filterYearLevel, sortMode]);
 
   const loadData = async () => {
     setLoading(true);
@@ -135,7 +134,7 @@ export default function StudentList() {
   }, [submissions, questions]);
 
   const sorted = [...submissions].sort((a, b) => {
-    if (showDuplicatesOnly) {
+    if (sortMode === 'duplicates') {
       const nameA = (getAnswerBySystemKey(a, 'surname') || '').toLowerCase();
       const nameB = (getAnswerBySystemKey(b, 'surname') || '').toLowerCase();
       const cmp = nameA.localeCompare(nameB);
@@ -151,7 +150,7 @@ export default function StudentList() {
   });
 
   const filtered = sorted.filter(sub => {
-    if (showDuplicatesOnly && !duplicateIds.has(sub.id)) return false;
+    if (sortMode === 'duplicates' && !duplicateIds.has(sub.id)) return false;
     if (filterSem && sub.semester_id !== Number(filterSem)) return false;
     if (filterCat.length > 0 && !filterCat.includes(sub.student_category)) return false;
     if (filterProg && getProgramAbbr(getStudentProgram(sub)) !== filterProg) return false;
@@ -437,7 +436,7 @@ export default function StudentList() {
           {filtered.length !== submissions.length && (
             <p className="text-[11px] text-muted-foreground">of {submissions.length}</p>
           )}
-          {showDuplicatesOnly && duplicateCount > 0 && (
+          {sortMode === 'duplicates' && duplicateCount > 0 && (
             <p className="text-[11px] text-orange-600 font-medium">{duplicateCount} duplicate group{duplicateCount !== 1 ? 's' : ''}</p>
           )}
         </div>
@@ -462,7 +461,7 @@ export default function StudentList() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={sortMode} onValueChange={setSortMode}>
-              <SelectTrigger className="h-9 w-[150px]">
+              <SelectTrigger className="h-9 w-[170px]">
                 <ArrowUpDown className="w-3.5 h-3.5 shrink-0" />
                 <SelectValue />
               </SelectTrigger>
@@ -470,6 +469,7 @@ export default function StudentList() {
                 <SelectItem value="newest">Sort from newest</SelectItem>
                 <SelectItem value="asc">Sort A–Z</SelectItem>
                 <SelectItem value="desc">Sort Z–A</SelectItem>
+                <SelectItem value="duplicates">Duplicates (A–Z)</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filterSem} onValueChange={v => setFilterSem(v)}>
@@ -559,21 +559,6 @@ export default function StudentList() {
               })}
             </div>
           </div>
-          <div className="flex-1 min-w-[200px]">
-            <p className="text-[11px] font-medium text-muted-foreground mb-1.5">Duplicates</p>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                onClick={() => setShowDuplicatesOnly(prev => !prev)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-                  showDuplicatesOnly
-                    ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
-                    : 'bg-white text-muted-foreground border-border hover:bg-muted/50 hover:border-muted-foreground/30'
-                }`}
-              >
-                {showDuplicatesOnly ? `Showing Duplicates (${duplicateCount} groups)` : 'Show Duplicates'}
-              </button>
-            </div>
-          </div>
         </div>
       </motion.div>
 
@@ -603,7 +588,7 @@ export default function StudentList() {
               </thead>
               <tbody>
                 {paginated.map(sub => (
-                  <tr key={sub.id} className={`border-b hover:bg-muted/30 transition-colors ${showDuplicatesOnly && duplicateIds.has(sub.id) ? 'bg-orange-50/50' : ''}`}>
+                  <tr key={sub.id} className={`border-b hover:bg-muted/30 transition-colors ${sortMode === 'duplicates' && duplicateIds.has(sub.id) ? 'bg-orange-50/50' : ''}`}>
                     <td className="p-3">
                       <Checkbox
                         checked={selectedIds.includes(sub.id)}
@@ -615,7 +600,7 @@ export default function StudentList() {
                     <td className="p-3 font-medium">
                       <div className="flex items-center gap-2">
                         {getStudentName(sub)}
-                        {showDuplicatesOnly && duplicateGroupMap[sub.id] && (
+                        {sortMode === 'duplicates' && duplicateGroupMap[sub.id] && (
                           <span className="text-[10px] font-mono bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full whitespace-nowrap">
                             Dup #{duplicateGroupMap[sub.id]}
                           </span>
@@ -694,7 +679,7 @@ export default function StudentList() {
                   <tr>
                     <td colSpan={9} className="p-12 text-center text-muted-foreground">
                       <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      {showDuplicatesOnly ? 'No duplicate students found' : 'No submissions found'}
+                      {sortMode === 'duplicates' ? 'No duplicate students found' : 'No submissions found'}
                     </td>
                   </tr>
                 )}
